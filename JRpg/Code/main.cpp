@@ -1,6 +1,7 @@
 /*
-Authors: Randy Brunecz, Josh 
+Authors: Randy Brunecz, Joshua Gray
 main.cpp
+8/31/2015
 
 The main.cpp file is the entry point for the game. This is where the window is created
 and displays the graphics for the game. The main.cpp file contains a state variable which
@@ -15,9 +16,11 @@ in.
 const enum Game_States //Dictates the state the game is in
 {
 	Play,
+	Battle,
 	Pause,
-	Quit,
-	MainMenu
+	MainMenu,
+	GameMenu,
+	Quit
 };
 
 /*
@@ -38,7 +41,8 @@ void runGame(sf::RenderWindow& window, Game_States& state)
 
 	case Quit:
 		return; //If the game state is set to Quit, return to the game loop and close down the game.
-		std::cout << "Not here!\n";
+		
+		break;
 	}
 
 	//Update the game display.
@@ -50,9 +54,6 @@ int main()
 {
 	//LOCAL VARIABLES
 	Game_States state = Play;
-
-	//Create a list of all the video modes available for fullscreen
-	std::vector<sf::VideoMode> modes = sf::VideoMode::getFullscreenModes();
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
