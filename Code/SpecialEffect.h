@@ -10,6 +10,7 @@ The special effects object contains many methods for creating special effects su
 #define SpecialEffect_H
 
 #include <SFML\Graphics.hpp>
+#include "Graphic.h"
 
 class SpecialEffect
 {
