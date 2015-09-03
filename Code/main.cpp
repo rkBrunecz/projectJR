@@ -10,7 +10,6 @@ in.
 */
 
 #include <SFML\Graphics.hpp>
-#include "iostream"
 
 //CONSTANTS
 const enum Game_States //Dictates the state the game is in
@@ -31,7 +30,7 @@ Parameters:
 
 This method is where all game related work is done.
 */
-void runGame(sf::RenderWindow& window, Game_States& state)
+void runGame(sf::RenderWindow& window, Game_States& state, sf::Clock& gameClock)
 {
 	//Perform game actions based on the current game state.
 	switch (state)
@@ -45,8 +44,10 @@ void runGame(sf::RenderWindow& window, Game_States& state)
 		break;
 	}
 
-	//Update the game display.
+	//Clear the window
 	window.clear();
+
+	//Redisplay everything in the window
 	window.display();
 }
 
@@ -54,13 +55,12 @@ int main()
 {
 	//LOCAL VARIABLES
 	Game_States state = Play;
+	sf::Clock gameClock; //Used to determine how much time has passed since the last game update
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 	window.setFramerateLimit(60); //Set the framerate to 60
-
-	std::cout << desktop.bitsPerPixel << std::endl;
 
 	//GAME LOOP
 	while (state != Quit)
@@ -72,7 +72,7 @@ int main()
 				state = Quit;
 		}
 
-		runGame(window, state); //Run the game based on the current game state
+		runGame(window, state, gameClock); //Run the game based on the current game state
 	}
 
 	window.close(); //Close the game window
