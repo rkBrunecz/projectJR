@@ -17,13 +17,27 @@ class Player : public Graphic
 {
 public:
 	//PUBLIC FUNCTIONS
-	Player();
+	Player(sf::RenderWindow* window);
 	void draw(sf::RenderWindow* window);
 	void updatePosition(sf::RenderWindow* window, float timeSinceLastFrame);
 
 private:
+	//PRIVATE FUNCTIONS
+	void updateAnimation(bool positionUpdated);
+
+	//PRIVATE CONSTANTS
+	float VELOCITY = 1;
+
 	//PRIVATE VARIABLES
-	sf::CircleShape tmp;
+	enum walkingDirection{
+		Up,
+		Down,
+		Right,
+		Left
+	} currentDirection;
+	sf::Sprite sprite;
+	sf::Texture spriteMap;
+	sf::Clock characterAnimation;
 	float x, y;
 };
 
