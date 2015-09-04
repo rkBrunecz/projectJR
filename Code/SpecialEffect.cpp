@@ -83,7 +83,7 @@ void SpecialEffect::fadeIn(sf::RenderWindow* window, Graphic* graphics[], int ar
 
 /*
 screenDim
-parameters:
+Parameters:
 	graphics[]: An array containing all of the graphics
 	arraySize: Size of the graphics array
 
@@ -102,7 +102,7 @@ void SpecialEffect::screenDim(Graphic* graphics[], int arraySize)
 
 /*
 resetScreenDim
-parameters:
+Parameters:
 	graphics[]: An array containing all of the graphics
 	arraySize: Size of the graphics array
 
