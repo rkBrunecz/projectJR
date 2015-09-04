@@ -11,9 +11,10 @@ in.
 
 #include <SFML\Graphics.hpp>
 #include "Player.h"
+#include "SpecialEffect.h"
 
 //CONSTANTS
-const int graphicArraySize = 1;
+const int GRAPHICS_ARRAY_SIZE = 1;
 const enum Game_States //Dictates the state the game is in
 {
 	Play,
@@ -23,10 +24,14 @@ const enum Game_States //Dictates the state the game is in
 	GameMenu,
 	Quit
 };
+const enum Window_States
+{
+	Fullscreen,
+	Windowed
+};
 
 //GLOBAL VARIABLES
-Graphic* graphics[graphicArraySize];
-sf::Clock gameClock;
+Graphic* graphics[GRAPHICS_ARRAY_SIZE]; //Contains pointers to all graphic objects in the game
 
 /*
 runGame
@@ -45,8 +50,20 @@ void runGame(sf::RenderWindow& window, Game_States& state)
 	switch (state)
 	{
 	case Play:
-		graphics[0]->updatePosition(&window, gameClock.getElapsedTime().asSeconds());
-		graphics[0]->draw(&window);
+		//Update the position and draw all graphics
+		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
+		{
+			graphics[i]->updatePosition(&window);
+			graphics[i]->draw(&window);
+		}
+
+		break;
+
+	case Pause:
+		SpecialEffect::screenDim(graphics, GRAPHICS_ARRAY_SIZE);
+
+		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
+			graphics[i]->draw(&window);
 
 		break;
 
@@ -60,20 +77,30 @@ void runGame(sf::RenderWindow& window, Game_States& state)
 	window.display();
 }
 
+/*
+populateGraphicsArray
+Parameters:
+	window: This is the game window. Used to determine how to place certain graphics in relation to the windows resolution.
+
+This method simply creates and poplulates the graphics array
+*/
+void populateGraphicsArray(sf::RenderWindow& window)
+{
+	graphics[0] = new Player(&window);
+}
+
 int main()
 {
 	//LOCAL VARIABLES
 	Game_States state = Play; //Set the starting game state
+	Window_States windowState = Fullscreen; //Set window state to fullscreen
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 	window.setFramerateLimit(60); //Set the framerate to 60
-
-	//Create graphics to store in array
-	Player player(&window);
-
-	graphics[0] = &player;
+	
+	populateGraphicsArray(window); //Populate the graphics array
 
 	//GAME LOOP
 	while (state != Quit)
@@ -83,11 +110,41 @@ int main()
 		{
 			if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
 				state = Quit;
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num1) //DEBUG TEST FADE IN
+				SpecialEffect::fadeIn(&window, graphics, GRAPHICS_ARRAY_SIZE);
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num2) //DEBUG TEST FADE OUT
+				SpecialEffect::fadeOut(&window, graphics, GRAPHICS_ARRAY_SIZE);
+			//Resize window if the F11 key is pressed
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F11)
+			{
+				window.close(); //Close the current window
+
+				//Create a window in Windowed mode
+				if (windowState == Fullscreen)
+				{
+					window.create(sf::VideoMode(desktop.width - 150, desktop.height - 150, desktop.bitsPerPixel), "Project JR", sf::Style::Titlebar);
+					windowState = Windowed;
+				}
+				else //Create a window in fullscreen mode
+				{
+					window.create(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
+					windowState = Fullscreen;
+				}
+				
+				window.setFramerateLimit(60); //Set the framerate to 60
+			}
+			//If the window loses focus, pause the game
+			else if (event.type == sf::Event::LostFocus)
+				state = Pause;			
+			//When the window regains focus, resume the game
+			else if (event.type == sf::Event::GainedFocus)
+			{
+				SpecialEffect::resetScreenDim(graphics, GRAPHICS_ARRAY_SIZE);
+				state = Play;
+			}
 		}
 
 		runGame(window, state); //Run the game based on the current game state
-
-		gameClock.restart();
 	}
 
 	window.close(); //Close the game window
