@@ -33,7 +33,7 @@ updatePosition method which will dictate how positions of graphical objects
 will move around. Return is the default use of this method. This is specifically
 used for graphic elements that do not need their positions updated.
 */
-void Graphic::updatePosition(sf::RenderWindow* window, float milliSeconds)
+void Graphic::updatePosition(sf::RenderWindow* window, float timeSinceLastFrame)
 {
 	return;
 }
