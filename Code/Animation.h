@@ -1,14 +1,5 @@
 /*
 Authors: Randy Brunecz, Joshua Gray
-Player.h
-9/4/2015
-
-This class contains information about the player character such as position, graphic used and
-characteristics.
-*/
-
-/*
-Authors: Randy Brunecz, Joshua Gray
 Animation
 9/4/2015
 

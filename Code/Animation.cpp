@@ -1,3 +1,11 @@
+/*
+Authors: Randy Brunecz, Joshua Gray
+Animation
+9/4/2015
+
+This class handles animations for sprites
+*/
+
 #include "Animation.h"
 
 /*
