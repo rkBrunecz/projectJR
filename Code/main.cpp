@@ -64,15 +64,14 @@ int main()
 {
 	//LOCAL VARIABLES
 	Game_States state = Play; //Set the starting game state
-	Player play;
+	Player player;
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 	window.setFramerateLimit(60); //Set the framerate to 60
 
-	//Create graphics <TEMP>
-	graphics[0] = &play;
+	graphics[0] = &player;
 
 	//GAME LOOP
 	while (state != Quit)
