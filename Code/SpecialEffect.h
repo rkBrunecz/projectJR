@@ -16,10 +16,10 @@ class SpecialEffect
 {
 public:
 	//PUBLIC FUNCTIONS
-	void fadeOut(sf::RenderWindow* window, Graphic* graphics[], int arraySize);
-	void fadeIn(sf::RenderWindow* window, Graphic* graphics[], int arraySize);
-	void screenDim(Graphic* graphics[], int arraySize);
-	void resetScreenDim(Graphic* graphics[], int arraySize);
+	static void fadeOut(sf::RenderWindow* window, Graphic* graphics[], int arraySize);
+	static void fadeIn(sf::RenderWindow* window, Graphic* graphics[], int arraySize);
+	static void screenDim(Graphic* graphics[], int arraySize);
+	static void resetScreenDim(Graphic* graphics[], int arraySize);
 };
 
 #endif

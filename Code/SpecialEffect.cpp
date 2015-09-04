@@ -29,20 +29,21 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int a
 	{
 		//Set the transparency
 		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(0, 0, 0, alpha);
+			graphics[i]->setColor(255, 255, 255, alpha);
 
-		alpha -= 15;
+		if (alpha != 0)
+			alpha -= 15;
+
+		//Clear window
+		window->clear();
+
+		//Draw all of the graphics
+		for (int i = 0; i < arraySize; i++)
+			graphics[i]->draw(window);
+
+		//Display everything in the window
+		window->display();
 	}
-
-	//Clear window
-	window->clear();
-
-	//Draw all of the graphics
-	for (int i = 0; i < arraySize; i++)
-		graphics[i]->draw(window);
-
-	//Display everything in the window
-	window->display();
 }
 
 /*
@@ -65,20 +66,21 @@ void SpecialEffect::fadeIn(sf::RenderWindow* window, Graphic* graphics[], int ar
 	{
 		//Set the transparency
 		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(0, 0, 0, alpha);
+			graphics[i]->setColor(255, 255, 255, alpha);
 
-		alpha += 15;
+		if (alpha != 255)
+			alpha += 15;
+
+		//Clear window
+		window->clear();
+
+		//Draw all of the graphics
+		for (int i = 0; i < arraySize; i++)
+			graphics[i]->draw(window);
+
+		//Display everything in the window
+		window->display();
 	}
-
-	//Clear window
-	window->clear();
-
-	//Draw all of the graphics
-	for (int i = 0; i < arraySize; i++)
-		graphics[i]->draw(window);
-
-	//Display everything in the window
-	window->display();
 }
 
 /*
@@ -97,7 +99,7 @@ void SpecialEffect::screenDim(Graphic* graphics[], int arraySize)
 
 	//Go through the list and dim all of the graphics in the array
 	for (int i = 0; i < arraySize; i++)
-		graphics[i]->setColor(0, 0, 0, 150);
+		graphics[i]->setColor(255, 255, 255, 150);
 }
 
 /*
@@ -112,5 +114,5 @@ void SpecialEffect::resetScreenDim(Graphic* graphics[], int arraySize)
 {
 	//Go through the list and dim all of the graphics in the array
 	for (int i = 0; i < arraySize; i++)
-		graphics[i]->setColor(0, 0, 0, 255);
+		graphics[i]->setColor(255, 255, 255, 255);
 }
