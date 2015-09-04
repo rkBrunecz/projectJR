@@ -1,6 +1,6 @@
 --------------------------------------------
 * Authors:	Joshua Gray, Randy Brunecz *
-* Last Update:	9/1/2015		   *					   
+* Last Updated:	9/3/2015		   *					   
 --------------------------------------------
 
 
@@ -11,6 +11,10 @@ DESCRIPTION
 CONTROLS
 --------------------------------------------
 Esc: Quits the game (Will change when the game develops more)
+W  : Moves circle up
+S  : Moves circle down
+D  : Moves circle right
+A  : Moves circle left
 
 
 GETTING THE CODE TO COMPILE AND RUN
