@@ -12,6 +12,7 @@ characteristics.
 
 #include <SFML\Graphics.hpp>
 #include "Graphic.h"
+#include "Animation.h"
 
 class Player : public Graphic
 {
@@ -19,22 +20,15 @@ public:
 	//PUBLIC FUNCTIONS
 	Player(sf::RenderWindow* window);
 	void draw(sf::RenderWindow* window);
-	void updatePosition(sf::RenderWindow* window, float timeSinceLastFrame);
+	void updatePosition(sf::RenderWindow* window);
+	void setColor(int r, int g, int b, int a);
 
 private:
-	//PRIVATE FUNCTIONS
-	void updateAnimation(bool positionUpdated);
-
 	//PRIVATE CONSTANTS
 	float VELOCITY = 1;
 
 	//PRIVATE VARIABLES
-	enum walkingDirection{
-		Up,
-		Down,
-		Right,
-		Left
-	} currentDirection;
+	Animation::WalkingDirection currentDirection = Animation::Down;
 	sf::Sprite sprite;
 	sf::Texture spriteMap;
 	sf::Clock characterAnimation;

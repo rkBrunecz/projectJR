@@ -7,24 +7,23 @@ This class contains information about the player character such as position, gra
 characteristics.
 */
 
-
 #include <SFML\Graphics.hpp>
 #include "Player.h"
+#include "Animation.h"
+#include "SpecialEffect.h"
 
 /*
 constructor
 Parameters:
 	window: The game window. Used to get the window size.
 
-Currently, this is a temporary constructor for the player. Obviously, the character will use a sprite.
+Creates the main characters sprite and sets other important information.
 */
 Player::Player(sf::RenderWindow* window)
 {
 	//Set the start position for the character sprite
 	x = window->getSize().x / 2;
 	y = window->getSize().y / 2;
-
-	currentDirection = Down;
 
 	//Load sprite map
 	if (!spriteMap.loadFromFile("bin/Graphics/test.png"))
@@ -58,7 +57,7 @@ Parameters:
 This method takes player input (if there is any) and moves the player character
 in a direction that the player chooses.
 */
-void Player::updatePosition(sf::RenderWindow* window, float timeSinceLastFrame)
+void Player::updatePosition(sf::RenderWindow* window)
 {
 	//LOCAL VARIABLES
 	bool positionUpdated = true;
@@ -69,7 +68,7 @@ void Player::updatePosition(sf::RenderWindow* window, float timeSinceLastFrame)
 		y -= VELOCITY;
 		sprite.setPosition(x, y);
 
-		currentDirection = Up; //Set the character direction state for animation purposes
+		currentDirection = Animation::Up; //Set the character direction state for animation purposes
 	}
 	//Move down
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
@@ -77,7 +76,7 @@ void Player::updatePosition(sf::RenderWindow* window, float timeSinceLastFrame)
 		y += VELOCITY;
 		sprite.setPosition(x, y);
 
-		currentDirection = Down; //Set the character direction state for animation purposes
+		currentDirection = Animation::Down; //Set the character direction state for animation purposes
 	}
 	//Move right
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
@@ -85,7 +84,7 @@ void Player::updatePosition(sf::RenderWindow* window, float timeSinceLastFrame)
 		x += VELOCITY;
 		sprite.setPosition(x, y);
 
-		currentDirection = Right; //Set the character direction state for animation purposes
+		currentDirection = Animation::Right; //Set the character direction state for animation purposes
 	}
 	//Move left
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
@@ -93,99 +92,25 @@ void Player::updatePosition(sf::RenderWindow* window, float timeSinceLastFrame)
 		x -= VELOCITY;
 		sprite.setPosition(x, y);
 
-		currentDirection = Left; //Set the character direction state for animation purposes
+		currentDirection = Animation::Left; //Set the character direction state for animation purposes
 	}
 	else
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
 
-	updateAnimation(positionUpdated); //Update the characters movement animation
+	Animation::updateAnimation(positionUpdated, currentDirection, &characterAnimation, &sprite); //Update the characters movement animation
 }
 
 /*
-updateAnimation
+setColor
 Parameters:
-	positionUpdated: This determines on the next animation update if the character should return to standing position or not.
+	r: The red scaling on the rgb scale
+	g: The green scaling on the rgb scale
+	b: The blue scaling on the rgb scale
+	a: The alpha scaling
 
-This method updates the characters animation based on the direction the character is moving in
+This method sets the color and transparency of a sprite
 */
-void Player::updateAnimation(bool positionUpdated)
+void Player::setColor(int r, int g, int b, int a)
 {
-	switch (currentDirection)
-	{
-	case Down:
-		if (characterAnimation.getElapsedTime() > sf::seconds(0.2f))
-		{
-			//If position has not been updated, return character to standing animation facing downward
-			if (!positionUpdated)
-				sprite.setTextureRect(sf::IntRect(32, 0, 32, 32));
-			else if (sprite.getTextureRect().left == 64) //Shuffle walk animation
-				sprite.setTextureRect(sf::IntRect(0, 0, 32, 32));
-			else //Shuffle walk animation
-				sprite.setTextureRect(sf::IntRect(64, 0, 32, 32));
-
-			characterAnimation.restart(); //Restart the character animation clock
-		}
-		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f
-		else if (sprite.getTextureRect().top != 0)
-			sprite.setTextureRect(sf::IntRect(0, 0, 32, 32));
-
-		break;
-
-	case Left:
-		if (characterAnimation.getElapsedTime() > sf::seconds(0.2f))
-		{
-			//If position has not been updated, return character to standing animation facing left
-			if (!positionUpdated)
-				sprite.setTextureRect(sf::IntRect(32, 32, 32, 32));
-			else if (sprite.getTextureRect().left == 64) //Shuffle walk animation
-				sprite.setTextureRect(sf::IntRect(0, 32, 32, 32));
-			else //Shuffle walk animation
-				sprite.setTextureRect(sf::IntRect(64, 32, 32, 32));
-
-			characterAnimation.restart(); //Restart the character animation clock
-		}
-		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f
-		else if (sprite.getTextureRect().top != 32)
-			sprite.setTextureRect(sf::IntRect(0, 32, 32, 32));
-
-		break;
-
-	case Right:
-		if (characterAnimation.getElapsedTime() > sf::seconds(0.2f))
-		{
-			//If position has not been updated, return character to standing animation facing right
-			if (!positionUpdated)
-				sprite.setTextureRect(sf::IntRect(32, 64, 32, 32));
-			else if (sprite.getTextureRect().left == 64) //Shuffle walk animation
-				sprite.setTextureRect(sf::IntRect(0, 64, 32, 32));
-			else //Shuffle walk animation
-				sprite.setTextureRect(sf::IntRect(64, 64, 32, 32));
-
-			characterAnimation.restart(); //Restart the character animation clock
-		}
-		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f
-		else if (sprite.getTextureRect().top != 64)
-			sprite.setTextureRect(sf::IntRect(0, 64, 32, 32));
-
-		break;
-
-	case Up:
-		if (characterAnimation.getElapsedTime() > sf::seconds(0.2f))
-		{
-			//If position has not been updated, return character to standing animation facing upward
-			if (!positionUpdated)
-				sprite.setTextureRect(sf::IntRect(32, 96, 32, 32));
-			else if (sprite.getTextureRect().left == 64) //Shuffle walk animation
-				sprite.setTextureRect(sf::IntRect(0, 96, 32, 32));
-			else //Shuffle walk animation
-				sprite.setTextureRect(sf::IntRect(64, 96, 32, 32));
-
-			characterAnimation.restart(); //Restart the character animation clock
-		}
-		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f
-		else if (sprite.getTextureRect().top != 96)
-			sprite.setTextureRect(sf::IntRect(0, 96, 32, 32));
-
-		break;
-	}
+	sprite.setColor(sf::Color(r, g, b, a));
 }
