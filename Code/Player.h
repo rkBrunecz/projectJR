@@ -3,7 +3,8 @@ Authors: Randy Brunecz, Joshua Gray
 Player.h
 9/3/2015
 
-....
+This class contains information about the player character such as position, graphic used and
+characteristics.
 */
 
 #ifndef Player_H
@@ -18,7 +19,7 @@ public:
 	//PUBLIC FUNCTIONS
 	Player();
 	void draw(sf::RenderWindow* window);
-	void updatePosition(sf::RenderWindow* window, float seconds);
+	void updatePosition(sf::RenderWindow* window, float timeSinceLastFrame);
 
 private:
 	//PRIVATE VARIABLES
