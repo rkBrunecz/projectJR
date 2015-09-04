@@ -10,8 +10,10 @@ in.
 */
 
 #include <SFML\Graphics.hpp>
+#include "Player.h"
 
 //CONSTANTS
+const int graphicArraySize = 1;
 const enum Game_States //Dictates the state the game is in
 {
 	Play,
@@ -22,6 +24,10 @@ const enum Game_States //Dictates the state the game is in
 	Quit
 };
 
+//GLOBAL VARIABLES
+Graphic* graphics[graphicArraySize];
+sf::Clock gameClock;
+
 /*
 runGame
 Parameters:
@@ -30,12 +36,18 @@ Parameters:
 
 This method is where all game related work is done.
 */
-void runGame(sf::RenderWindow& window, Game_States& state, sf::Clock& gameClock)
+void runGame(sf::RenderWindow& window, Game_States& state)
 {
+	//Clear the window
+	window.clear();
+
 	//Perform game actions based on the current game state.
 	switch (state)
 	{
 	case Play:
+		graphics[0]->updatePosition(&window, gameClock.getElapsedTime().asSeconds());
+		graphics[0]->draw(&window);
+
 		break;
 
 	case Quit:
@@ -44,9 +56,6 @@ void runGame(sf::RenderWindow& window, Game_States& state, sf::Clock& gameClock)
 		break;
 	}
 
-	//Clear the window
-	window.clear();
-
 	//Redisplay everything in the window
 	window.display();
 }
@@ -54,13 +63,16 @@ void runGame(sf::RenderWindow& window, Game_States& state, sf::Clock& gameClock)
 int main()
 {
 	//LOCAL VARIABLES
-	Game_States state = Play;
-	sf::Clock gameClock; //Used to determine how much time has passed since the last game update
+	Game_States state = Play; //Set the starting game state
+	Player play;
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 	window.setFramerateLimit(60); //Set the framerate to 60
+
+	//Create graphics <TEMP>
+	graphics[0] = &play;
 
 	//GAME LOOP
 	while (state != Quit)
@@ -72,7 +84,9 @@ int main()
 				state = Quit;
 		}
 
-		runGame(window, state, gameClock); //Run the game based on the current game state
+		runGame(window, state); //Run the game based on the current game state
+
+		gameClock.restart();
 	}
 
 	window.close(); //Close the game window
