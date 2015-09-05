@@ -12,9 +12,11 @@ in.
 #include <SFML\Graphics.hpp>
 #include "Player.h"
 #include "SpecialEffect.h"
+#include "Map.h"
+#include <iostream>
 
 //CONSTANTS
-const int GRAPHICS_ARRAY_SIZE = 1;
+const int GRAPHICS_ARRAY_SIZE = 2;
 const enum Game_States //Dictates the state the game is in
 {
 	Play,
@@ -86,7 +88,8 @@ This method simply creates and poplulates the graphics array
 */
 void populateGraphicsArray(sf::RenderWindow& window)
 {
-	graphics[0] = new Player(&window);
+	graphics[0] = new Map;
+	graphics[1] = new Player(&window);
 }
 
 int main()
@@ -146,6 +149,10 @@ int main()
 
 		runGame(window, state); //Run the game based on the current game state
 	}
+
+	//Free up the memory used by the graphics library
+	for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
+		delete	graphics[i];
 
 	window.close(); //Close the game window
 
