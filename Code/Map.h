@@ -20,6 +20,7 @@ public:
 	~Map();
 	std::string toString();
 	void draw(sf::RenderWindow* window);
+	void setColor(int r, int g, int b, int a);
 
 private:
 	//PRIAVTE FUNCTIONS

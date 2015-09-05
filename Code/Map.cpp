@@ -83,6 +83,11 @@ void Map::draw(sf::RenderWindow* window)
 	}
 }
 
+void Map::setColor(int r, int g, int b, int a)
+{
+	tiles.setColor(sf::Color(r, g, b, a));
+}
+
 Map::~Map()
 {
 	//Free memory that was allocated for the map array
