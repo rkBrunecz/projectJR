@@ -29,10 +29,20 @@ private:
 
 	//PRIVATE VARIABLES
 	Animation::WalkingDirection currentDirection = Animation::Down;
-	sf::Sprite sprite;
 	sf::Texture spriteMap;
 	sf::Clock characterAnimation;
 	float x, y;
+
+	struct Character{
+		sf::Sprite sprite;
+		sf::CircleShape shadow;
+
+		void setPosition(float x, float y)
+		{
+			sprite.setPosition(x, y);
+			shadow.setPosition(x, y);
+		}
+	} character;
 };
 
 #endif

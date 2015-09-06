@@ -30,10 +30,16 @@ Player::Player(sf::RenderWindow* window)
 		exit(EXIT_FAILURE);
 
 	//Set up the sprites properties
-	sprite.setTexture(spriteMap);
-	sprite.setTextureRect(sf::IntRect(32, 0, 32, 32));
-	sprite.setOrigin(16, 16);
-	sprite.setPosition(x, y);
+	character.sprite.setTexture(spriteMap);
+	character.sprite.setTextureRect(sf::IntRect(32, 0, 32, 32));
+	character.sprite.setOrigin(16, 16);
+
+	//Set up the sprites shadow properties
+	character.shadow.setRadius(8);
+	character.shadow.setFillColor(sf::Color(0, 0, 0, 75));
+	character.shadow.setOrigin(8, -4);
+
+	character.setPosition(x, y);
 }
 
 /*
@@ -45,7 +51,8 @@ This method draws the character model on to the games window
 */
 void Player::draw(sf::RenderWindow* window)
 {
-	window->draw(sprite);
+	window->draw(character.shadow);
+	window->draw(character.sprite);
 }
 
 /*
@@ -66,7 +73,7 @@ void Player::updatePosition(sf::RenderWindow* window)
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 	{
 		y -= VELOCITY;
-		sprite.setPosition(x, y);
+		character.setPosition(x, y);
 
 		currentDirection = Animation::Up; //Set the character direction state for animation purposes
 	}
@@ -74,7 +81,7 @@ void Player::updatePosition(sf::RenderWindow* window)
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 	{
 		y += VELOCITY;
-		sprite.setPosition(x, y);
+		character.setPosition(x, y);
 
 		currentDirection = Animation::Down; //Set the character direction state for animation purposes
 	}
@@ -82,7 +89,7 @@ void Player::updatePosition(sf::RenderWindow* window)
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
 		x += VELOCITY;
-		sprite.setPosition(x, y);
+		character.setPosition(x, y);
 
 		currentDirection = Animation::Right; //Set the character direction state for animation purposes
 	}
@@ -90,14 +97,14 @@ void Player::updatePosition(sf::RenderWindow* window)
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 	{
 		x -= VELOCITY;
-		sprite.setPosition(x, y);
+		character.setPosition(x, y);
 
 		currentDirection = Animation::Left; //Set the character direction state for animation purposes
 	}
 	else
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
 
-	Animation::updateAnimation(positionUpdated, currentDirection, &characterAnimation, &sprite); //Update the characters movement animation
+	Animation::updateAnimation(positionUpdated, currentDirection, &characterAnimation, &character.sprite); //Update the characters movement animation
 }
 
 /*
@@ -112,5 +119,5 @@ This method sets the color and transparency of a sprite
 */
 void Player::setColor(int r, int g, int b, int a)
 {
-	sprite.setColor(sf::Color(r, g, b, a));
+	character.sprite.setColor(sf::Color(r, g, b, a));
 }
