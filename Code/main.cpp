@@ -117,6 +117,16 @@ int main()
 				SpecialEffect::fadeIn(&window, graphics, GRAPHICS_ARRAY_SIZE);
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num2) //DEBUG TEST FADE OUT
 				SpecialEffect::fadeOut(&window, graphics, GRAPHICS_ARRAY_SIZE);
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
+			{
+				if (state == Play)
+					state = Pause;
+				else
+				{
+					state = Play;
+					SpecialEffect::resetScreenDim(graphics, GRAPHICS_ARRAY_SIZE);
+				}
+			}
 			//Resize window if the F11 key is pressed
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F11)
 			{

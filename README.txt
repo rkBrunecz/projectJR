@@ -1,6 +1,6 @@
 --------------------------------------------
 * Authors:	Joshua Gray, Randy Brunecz *
-* Last Updated:	9/4/2015		   *					   
+* Last Updated:	9/6/2015		   *					   
 --------------------------------------------
 
 
@@ -10,12 +10,13 @@ DESCRIPTION
 
 CONTROLS
 --------------------------------------------
-Esc: Quits the game (Will change when the game develops more)
-F11: Resizes the window to windowed mode or fullscreen mode depending on which mode it was in previously.
-W  : Moves sprite up
-S  : Moves sprite down
-D  : Moves sprite right
-A  : Moves sprite left
+Esc   : Quits the game (Will change when the game develops more)
+F11   : Resizes the window to windowed mode or fullscreen mode depending on which mode it was in previously.
+W     : Moves sprite up
+S     : Moves sprite down
+D     : Moves sprite right
+A     : Moves sprite left
+Space : Pauses the game
 
 DEBUG CONTROLS
 1  : Perform a fade in transition
