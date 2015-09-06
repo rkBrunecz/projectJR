@@ -9,6 +9,7 @@ This class handles creates and draws a map. It also performs other useful map re
 #include "Map.h"
 #include <fstream>
 #include <sstream>
+#include "Animation.h"
 
 /*
 Map 
