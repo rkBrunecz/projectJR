@@ -3,14 +3,12 @@ Authors: Randy Brunecz, Joshua Gray
 Map
 9/5/2015
 
-This class handles creates and draws a map. It also performs other useful functions.
+This class handles creates and draws a map. It also performs other useful map related functions.
 */
 
 #include "Map.h"
 #include <fstream>
-#include <string>
 #include <sstream>
-#include <iostream>
 
 /*
 Map 
