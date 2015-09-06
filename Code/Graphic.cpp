@@ -51,17 +51,3 @@ void Graphic::setColor(int r, int g, int b, int a)
 {
 	return;
 }
-
-/*
-getAlpha
-return:
-	Return the current scaling for transparency
-
-This gets the current scaling for the alpha channel and returns it to the calling
-method
-*/
-int Graphic::getAlpha()
-{
-	return 255; //This is the default return value
-}
-
