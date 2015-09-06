@@ -93,10 +93,6 @@ This method dims all of the graphics in the graphics array
 */
 void SpecialEffect::screenDim(Graphic* graphics[], int arraySize)
 {
-	//Do not continue to re dim graphics if the images have already been dimmed.
-	if (graphics[0]->getAlpha() == 150)
-		return;
-
 	//Go through the list and dim all of the graphics in the array
 	for (int i = 0; i < arraySize; i++)
 		graphics[i]->setColor(255, 255, 255, 150);
