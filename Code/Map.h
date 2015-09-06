@@ -1,9 +1,9 @@
 /*
 Authors: Randy Brunecz, Joshua Gray
-Animation
-9/4/2015
+Map
+9/5/2015
 
-This class handles animations for sprites
+This class handles creates and draws a map. It also performs other useful functions.
 */
 
 #ifndef Map_H
@@ -24,18 +24,21 @@ public:
 
 private:
 	//PRIAVTE FUNCTIONS
-	void createArray(std::ifstream& mapFile);
+	void initialize(std::ifstream& mapFile);
 	void populateArray(std::ifstream& mapFile);
 
+	//PRIVATE CONSTANTS
+	int tileSize = 32; //This is the width and height of each of the tiles
+
 	//PRIVATE VARIABLES
-	struct Tile
+	struct Tile //Contains information about a tile such as the row and column it is found in the tileSheet, and special transformation information.
 	{
 		unsigned short row, column, transformation;
 	};
-	Tile** map;
+	Tile** map; //This is the 2d array that contains the all of the tile information needed for the map
 	sf::Sprite tiles;
 	sf::Texture tileSheet;
-	int numRows, numColumns;
+	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
 };
 
 #endif
