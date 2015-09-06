@@ -26,7 +26,7 @@ const enum Game_States //Dictates the state the game is in
 	GameMenu,
 	Quit
 };
-const enum Window_States
+const enum Window_States //Determines the state the window is in
 {
 	Fullscreen,
 	Windowed
