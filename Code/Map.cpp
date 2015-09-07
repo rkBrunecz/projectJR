@@ -121,10 +121,10 @@ void Map::draw(sf::RenderWindow* window)
 			tiles.setPosition(j * tileSize, i * tileSize); //Set the position of the tile to be drawn
 			
 			//Set the part of the tile map to draw to the window
-			tiles.setTextureRect(sf::IntRect((map[i][j].column * tileSize) - tileSize, 
-											 (map[i][j].row * tileSize) - tileSize, 
-											  tileSize, 
-											  tileSize)); 
+			tiles.setTextureRect(sf::IntRect(map[i][j].column * tileSize, 
+											 map[i][j].row * tileSize, 
+											 tileSize, 
+											 tileSize)); 
 			
 			window->draw(tiles); //Draw the tile
 		}			
