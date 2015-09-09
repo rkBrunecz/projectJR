@@ -10,6 +10,7 @@ Parent class that defines common elements that child objects will share.
 #define Graphic_H
 
 #include <SFML\Graphics.hpp>
+#include "Camera.h"
 
 class Graphic
 {
@@ -18,6 +19,9 @@ public:
 	virtual void draw(sf::RenderWindow* window);
 	virtual void updatePosition(sf::RenderWindow* window);
 	virtual void setColor(int r, int g, int b, int a);
+
+protected:
+	static Camera camera;
 };
 
 #endif
