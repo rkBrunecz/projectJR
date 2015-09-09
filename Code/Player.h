@@ -25,13 +25,13 @@ public:
 
 private:
 	//PRIVATE CONSTANTS
-	float VELOCITY = 1;
+	float VELOCITY = 2;
 
 	//PRIVATE VARIABLES
 	Animation::WalkingDirection currentDirection = Animation::Down;
 	sf::Texture spriteMap;
 	sf::Clock characterAnimation;
-	float x, y;
+	int x, y;
 
 	struct Character{
 		sf::Sprite sprite;
