@@ -65,6 +65,8 @@ void Map::initialize(std::ifstream& mapFile)
 	numRows = atoi(mapRows.c_str());
 	numColumns = atoi(mapColumns.c_str());
 
+	camera.setCameraMaxBounds(numColumns * tileSize, numRows * tileSize);
+
 	//Dynamically Create an array to hold the map
 	map = new Tile*[numRows];
 	for (int i = 0; i < numRows; i++)
@@ -113,18 +115,18 @@ This method draws the map to the window
 void Map::draw(sf::RenderWindow* window)
 {
 	//Step through each row in the maps array.
-	for (int i = 0; i < numRows; i++)
+	for (int i = camera.getLowerBoundHeight(tileSize), windowY = 0; i <= camera.getUpperBoundHeight(tileSize); i++, windowY++)
 	{
 		//Step through each columns in the maps row
-		for (int j = 0; j < numColumns; j++)
+		for (int j = camera.getLowerBoundWidth(tileSize), windowX = 0; j <= camera.getUpperBoundWidth(tileSize); j++, windowX++)
 		{
-			tiles.setPosition(j * tileSize, i * tileSize); //Set the position of the tile to be drawn
-			
 			//Set the part of the tile map to draw to the window
-			tiles.setTextureRect(sf::IntRect(map[i][j].column * tileSize, 
-											 map[i][j].row * tileSize, 
-											 tileSize, 
-											 tileSize)); 
+			tiles.setTextureRect(sf::IntRect(map[i][j].column * tileSize,
+				map[i][j].row * tileSize,
+				tileSize,
+				tileSize));
+
+			tiles.setPosition((windowX * tileSize) - camera.getXPos(), (windowY * tileSize) - camera.getYPos()); //Set the position of the tile to be drawn 
 			
 			window->draw(tiles); //Draw the tile
 		}			

@@ -38,6 +38,7 @@ private:
 	Tile** map; //This is the 2d array that contains the all of the tile information needed for the map
 	sf::Sprite tiles;
 	sf::Texture tileSheet;
+	sf::Clock clock;
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
 };
 
