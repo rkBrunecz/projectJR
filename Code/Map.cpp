@@ -127,7 +127,7 @@ void Map::draw(sf::RenderWindow* window)
 				tileSize));
 
 			tiles.setPosition((windowX * tileSize) - camera.getXPos(), (windowY * tileSize) - camera.getYPos()); //Set the position of the tile to be drawn 
-			
+				
 			window->draw(tiles); //Draw the tile
 		}			
 	}

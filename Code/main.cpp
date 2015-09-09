@@ -101,7 +101,6 @@ int main()
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
-	//window.setVerticalSyncEnabled(true); //Turns of vertical sync
 	window.setFramerateLimit(60);
 	
 	populateGraphicsArray(window); //Populate the graphics array

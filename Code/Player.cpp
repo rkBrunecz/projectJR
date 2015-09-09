@@ -109,7 +109,7 @@ void Player::updatePosition(sf::RenderWindow* window)
 		 pastCameraBoundaryY = camera.pastCameraBoundaryY(y);
 
 	if (pastCameraBoundaryX && pastCameraBoundaryY)
-		character.setPosition(x, y);
+		character.setPosition(x - camera.getXPos(), y - camera.getYPos());
 	else if (pastCameraBoundaryX)
 		character.setPosition(x - camera.getXPos(), window->getSize().y / 2);
 	else if (pastCameraBoundaryY)

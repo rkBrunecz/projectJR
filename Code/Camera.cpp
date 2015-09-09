@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include <SFML\Graphics.hpp>
+#include <iostream>
 
 void Camera::updateCameraPosition(float velocityX, float velocityY, int playerX, int playerY)
 {
@@ -34,7 +35,7 @@ int Camera::getYPos()
 
 int Camera::getUpperBoundWidth(int tileSize)
 {
-	if ((x + displayWidth) / tileSize > mapX / tileSize)
+	if ((x + displayWidth) / tileSize > (mapX / tileSize))
 		return mapX / tileSize;
 	else
 		return (x + displayWidth) / tileSize;
