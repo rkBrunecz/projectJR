@@ -13,7 +13,6 @@ in.
 #include "Player.h"
 #include "SpecialEffect.h"
 #include "Map.h"
-#include <iostream>
 
 //CONSTANTS
 const int GRAPHICS_ARRAY_SIZE = 2;
@@ -40,6 +39,7 @@ runGame
 Parameters:
 	window - The game window where graphics are drawn
 	state  - The state the game is currently in
+	dT	   - This is the delta time, or time elapsed, since the last update
 
 This method is where all game related work is done.
 */
@@ -101,7 +101,8 @@ int main()
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
-	window.setFramerateLimit(60); //Set the framerate to 60
+	//window.setVerticalSyncEnabled(true); //Turns of vertical sync
+	window.setFramerateLimit(60);
 	
 	populateGraphicsArray(window); //Populate the graphics array
 
