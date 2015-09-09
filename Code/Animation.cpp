@@ -7,7 +7,6 @@ This class handles animations for sprites
 */
 
 #include "Animation.h"
-#include <iostream>
 
 /*
 updateAnimation
