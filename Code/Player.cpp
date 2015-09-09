@@ -10,8 +10,6 @@ characteristics.
 #include <SFML\Graphics.hpp>
 #include "Player.h"
 #include "Animation.h"
-#include "SpecialEffect.h"
-
 /*
 constructor
 Parameters:
@@ -40,6 +38,9 @@ Player::Player(sf::RenderWindow* window)
 	character.shadow.setOrigin(8, -4);
 
 	character.setPosition(x, y);
+
+	//Set up important properties of the camera
+	camera.setDisplay(window->getSize().x, window->getSize().y);
 }
 
 /*
@@ -72,8 +73,8 @@ void Player::updatePosition(sf::RenderWindow* window)
 	//Move up
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 	{
-		y -= VELOCITY;
-		character.setPosition(x, y);
+		y -= VELOCITY;		
+		camera.updateCameraPosition(0, -VELOCITY, x, y);
 
 		currentDirection = Animation::Up; //Set the character direction state for animation purposes
 	}
@@ -81,15 +82,15 @@ void Player::updatePosition(sf::RenderWindow* window)
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 	{
 		y += VELOCITY;
-		character.setPosition(x, y);
-
+		camera.updateCameraPosition(0, VELOCITY, x, y);
+			
 		currentDirection = Animation::Down; //Set the character direction state for animation purposes
 	}
 	//Move right
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
 		x += VELOCITY;
-		character.setPosition(x, y);
+		camera.updateCameraPosition(VELOCITY, 0, x, y);
 
 		currentDirection = Animation::Right; //Set the character direction state for animation purposes
 	}
@@ -97,12 +98,22 @@ void Player::updatePosition(sf::RenderWindow* window)
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 	{
 		x -= VELOCITY;
-		character.setPosition(x, y);
+		camera.updateCameraPosition(-VELOCITY, 0, x, y);
 
 		currentDirection = Animation::Left; //Set the character direction state for animation purposes
 	}
 	else
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
+	
+	bool pastCameraBoundaryX = camera.pastCameraBoundaryX(x), 
+		 pastCameraBoundaryY = camera.pastCameraBoundaryY(y);
+
+	if (pastCameraBoundaryX && pastCameraBoundaryY)
+		character.setPosition(x, y);
+	else if (pastCameraBoundaryX)
+		character.setPosition(x - camera.getXPos(), window->getSize().y / 2);
+	else if (pastCameraBoundaryY)
+		character.setPosition(window->getSize().x / 2, y - camera.getYPos());
 
 	Animation::updateAnimation(positionUpdated, currentDirection, &characterAnimation, &character.sprite); //Update the characters movement animation
 }

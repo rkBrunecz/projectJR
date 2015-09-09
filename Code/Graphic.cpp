@@ -9,6 +9,9 @@ Parent class that defines common elements that child objects will share.
 #include "Graphic.h"
 #include <SFML\Graphics.hpp>
 
+//Intialize the camera static object
+Camera Graphic::camera;
+
 /*
 draw
 Parameters:
