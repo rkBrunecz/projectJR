@@ -9,9 +9,6 @@ Parent class that defines common elements that child objects will share.
 #include "Graphic.h"
 #include <SFML\Graphics.hpp>
 
-//Intialize the camera static object
-Camera Graphic::camera;
-
 /*
 draw
 Parameters:
@@ -35,7 +32,7 @@ updatePosition method which will dictate how positions of graphical objects
 will move around. Return is the default use of this method. This is specifically
 used for graphic elements that do not need their positions updated.
 */
-void Graphic::updatePosition(sf::RenderWindow* window)
+void Graphic::updatePosition(sf::RenderWindow* window, Camera* camera)
 {
 	return;
 }
