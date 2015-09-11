@@ -13,6 +13,7 @@ in.
 #include "Player.h"
 #include "SpecialEffect.h"
 #include "Map.h"
+#include "Camera.h"
 
 //CONSTANTS
 const int GRAPHICS_ARRAY_SIZE = 2;
@@ -37,13 +38,14 @@ Graphic* graphics[GRAPHICS_ARRAY_SIZE]; //Contains pointers to all graphic objec
 /*
 runGame
 Parameters:
-	window - The game window where graphics are drawn
-	state  - The state the game is currently in
-	dT	   - This is the delta time, or time elapsed, since the last update
+	window     - The game window where graphics are drawn
+	state      - The state the game is currently in
+	mapTexture - The texture that stores the map for drawing.
+	map        - This object contains information about the map
 
 This method is where all game related work is done.
 */
-void runGame(sf::RenderWindow& window, Game_States& state)
+void runGame(sf::RenderWindow& window, Camera& camera, Map* map, Game_States& state)
 {
 	//Clear the window
 	window.clear();
@@ -52,23 +54,29 @@ void runGame(sf::RenderWindow& window, Game_States& state)
 	switch (state)
 	{
 	case Play:
-		//Update the position and draw all graphics
+	{
+		//Update positions
 		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
-		{
-			graphics[i]->updatePosition(&window);
+			graphics[i]->updatePosition(&window, &camera);
+		
+		window.setView(camera);
+		//Draw all graphics
+		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
 			graphics[i]->draw(&window);
-		}
 
 		break;
 
+	}
 	case Pause:
+	{
 		SpecialEffect::screenDim(graphics, GRAPHICS_ARRAY_SIZE);
 
+		//Draw the fade 
 		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
 			graphics[i]->draw(&window);
 
 		break;
-
+	}
 	case Quit:
 		return; //If the game state is set to Quit, return to the game loop and close down the game.
 		
@@ -86,9 +94,9 @@ Parameters:
 
 This method simply creates and poplulates the graphics array
 */
-void populateGraphicsArray(sf::RenderWindow& window)
+void populateGraphicsArray(sf::RenderWindow& window, Map* map)
 {
-	graphics[0] = new Map;
+	graphics[0] = map;
 	graphics[1] = new Player(&window);
 }
 
@@ -97,13 +105,20 @@ int main()
 	//LOCAL VARIABLES
 	Game_States state = Play; //Set the starting game state
 	Window_States windowState = Fullscreen; //Set window state to fullscreen
+	Camera camera;
+	Map * map = new Map(&camera);
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
+
+	//Set up camera properties
+	camera.setSize(desktop.width, desktop.height);
+	camera.setCenter(desktop.width * 0.5, desktop.height * 0.5);
+
 	window.setFramerateLimit(60);
 	
-	populateGraphicsArray(window); //Populate the graphics array
+	populateGraphicsArray(window, map); //Populate the graphics array
 
 	//GAME LOOP
 	while (state != Quit)
@@ -117,7 +132,7 @@ int main()
 				SpecialEffect::fadeIn(&window, graphics, GRAPHICS_ARRAY_SIZE);
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num2) //DEBUG TEST FADE OUT
 				SpecialEffect::fadeOut(&window, graphics, GRAPHICS_ARRAY_SIZE);
-			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) //Pause the game if the spacebar is pressed
 			{
 				if (state == Play)
 					state = Pause;
@@ -157,7 +172,7 @@ int main()
 			}
 		}
 
-		runGame(window, state); //Run the game based on the current game state
+		runGame(window, camera, map, state); //Run the game based on the current game state
 	}
 
 	//Free up the memory used by the graphics library

@@ -38,9 +38,6 @@ Player::Player(sf::RenderWindow* window)
 	character.shadow.setOrigin(8, -4);
 
 	character.setPosition(x, y);
-
-	//Set up important properties of the camera
-	camera.setDisplay(window->getSize().x, window->getSize().y);
 }
 
 /*
@@ -59,63 +56,66 @@ void Player::draw(sf::RenderWindow* window)
 /*
 updatePosition
 Parameters:
-	window: The game window (NOT SURE WE NEED THIS)
-	timeSinceLastFrame: This is the time elapsed between updates.
+	window: The game window 
 
 This method takes player input (if there is any) and moves the player character
 in a direction that the player chooses.
 */
-void Player::updatePosition(sf::RenderWindow* window)
+void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 {
 	//LOCAL VARIABLES
 	bool positionUpdated = true;
+	float offSetX = 0, offSetY = 0;
 
 	//Move up
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 	{
-		y -= VELOCITY;		
-		camera.updateCameraPosition(0, -VELOCITY, x, y);
+		offSetY = -VELOCITY;
 
 		currentDirection = Animation::Up; //Set the character direction state for animation purposes
 	}
 	//Move down
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 	{
-		y += VELOCITY;
-		camera.updateCameraPosition(0, VELOCITY, x, y);
+		offSetY = VELOCITY;
 			
 		currentDirection = Animation::Down; //Set the character direction state for animation purposes
 	}
 	//Move right
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
-		x += VELOCITY;
-		camera.updateCameraPosition(VELOCITY, 0, x, y);
+		offSetX = VELOCITY;
 
 		currentDirection = Animation::Right; //Set the character direction state for animation purposes
 	}
 	//Move left
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 	{
-		x -= VELOCITY;
-		camera.updateCameraPosition(-VELOCITY, 0, x, y);
+		offSetX = -VELOCITY;
 
 		currentDirection = Animation::Left; //Set the character direction state for animation purposes
 	}
 	else
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
 	
-	bool pastCameraBoundaryX = camera.pastCameraBoundaryX(x), 
-		 pastCameraBoundaryY = camera.pastCameraBoundaryY(y);
-
-	if (pastCameraBoundaryX && pastCameraBoundaryY)
-		character.setPosition(x - camera.getXPos(), y - camera.getYPos());
-	else if (pastCameraBoundaryX)
-		character.setPosition(x - camera.getXPos(), window->getSize().y / 2);
-	else if (pastCameraBoundaryY)
-		character.setPosition(window->getSize().x / 2, y - camera.getYPos());
+	//Update positions
+	x += offSetX;
+	y += offSetY;
 
 	Animation::updateAnimation(positionUpdated, currentDirection, &characterAnimation, &character.sprite); //Update the characters movement animation
+
+	if (offSetX != 0 && x > camera->getSize().x * 0.5 && x < camera->getCameraBounds().x)
+	{
+		camera->move(offSetX, offSetY);
+		character.setPosition(x, y);
+	}
+	else if (offSetY != 0 && y > camera->getSize().y * 0.5 && y < camera->getCameraBounds().y)
+	{
+		camera->move(offSetX, offSetY);
+		character.setPosition(x, y);
+	}
+	else 
+		character.setPosition(x, y);
 }
 
 /*

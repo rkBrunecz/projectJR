@@ -16,7 +16,7 @@ Map
 
 The constructor of the map class creates a map that can be drawn.
 */
-Map::Map()
+Map::Map(Camera* camera)
 {
 	//LOCAL VARIABLES
 	std::ifstream mapFile;
@@ -25,10 +25,7 @@ Map::Map()
 	mapFile.open("bin/Maps/TestMap.jrm");
 
 	if (mapFile.is_open())
-	{
-		initialize(mapFile); //Dynamically create an array to hold the map
-		populateArray(mapFile); //Fill the array with the map data
-	}
+		initialize(mapFile, camera); //Dynamically create an array to hold the map		
 	else
 		exit(EXIT_FAILURE); //Close the application with a failure code if the file does not open
 
@@ -43,7 +40,7 @@ Parameters:
 The initialize method loads the tilesheet needed to draw the map; dynamically creates an array to hold all
 of the tile objects; and stores the size of the created 2d array in variables numRow and numColumn.
 */
-void Map::initialize(std::ifstream& mapFile)
+void Map::initialize(std::ifstream& mapFile, Camera* camera)
 {
 	//LOCAL VARIABLES
 	std::string input, //Used to get input from the getline method from the file
@@ -65,12 +62,17 @@ void Map::initialize(std::ifstream& mapFile)
 	numRows = atoi(mapRows.c_str());
 	numColumns = atoi(mapColumns.c_str());
 
-	camera.setCameraMaxBounds(numColumns * tileSize, numRows * tileSize);
+	mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+	camera->setBounds(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 
 	//Dynamically Create an array to hold the map
 	map = new Tile*[numRows];
 	for (int i = 0; i < numRows; i++)
 		map[i] = new Tile[numColumns];
+
+	populateArray(mapFile); //Fill the array with the map data
+
+	drawMap();
 }
 
 /*
@@ -108,29 +110,40 @@ void Map::populateArray(std::ifstream& mapFile)
 /*
 draw
 Parameters:
-	window: This is the game window where the map will be draw
+	texture: Draws a map to an offscreen texture that can be added to the window when to display the map
 
-This method draws the map to the window
+This method draws the map statically to a texture.
 */
-void Map::draw(sf::RenderWindow* window)
+void Map::drawMap()
 {
+	mapTexture.clear();
+
 	//Step through each row in the maps array.
-	for (int i = camera.getLowerBoundHeight(tileSize), windowY = 0; i <= camera.getUpperBoundHeight(tileSize); i++, windowY++)
+	for (int i = 0; i <= numRows - 1; i++)
 	{
 		//Step through each columns in the maps row
-		for (int j = camera.getLowerBoundWidth(tileSize), windowX = 0; j <= camera.getUpperBoundWidth(tileSize); j++, windowX++)
+		for (int j = 0; j <= numColumns - 1; j++)
 		{
 			//Set the part of the tile map to draw to the window
-			tiles.setTextureRect(sf::IntRect(map[i][j].column * tileSize,
-				map[i][j].row * tileSize,
-				tileSize,
-				tileSize));
+			tiles.setTextureRect(sf::IntRect(map[i][j].column * TILE_SIZE,
+				map[i][j].row * TILE_SIZE,
+				TILE_SIZE,
+				TILE_SIZE));
 
-			tiles.setPosition((windowX * tileSize) - camera.getXPos(), (windowY * tileSize) - camera.getYPos()); //Set the position of the tile to be drawn 
+			tiles.setPosition(j * TILE_SIZE, i * TILE_SIZE); //Set the position of the tile to be drawn 
 				
-			window->draw(tiles); //Draw the tile
+			mapTexture.draw(tiles); //Draw the tile
 		}			
 	}
+
+	mapTexture.display();
+
+	mapSprite.setTexture(mapTexture.getTexture());
+}
+
+void Map::draw(sf::RenderWindow* window)
+{
+	window->draw(mapSprite);
 }
 
 /*
@@ -145,7 +158,7 @@ This method sets the color and transparency of a the tiles
 */
 void Map::setColor(int r, int g, int b, int a)
 {
-	tiles.setColor(sf::Color(r, g, b, a));
+	mapSprite.setColor(sf::Color(r, g, b, a));
 }
 
 /*
@@ -160,31 +173,4 @@ Map::~Map()
 	for (int i = 0; i < numRows; i++)
 		delete map[i];
 	delete[] map;
-}
-
-/*
-toString
-
-This is a debug function that creates a string the data stored in the map array.
-*/
-std::string Map::toString()
-{
-	//LOCAL VARIABLES
-	std::stringstream ss;
-
-	//Step through each row in the maps array.
-	for (int i = 0; i < numRows; i++)
-	{
-		//Step through each column in the maps array.
-		for (int j = 0; j < numColumns; j++)
-		{
-			//If not at the end of the column, add more data to the string
-			if (j != numColumns - 1)
-				ss << map[i][j].row << map[i][j].column << map[i][j].transformation << " ";
-			else
-				ss << "\n"; //Add a end of the line character to the string if j == numColumns
-		}
-	}
-
-	return ss.str(); //Return the string
 }

@@ -20,18 +20,18 @@ public:
 	//PUBLIC FUNCTIONS
 	Player(sf::RenderWindow* window);
 	void draw(sf::RenderWindow* window);
-	void updatePosition(sf::RenderWindow* window);
+	void updatePosition(sf::RenderWindow* window, Camera* camera);
 	void setColor(int r, int g, int b, int a);
 
 private:
 	//PRIVATE CONSTANTS
-	float VELOCITY = 2;
+	float VELOCITY = 4;
 
 	//PRIVATE VARIABLES
 	Animation::WalkingDirection currentDirection = Animation::Down;
 	sf::Texture spriteMap;
 	sf::Clock characterAnimation;
-	int x, y;
+	float x, y;
 
 	struct Character{
 		sf::Sprite sprite;
