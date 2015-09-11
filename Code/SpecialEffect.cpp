@@ -51,6 +51,7 @@ fadeIn
 Parameters:
 	window: The game window
 	graphics[]: The array that holds all of the graphics
+	map: The sprite of the map to be drawn 
 	arraySize: Size of the graphics array
 
 This method performs a fade in effect.
