@@ -19,6 +19,8 @@ public:
 	virtual void draw(sf::RenderWindow* window);
 	virtual void updatePosition(sf::RenderWindow* window, Camera* camera);
 	virtual void setColor(int r, int g, int b, int a);
+
+	virtual bool collisionDetected(sf::FloatRect tmp);
 };
 
 #endif
