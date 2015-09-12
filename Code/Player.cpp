@@ -10,6 +10,9 @@ characteristics.
 #include <SFML\Graphics.hpp>
 #include "Player.h"
 #include "Animation.h"
+#include "Collision.h"
+#include "Map.h"
+
 /*
 constructor
 Parameters:
@@ -97,13 +100,20 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	}
 	else
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
-	
+
+	//May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
+	if (positionUpdated && Collision::collisionDetected(sf::FloatRect(x + offSetX, y + offSetY, 8, 16)))
+	{
+		Animation::updateAnimation(false , currentDirection, &characterAnimation, &character.sprite); //Update the characters movement animation
+		return;
+	}
+
+
 	//Update positions
 	x += offSetX;
 	y += offSetY;
 
-	Animation::updateAnimation(positionUpdated, currentDirection, &characterAnimation, &character.sprite); //Update the characters movement animation
-
+	//Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
 	if (offSetX != 0 && x > camera->getSize().x * 0.5 && x < camera->getCameraBounds().x)
 	{
 		camera->move(offSetX, offSetY);
@@ -116,6 +126,8 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	}
 	else 
 		character.setPosition(x, y);
+
+	Animation::updateAnimation(positionUpdated, currentDirection, &characterAnimation, &character.sprite); //Update the characters movement animation
 }
 
 /*
