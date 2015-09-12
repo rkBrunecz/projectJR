@@ -18,14 +18,18 @@ public:
 	//PUBLIC FUNCTIONS
 	Map(Camera* camera);
 	~Map();
+	
 	void draw(sf::RenderWindow* window);
 	void setColor(int r, int g, int b, int a);
+	
+	static bool tileCollision();
 
 private:
 	//PRIAVTE FUNCTIONS
 	void initialize(std::ifstream& mapFile, Camera* camera);
 	void populateArray(std::ifstream& mapFile);
 	void drawMap();
+	bool collisionDetected(sf::FloatRect rect);
 
 	//PRIVATE CONSTANTS
 	int TILE_SIZE = 32; //This is the width and height of each of the tiles
@@ -34,6 +38,7 @@ private:
 	struct Tile //Contains information about a tile such as the row and column it is found in the tileSheet, and special transformation information.
 	{
 		unsigned short row, column, transformation;
+		bool collidable;
 	};
 	Tile** map; //This is the 2d array that contains the all of the tile information needed for the map
 	sf::Sprite tiles, mapSprite;

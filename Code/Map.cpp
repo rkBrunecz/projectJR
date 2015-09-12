@@ -98,8 +98,9 @@ void Map::populateArray(std::ifstream& mapFile)
 			map[j][i].row = (unsigned int)input[x] - '0';
 			map[j][i].column = (unsigned int)input[x + 1] - '0';
 			map[j][i].transformation = (unsigned int)input[x + 2] - '0';
+			map[j][i].collidable = (unsigned int)input[x + 3] - '0'; //0 = false, 1 = true
 
-			x += 4; //x determines where in the string read in the file to pull a character from. We add 4 to skip over the white spaces in the file
+			x += 5; //x determines where in the string read in the file to pull a character from. We add 4 to skip over the white spaces in the file
 		}
 
 		x = 0; //Reset x to 0
@@ -108,9 +109,7 @@ void Map::populateArray(std::ifstream& mapFile)
 }
 
 /*
-draw
-Parameters:
-	texture: Draws a map to an offscreen texture that can be added to the window when to display the map
+drawMap
 
 This method draws the map statically to a texture.
 */
@@ -141,6 +140,13 @@ void Map::drawMap()
 	mapSprite.setTexture(mapTexture.getTexture());
 }
 
+/*
+draw
+Parameters:
+	window: This is the window that the map will be drawn on
+
+Draws the map to the game window
+*/
 void Map::draw(sf::RenderWindow* window)
 {
 	window->draw(mapSprite);
@@ -159,6 +165,26 @@ This method sets the color and transparency of a the tiles
 void Map::setColor(int r, int g, int b, int a)
 {
 	mapSprite.setColor(sf::Color(r, g, b, a));
+}
+
+bool Map::collisionDetected(sf::FloatRect rect)
+{
+	if ((rect.left - rect.width) < 0 || rect.left + rect.width > numColumns * TILE_SIZE)
+		return true;
+
+	if (rect.top < 0 || rect.top + rect.height > numRows * TILE_SIZE)
+		return true;
+
+	if (map[(int)rect.top / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].collidable)
+		return true;
+	else if (map[(int)rect.top / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable)
+		return true;
+	else if (map[(int)(rect.top + rect.height) / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].collidable)
+		return true;
+	else if (map[(int)(rect.top + rect.height) / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable)
+		return true;
+
+	return false;
 }
 
 /*
