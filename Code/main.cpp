@@ -14,6 +14,7 @@ in.
 #include "SpecialEffect.h"
 #include "Map.h"
 #include "Camera.h"
+#include "Collision.h"
 
 //CONSTANTS
 const int GRAPHICS_ARRAY_SIZE = 2;
@@ -98,6 +99,8 @@ void populateGraphicsArray(sf::RenderWindow& window, Map* map)
 {
 	graphics[0] = map;
 	graphics[1] = new Player(&window);
+
+	Collision::intializeGraphicObjects(graphics, GRAPHICS_ARRAY_SIZE);
 }
 
 int main()
