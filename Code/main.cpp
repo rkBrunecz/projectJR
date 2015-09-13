@@ -118,6 +118,7 @@ int main()
 	//Set up camera properties
 	camera.setSize(desktop.width, desktop.height);
 	camera.setCenter(desktop.width * 0.5, desktop.height * 0.5);
+	camera.zoom(0.6);
 
 	window.setFramerateLimit(60);
 	
