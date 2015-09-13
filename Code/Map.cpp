@@ -10,6 +10,7 @@ This class handles creates and draws a map. It also performs other useful map re
 #include <fstream>
 #include <sstream>
 #include "Animation.h"
+#include <iostream>
 
 /*
 Map 
@@ -106,6 +107,8 @@ void Map::populateArray(std::ifstream& mapFile)
 		x = 0; //Reset x to 0
 		j++; //Increment to the next row
 	}
+
+	std::cout << map[0][0].transformation << "/n";
 }
 
 /*
@@ -128,10 +131,30 @@ void Map::drawMap()
 				map[i][j].row * TILE_SIZE,
 				TILE_SIZE,
 				TILE_SIZE));
-
-			tiles.setPosition(j * TILE_SIZE, i * TILE_SIZE); //Set the position of the tile to be drawn 
+			
+			if (map[i][j].transformation == 0)
+			{
+				tiles.setPosition(j * TILE_SIZE, i * TILE_SIZE); //Set the position of the tile to be drawn 
 				
-			mapTexture.draw(tiles); //Draw the tile
+				mapTexture.draw(tiles); //Draw the tile
+			}
+			else if (map[i][j].transformation >= 1 && map[i][j].transformation <= 3)
+			{
+				//Create a temporary texture to hold the tileMap
+				sf::Texture temp;
+				temp.loadFromImage(tiles.getTexture()->copyToImage(), tiles.getTextureRect());
+				
+				//Create a temporary sprite to display the rotation of sprites
+				sf::Sprite tmp(temp);
+				
+				//The tiles are 32x32, so the origin is 16, 16
+				tmp.setOrigin(16, 16);
+				tmp.rotate(map[i][j].transformation * 90);
+
+				tmp.setPosition(j * TILE_SIZE + 16, i * TILE_SIZE + 16); //Set the position of the tile to be drawn 
+
+				mapTexture.draw(tmp); //Draw the tile
+			}
 		}			
 	}
 
@@ -197,6 +220,6 @@ Map::~Map()
 {
 	//Free memory that was allocated for the map array
 	for (int i = 0; i < numRows; i++)
-		delete map[i];
+		delete[] map[i];
 	delete[] map;
 }
