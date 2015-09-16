@@ -10,20 +10,36 @@ This class handles creates and draws a map. It also performs other useful map re
 #include <fstream>
 #include <sstream>
 #include "Animation.h"
-#include <iostream>
 
 /*
 Map 
 
 The constructor of the map class creates a map that can be drawn.
 */
-Map::Map(Camera* camera)
+Map::Map()
+{
+
+}
+
+/*
+loadMap
+Parameters:
+	mapName: This is the name of the map file that needs to be loaded in
+	camera:  This is the game camera. This is modified to have new boundaries upon entering a new map.
+
+Load map simply loads in all relavent map data to the map array to ready it to be displayer later.
+*/
+void Map::loadMap(std::string mapName, Camera* camera)
 {
 	//LOCAL VARIABLES
 	std::ifstream mapFile;
 
+	//If the rows and columns of the map have been set, you it is safe to clear out the map file.
+	if (numRows != 0 && numColumns != 0)
+		emptyMap(); //Empty out the map file to make room for a new map.
+
 	//Open the mapFile file
-	mapFile.open("bin/Maps/TestMap.jrm");
+	mapFile.open(mapName);
 
 	if (mapFile.is_open())
 		initialize(mapFile, camera); //Dynamically create an array to hold the map		
@@ -63,7 +79,10 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 	numRows = atoi(mapRows.c_str());
 	numColumns = atoi(mapColumns.c_str());
 
-	mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+	//Recreate the mapTexture ONLY when needed
+	if (mapTexture.getSize().x < numRows * TILE_SIZE && mapTexture.getSize().y < numColumns * TILE_SIZE)
+		mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+
 	camera->setBounds(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 
 	//Dynamically Create an array to hold the map
@@ -71,9 +90,66 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 	for (int i = 0; i < numRows; i++)
 		map[i] = new Tile[numColumns];
 
-	populateArray(mapFile); //Fill the array with the map data
+	initializeTransitionPoints(mapFile); //Intialize all transition points in the map
 
-	drawMap();
+	populateMap(mapFile); //Fill the array with the map data
+
+	drawMap(); //Draw the map
+}
+
+/*
+initializeTransitionPoints
+Parameters:
+	mapFile: This file contains the information about the transition points in the map
+
+This method reads the map file and sets the tiles indicated in the map file as transition points to another
+map. The information stored in a tile include the coordinates in the next map the player will spawn at, and the 
+name of the map file.
+*/
+void Map::initializeTransitionPoints(std::ifstream& mapFile)
+{
+	//LOCAL VARIABLES
+	std::string input, mapFileName;
+	int tileRow, tileColumn, numTransitionAreas, numCoords;
+	sf::Vector2i coords;
+
+	//Get the number connected maps
+	std::getline(mapFile, input);
+	numTransitionAreas = atoi(input.c_str());
+
+	for (int i = 0; i < numTransitionAreas; i++)
+	{
+		//Get the file name for a connected map
+		std::getline(mapFile, input, '-');
+		mapFileName = input;
+
+		//Get the coordinates that the player character will start on in the next map
+		std::getline(mapFile, input, 'x');
+		coords.y = atoi(input.c_str()) * TILE_SIZE;
+		std::getline(mapFile, input, '-');
+		coords.x = atoi(input.c_str()) * TILE_SIZE;
+
+		//Get the total number of map tiles that move the same map. Allows for an area to be defined to allow for more map transition flexibility
+		std::getline(mapFile, input, '-');
+		numCoords = atoi(input.c_str());
+
+		//Loop to find all possible map transition points and store the coordinates for the next map, and the map name to the file.
+		for (int i = 0; i < numCoords; i++)
+		{
+			//Get the coordinates of a tile that is a transition point
+			std::getline(mapFile, input, 'x');
+			tileRow = atoi(input.c_str()) - 1;
+			std::getline(mapFile, input, ',');
+			tileColumn = atoi(input.c_str()) - 1;
+
+			//Store the file name and coordinates for the spawning position in the next map
+			map[tileRow][tileColumn].mapName = mapFileName;
+			map[tileRow][tileColumn].transitionCoords = coords;
+		}
+	}
+
+	//Clear out the line to get ready to read the map.
+	std::getline(mapFile, input);
 }
 
 /*
@@ -83,7 +159,7 @@ Parameters:
 
 This method populates the array that was dynamically created previously.
 */
-void Map::populateArray(std::ifstream& mapFile)
+void Map::populateMap(std::ifstream& mapFile)
 {
 	//LOCAL VARIABLES
 	std::string input; //Used to get input from the getline method from the file
@@ -100,15 +176,27 @@ void Map::populateArray(std::ifstream& mapFile)
 			map[j][i].column = (unsigned int)input[x + 1] - '0';
 			map[j][i].transformation = (unsigned int)input[x + 2] - '0';
 			map[j][i].collidable = (unsigned int)input[x + 3] - '0'; //0 = false, 1 = true
+			map[j][i].transitionTile = (unsigned int)input[x + 4] - '0'; //0 = false, 1 = true
 
-			x += 5; //x determines where in the string read in the file to pull a character from. We add 4 to skip over the white spaces in the file
+			x += 6; //x determines where in the string read in the file to pull a character from. We add 4 to skip over the white spaces in the file
 		}
 
 		x = 0; //Reset x to 0
 		j++; //Increment to the next row
 	}
+}
 
-	std::cout << map[0][0].transformation << "/n";
+/*
+emptyMap
+
+This method simply releases the memory used to store the previous map.
+*/
+void Map::emptyMap()
+{
+	//Free memory that was allocated for the map array
+	for (int i = 0; i < numRows; i++)
+		delete[] map[i];
+	delete[] map;
 }
 
 /*
@@ -138,9 +226,9 @@ void Map::drawMap()
 				
 				mapTexture.draw(tiles); //Draw the tile
 			}
-			else if (map[i][j].transformation >= 1 && map[i][j].transformation <= 3)
+			else if (map[i][j].transformation >= 1 && map[i][j].transformation <= 3) //Rotate the tile if the transformation value is between 1 and 3, inclusive
 			{
-				//Create a temporary texture to hold the tileMap
+				//Create a temporary texture to hold the tile
 				sf::Texture temp;
 				temp.loadFromImage(tiles.getTexture()->copyToImage(), tiles.getTextureRect());
 				
@@ -155,12 +243,29 @@ void Map::drawMap()
 
 				mapTexture.draw(tmp); //Draw the tile
 			}
+			else if (map[i][j].transformation == 4) //Mirro tile
+			{
+				//Create a temporary texture to hold the tile
+				sf::Texture temp;
+				temp.loadFromImage(tiles.getTexture()->copyToImage(), tiles.getTextureRect());
+
+				//Create a temporary sprite to display the rotation of sprites
+				sf::Sprite tmp(temp);
+
+				//The tiles are 32x32, so the origin is 16, 16
+				tmp.setOrigin(16, 16);
+				tmp.scale(-1.f, 1.f); //Mirror the tile
+
+				tmp.setPosition(j * TILE_SIZE + 16, i * TILE_SIZE + 16); //Set the position of the tile to be drawn 
+
+				mapTexture.draw(tmp); //Draw the tile
+			}
 		}			
 	}
 
-	mapTexture.display();
+	mapTexture.display(); //Let the map texture know that it is no longer being drawn to
 
-	mapSprite.setTexture(mapTexture.getTexture());
+	mapSprite.setTexture(mapTexture.getTexture()); //Set the map texture to a sprite.
 }
 
 /*
@@ -190,14 +295,55 @@ void Map::setColor(int r, int g, int b, int a)
 	mapSprite.setColor(sf::Color(r, g, b, a));
 }
 
+/*
+moveToMap
+Parameters:
+	player: The player character will have its position set to the indicated spawning point
+	camera: The camera will have its position updated to center on the player
+
+This method moves from one map to another when a transition tile is collided with.
+*/
+void Map::moveToMap(Player* player, Camera* camera)
+{
+	//LOCAL VARIABLES
+	int row = player->getPlayerCoordinates().y / TILE_SIZE;
+	int column = player->getPlayerCoordinates().x / TILE_SIZE;
+	sf::Vector2i startPosition = map[row][column].transitionCoords;
+
+	loadMap(map[row][column].mapName, camera); //Load the next map
+
+	player->setPlayerPosition(startPosition); 
+	camera->updatePosition(startPosition);
+
+	transition = false; //Set the transition variable back to false to indicate the transition has been complete.
+}
+
+/*
+collisionDetected
+Parameters:
+	rect: This rectangle contains the boundaries of some graphic entity that needs to be checked.
+
+This method checks for collision between a tile and some entity that exists within the map. Returns true 
+if collision has been detected. False otherwise.
+*/
 bool Map::collisionDetected(sf::FloatRect rect)
 {
+	//This checks to see if the tile being moved to is a transition tile
+	if (map[(int)rect.top / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].transitionTile)
+	{
+		transition = true; //Say that a map transition needs to occur.
+		return false; //No collision has been detected
+	}
+
+	//If the entity is at the maps edge along the x-axis, return true
 	if ((rect.left - rect.width) < 0 || rect.left + rect.width > numColumns * TILE_SIZE)
 		return true;
 
+	//If the entity is at the maps edge along the y-axis, return true
 	if (rect.top < 0 || rect.top + rect.height > numRows * TILE_SIZE)
 		return true;
 
+	//Check to see if one of the four sides of some entity has collided with a collidable tile
 	if (map[(int)rect.top / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].collidable)
 		return true;
 	else if (map[(int)rect.top / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable)
@@ -207,7 +353,18 @@ bool Map::collisionDetected(sf::FloatRect rect)
 	else if (map[(int)(rect.top + rect.height) / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable)
 		return true;
 
+	//No collision has been detected
 	return false;
+}
+
+/*
+transitioning
+
+This method is used to determine if the game state should switch to the transitioning state or not.
+*/
+bool Map::transitioning()
+{
+	return transition;
 }
 
 /*
