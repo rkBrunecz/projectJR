@@ -24,8 +24,7 @@ DEBUG CONTROLS
 
 PERFORMANCE
 --------------------------------------------
-V-Sync has been enabled for the game. If you notice your CPU usage is 20%+, and you use an Nvidia card, go into the Nvidia control panel and turn off
-"Threaded Optimization".
+V-Sync has been enabled for the game. If you notice your CPU usage is 20%+, and you use an Nvidia card, go into the Nvidia control panel and turn off "Threaded Optimization".
 
 GETTING THE CODE TO COMPILE AND RUN
 --------------------------------------------
