@@ -15,6 +15,7 @@ in.
 #include "Map.h"
 #include "Camera.h"
 #include "Collision.h"
+#include <iostream>
 
 //CONSTANTS
 const int GRAPHICS_ARRAY_SIZE = 2;
@@ -25,6 +26,7 @@ const enum Game_States //Dictates the state the game is in
 	Pause,
 	MainMenu,
 	GameMenu,
+	Transition,
 	Quit
 };
 const enum Window_States //Determines the state the window is in
@@ -35,6 +37,7 @@ const enum Window_States //Determines the state the window is in
 
 //GLOBAL VARIABLES
 Graphic* graphics[GRAPHICS_ARRAY_SIZE]; //Contains pointers to all graphic objects in the game
+Game_States state = Play;
 
 /*
 runGame
@@ -46,7 +49,7 @@ Parameters:
 
 This method is where all game related work is done.
 */
-void runGame(sf::RenderWindow& window, Camera& camera, Map* map, Game_States& state)
+void runGame(sf::RenderWindow& window, Camera& camera, Map* map, Player* player)
 {
 	//Clear the window
 	window.clear();
@@ -60,23 +63,39 @@ void runGame(sf::RenderWindow& window, Camera& camera, Map* map, Game_States& st
 		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
 			graphics[i]->updatePosition(&window, &camera);
 		
-		window.setView(camera);
+		window.setView(camera); //Update the windows view
+
 		//Draw all graphics
 		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
 			graphics[i]->draw(&window);
+
+		if (map->transitioning())
+			state = Transition;
 
 		break;
 
 	}
 	case Pause:
 	{
-		SpecialEffect::screenDim(graphics, GRAPHICS_ARRAY_SIZE);
-
-		//Draw the fade 
+		//Draw the graphics on the screen
 		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
 			graphics[i]->draw(&window);
 
+		SpecialEffect::screenDim(&window);
+
 		break;
+	}
+	case Transition:
+	{
+		SpecialEffect::fadeOut(&window, graphics, GRAPHICS_ARRAY_SIZE);
+
+		map->moveToMap(player, &camera); //Transition to the next map
+
+		window.setView(camera); //Update the window view
+
+		SpecialEffect::fadeIn(&window, graphics, GRAPHICS_ARRAY_SIZE);
+
+		state = Play; //Continue playing the game
 	}
 	case Quit:
 		return; //If the game state is set to Quit, return to the game loop and close down the game.
@@ -95,10 +114,10 @@ Parameters:
 
 This method simply creates and poplulates the graphics array
 */
-void populateGraphicsArray(sf::RenderWindow& window, Map* map)
+void populateGraphicsArray(Player* player, Map* map)
 {
 	graphics[0] = map;
-	graphics[1] = new Player(&window);
+	graphics[1] = player;
 
 	Collision::intializeGraphicObjects(graphics, GRAPHICS_ARRAY_SIZE);
 }
@@ -106,23 +125,25 @@ void populateGraphicsArray(sf::RenderWindow& window, Map* map)
 int main()
 {
 	//LOCAL VARIABLES
-	Game_States state = Play; //Set the starting game state
 	Window_States windowState = Fullscreen; //Set window state to fullscreen
 	Camera camera;
-	Map * map = new Map(&camera);
+	Map * map = new Map();
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 
+	Player * player = new Player(&window, &camera);
+
 	//Set up camera properties
 	camera.setSize(desktop.width, desktop.height);
-	camera.setCenter(desktop.width * 0.5, desktop.height * 0.5);
 	camera.zoom(0.6);
 
-	window.setFramerateLimit(60);
+	window.setVerticalSyncEnabled(true);
 	
-	populateGraphicsArray(window, map); //Populate the graphics array
+	populateGraphicsArray(player, map); //Populate the graphics array
+
+	map->loadMap("bin/Maps/TestMap.jrm", &camera); //Load the map
 
 	//GAME LOOP
 	while (state != Quit)
@@ -141,10 +162,8 @@ int main()
 				if (state == Play)
 					state = Pause;
 				else
-				{
 					state = Play;
-					SpecialEffect::resetScreenDim(graphics, GRAPHICS_ARRAY_SIZE);
-				}
+
 			}
 			//Resize window if the F11 key is pressed
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F11)
@@ -163,20 +182,17 @@ int main()
 					windowState = Fullscreen;
 				}
 				
-				window.setFramerateLimit(60); //Set the framerate to 60
+				window.setVerticalSyncEnabled(true);
 			}
 			//If the window loses focus, pause the game
 			else if (event.type == sf::Event::LostFocus)
 				state = Pause;			
 			//When the window regains focus, resume the game
 			else if (event.type == sf::Event::GainedFocus)
-			{
-				SpecialEffect::resetScreenDim(graphics, GRAPHICS_ARRAY_SIZE);
 				state = Play;
-			}
 		}
 
-		runGame(window, camera, map, state); //Run the game based on the current game state
+		runGame(window, camera, map, player); //Run the game based on the current game state
 	}
 
 	//Free up the memory used by the graphics library
