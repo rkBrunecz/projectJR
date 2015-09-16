@@ -23,6 +23,34 @@ void Camera::setBounds(int x, int y)
 }
 
 /*
+updatePosition
+Parameters:
+	x: The x position to set the camera to
+	y: The y position to set the camera to
+
+This method simply updates the position of the camera.
+*/
+void Camera::updatePosition(sf::Vector2i position)
+{
+	//LOCAL VARIABLES
+	int cameraX = position.x, cameraY = position.y;
+
+	//If the x position to be set is at the edge of the game map, set the cameras position to its boundaries 
+	if (position.x < getSize().x * 0.5)
+		cameraX = getSize().x * 0.5;
+	else if (position.x > getCameraBounds().x)
+		cameraX = getCameraBounds().x;
+
+	//If the y position to be set is at the edge of the game map, set the cameras position to its boundaries 
+	if (position.y < getSize().y * 0.5)
+		cameraY = getSize().y * 0.5;
+	else if (position.y > getCameraBounds().y)
+		cameraY = getCameraBounds().y;
+
+	setCenter(cameraX, cameraY);
+}
+
+/*
 setBounds
 return: Returns a 2d vector that contains the x and y camera bounds.
 

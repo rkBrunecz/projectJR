@@ -15,6 +15,8 @@ class Camera : public sf::View
 {
 public:
 	void setBounds(int x, int y);
+	void updatePosition(sf::Vector2i position);
+
 	sf::Vector2f getCameraBounds();
 
 private:
