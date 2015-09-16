@@ -20,7 +20,7 @@ Parameters:
 
 Creates the main characters sprite and sets other important information.
 */
-Player::Player(sf::RenderWindow* window)
+Player::Player(sf::RenderWindow* window, Camera* camera)
 {
 	//Set the start position for the character sprite
 	x = window->getSize().x / 2;
@@ -41,6 +41,7 @@ Player::Player(sf::RenderWindow* window)
 	character.shadow.setOrigin(8, -4);
 
 	character.setPosition(x, y);
+	camera->setCenter(x, y);
 }
 
 /*
@@ -104,7 +105,7 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	//May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
 	if (positionUpdated && Collision::collisionDetected(sf::FloatRect(x + offSetX, y + offSetY, 8, 16)))
 	{
-		Animation::updateAnimation(false , currentDirection, &characterAnimation, &character.sprite); //Update the characters movement animation
+		Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
 		return;
 	}
 
@@ -114,20 +115,10 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	y += offSetY;
 
 	//Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
-	if (offSetX != 0 && x > camera->getSize().x * 0.5 && x < camera->getCameraBounds().x)
-	{
-		camera->move(offSetX, offSetY);
-		character.setPosition(x, y);
-	}
-	else if (offSetY != 0 && y > camera->getSize().y * 0.5 && y < camera->getCameraBounds().y)
-	{
-		camera->move(offSetX, offSetY);
-		character.setPosition(x, y);
-	}
-	else 
-		character.setPosition(x, y);
-
-	Animation::updateAnimation(positionUpdated, currentDirection, &characterAnimation, &character.sprite); //Update the characters movement animation
+	character.setPosition(x, y);
+	camera->updatePosition(sf::Vector2i(x, y));
+	
+	Animation::updateAnimation(positionUpdated, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
 }
 
 /*
@@ -143,4 +134,33 @@ This method sets the color and transparency of a sprite
 void Player::setColor(int r, int g, int b, int a)
 {
 	character.sprite.setColor(sf::Color(r, g, b, a));
+}
+
+/*
+setPlayerPosition
+Parameters:
+	coords: These are the coordinates that the players position will be set to
+
+This updates the players position in the game world.
+*/
+void Player::setPlayerPosition(sf::Vector2i coords)
+{
+	x = coords.x;
+	y = coords.y;
+
+	character.setPosition(x, y);
+
+	Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); //Update the characters animation
+}
+
+/*
+getPlayerCoordinates
+return:
+	This method returns the players current position in the game world
+
+This method simply stores the players position in a vector and returns it to the calling method.
+*/
+sf::Vector2i Player::getPlayerCoordinates()
+{
+	return sf::Vector2i(x, y);
 }
