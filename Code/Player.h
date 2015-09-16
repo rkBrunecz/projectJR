@@ -18,10 +18,14 @@ class Player : public Graphic
 {
 public:
 	//PUBLIC FUNCTIONS
-	Player(sf::RenderWindow* window);
+	Player(sf::RenderWindow* window, Camera* camera);
+	
 	void draw(sf::RenderWindow* window);
 	void updatePosition(sf::RenderWindow* window, Camera* camera);
 	void setColor(int r, int g, int b, int a);
+	void setPlayerPosition(sf::Vector2i coords);
+
+	sf::Vector2i getPlayerCoordinates();
 
 private:
 	//PRIVATE CONSTANTS
@@ -30,8 +34,8 @@ private:
 	//PRIVATE VARIABLES
 	Animation::WalkingDirection currentDirection = Animation::Down;
 	sf::Texture spriteMap;
-	sf::Clock characterAnimation;
-	float x, y;
+	sf::Clock characterAniClock;
+	int x, y;
 
 	struct Character{
 		sf::Sprite sprite;
