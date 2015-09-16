@@ -25,7 +25,7 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int a
 	int alpha = 255;
 
 	//Perform a fade out over a half second
-	while (clock.getElapsedTime() <= sf::seconds(0.5f))
+	while (clock.getElapsedTime() <= sf::seconds(0.3f))
 	{
 		//Set the transparency
 		for (int i = 0; i < arraySize; i++)
@@ -43,6 +43,14 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int a
 
 		//Display everything in the window
 		window->display();
+	}
+
+	//If for some reason the fade did not finish, set the graphics to be fully transparent
+	if (alpha != 0)
+	{
+		//Set the transparency
+		for (int i = 0; i < arraySize; i++)
+			graphics[i]->setColor(255, 255, 255, 0);
 	}
 }
 
@@ -62,7 +70,7 @@ void SpecialEffect::fadeIn(sf::RenderWindow* window, Graphic* graphics[], int ar
 	int alpha = 0;
 
 	//Perform a fade in over a half second
-	while (clock.getElapsedTime() <= sf::seconds(0.5f))
+	while (clock.getElapsedTime() <= sf::seconds(0.3f))
 	{
 		//Set the transparency
 		for (int i = 0; i < arraySize; i++)
@@ -81,34 +89,30 @@ void SpecialEffect::fadeIn(sf::RenderWindow* window, Graphic* graphics[], int ar
 		//Display everything in the window
 		window->display();
 	}
+
+	//If for some reason the alpha is not 255, set all graphics objects to be have no transparency
+	if (alpha != 255)
+	{
+		//Set the transparency
+		for (int i = 0; i < arraySize; i++)
+			graphics[i]->setColor(255, 255, 255, 255);
+	}
 }
 
 /*
 screenDim
 Parameters:
-	graphics[]: An array containing all of the graphics
-	arraySize: Size of the graphics array
+	window: This is the window that will be drawn on
 
-This method dims all of the graphics in the graphics array
+This method overlays a black rectangle over the window to create a "dim" effect
 */
-void SpecialEffect::screenDim(Graphic* graphics[], int arraySize)
+void SpecialEffect::screenDim(sf::RenderWindow* window)
 {
-	//Go through the list and dim all of the graphics in the array
-	for (int i = 0; i < arraySize; i++)
-		graphics[i]->setColor(255, 255, 255, 150);
-}
+	//Create a rectangle to lay over the window
+	sf::RectangleShape dim;
+	dim.setSize(sf::Vector2f(window->getSize().x, window->getSize().y));
+	dim.setPosition(window->getView().getCenter().x - (window->getSize().x * 0.5), window->getView().getCenter().y -  (window->getSize().y * 0.5));
+	dim.setFillColor(sf::Color(0, 0, 0, 150));
 
-/*
-resetScreenDim
-Parameters:
-	graphics[]: An array containing all of the graphics
-	arraySize: Size of the graphics array
-
-This method resets all graphics back to their original transparency.
-*/
-void SpecialEffect::resetScreenDim(Graphic* graphics[], int arraySize)
-{
-	//Go through the list and dim all of the graphics in the array
-	for (int i = 0; i < arraySize; i++)
-		graphics[i]->setColor(255, 255, 255, 255);
+	window->draw(dim);
 }
