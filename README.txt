@@ -1,6 +1,6 @@
 --------------------------------------------
 * Authors:	Joshua Gray, Randy Brunecz *
-* Last Updated:	9/6/2015		   *					   
+* Last Updated:	9/16/2015		   *					   
 --------------------------------------------
 
 
@@ -22,6 +22,10 @@ DEBUG CONTROLS
 1  : Perform a fade in transition
 2  : Perform a fade out transition
 
+PERFORMANCE
+--------------------------------------------
+V-Sync has been enabled for the game. If you notice your CPU usage is 20%+, and you use an Nvidia card, go into the Nvidia control panel and turn off
+"Threaded Optimization".
 
 GETTING THE CODE TO COMPILE AND RUN
 --------------------------------------------

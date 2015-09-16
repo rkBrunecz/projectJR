@@ -1,9 +1,9 @@
 /*
 Authors: Randy Brunecz, Joshua Gray
-Camera
+Collision
 9/11/2015
 
-This class inherits functions from the sf::View class and implements a few extra features.
+The collision class provides methods for detecting collision
 */
 
 #ifndef Collision_H
