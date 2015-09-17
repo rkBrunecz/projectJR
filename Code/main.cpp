@@ -62,14 +62,15 @@ void runGame(sf::RenderWindow& window, Camera& camera, Map* map, Player* player)
 		//Update positions
 		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
 			graphics[i]->updatePosition(&window, &camera);
-		
+
 		window.setView(camera); //Update the windows view
 
 		//Draw all graphics
 		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
 			graphics[i]->draw(&window);
 
-		if (map->transitioning())
+		//Check to see if a map transition is needed
+		if (map->transitioning(player))
 			state = Transition;
 
 		break;

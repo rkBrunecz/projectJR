@@ -314,8 +314,6 @@ void Map::moveToMap(Player* player, Camera* camera)
 
 	player->setPlayerPosition(startPosition); 
 	camera->updatePosition(startPosition);
-
-	transition = false; //Set the transition variable back to false to indicate the transition has been complete.
 }
 
 /*
@@ -328,13 +326,6 @@ if collision has been detected. False otherwise.
 */
 bool Map::collisionDetected(sf::FloatRect rect)
 {
-	//This checks to see if the tile being moved to is a transition tile
-	if (map[(int)rect.top / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].transitionTile)
-	{
-		transition = true; //Say that a map transition needs to occur.
-		return false; //No collision has been detected
-	}
-
 	//If the entity is at the maps edge along the x-axis, return true
 	if ((rect.left - rect.width) < 0 || rect.left + rect.width > numColumns * TILE_SIZE)
 		return true;
@@ -344,13 +335,13 @@ bool Map::collisionDetected(sf::FloatRect rect)
 		return true;
 
 	//Check to see if one of the four sides of some entity has collided with a collidable tile
-	if (map[(int)rect.top / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].collidable)
+	if (map[(int)rect.top / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].collidable) //Top left collision
 		return true;
-	else if (map[(int)rect.top / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable)
+	else if (map[(int)rect.top / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable) //Top right collision
 		return true;
-	else if (map[(int)(rect.top + rect.height) / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].collidable)
+	else if (map[(int)(rect.top + rect.height) / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].collidable) //Bottom left collision
 		return true;
-	else if (map[(int)(rect.top + rect.height) / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable)
+	else if (map[(int)(rect.top + rect.height) / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable) //Bottom right collision
 		return true;
 
 	//No collision has been detected
@@ -362,9 +353,13 @@ transitioning
 
 This method is used to determine if the game state should switch to the transitioning state or not.
 */
-bool Map::transitioning()
+bool Map::transitioning(Player* player)
 {
-	return transition;
+	//This checks to see if the tile being moved to is a transition tile
+	if (map[(int)player->getPlayerCoordinates().y / TILE_SIZE][(int)player->getPlayerCoordinates().x / TILE_SIZE].transitionTile)
+		return true; //No collision has been detected
+
+	return false;
 }
 
 /*
