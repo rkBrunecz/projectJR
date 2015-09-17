@@ -29,7 +29,7 @@ public:
 
 private:
 	//PRIVATE CONSTANTS
-	float VELOCITY = 10;
+	float VELOCITY = 3;
 
 	//PRIVATE VARIABLES
 	Animation::WalkingDirection currentDirection = Animation::Down;
