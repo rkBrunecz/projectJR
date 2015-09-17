@@ -26,7 +26,7 @@ public:
 	void moveToMap(Player* player, Camera* camera);
 	
 	static bool tileCollision();
-	bool transitioning();
+	bool transitioning(Player* player);
 
 private:
 	//PRIAVTE FUNCTIONS
@@ -55,8 +55,6 @@ private:
 	sf::RenderTexture mapTexture;
 	
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
-
-	bool transition = false;
 };
 
 #endif
