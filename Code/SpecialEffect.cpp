@@ -13,12 +13,12 @@ The special effects object contains many methods for creating special effects su
 fadeOut
 Parameters:
 	window: The game window
-	graphics[]: The array that holds all of the graphics
-	arraySize: Size of the graphics array
+	map: This object contains the core draw method needed to render the game properly
+	player: Used in the map draw call and to set it's transparency.
 
 This method performs a fade out effect.
 */
-void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int arraySize)
+void SpecialEffect::fadeOut(sf::RenderWindow* window, Map* map, Player* player)
 {
 	//LOCAL VARIABLES
 	sf::Clock clock;
@@ -28,8 +28,8 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int a
 	while (clock.getElapsedTime() <= sf::seconds(0.3f))
 	{
 		//Set the transparency
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(255, 255, 255, alpha);
+		map->setColor(255, 255, 255, alpha);
+		player->setColor(255, 255, 255, alpha);
 
 		if (alpha != 0)
 			alpha -= 15;
@@ -38,8 +38,7 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int a
 		window->clear();
 
 		//Draw all of the graphics
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->draw(window);
+		map->draw(window, player);
 
 		//Display everything in the window
 		window->display();
@@ -49,8 +48,8 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int a
 	if (alpha != 0)
 	{
 		//Set the transparency
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(255, 255, 255, 0);
+		map->setColor(255, 255, 255, 0);
+		player->setColor(255, 255, 255, 0);
 	}
 }
 
@@ -58,12 +57,12 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int a
 fadeIn
 Parameters:
 	window: The game window
-	graphics[]: The array that holds all of the graphics
-	arraySize: Size of the graphics array
+	map: This object contains the core draw method needed to render the game properly
+	player: Used in the map draw call and to set it's transparency.
 
 This method performs a fade in effect.
 */
-void SpecialEffect::fadeIn(sf::RenderWindow* window, Graphic* graphics[], int arraySize)
+void SpecialEffect::fadeIn(sf::RenderWindow* window, Map* map, Player* player)
 {
 	//LOCAL VARIABLES
 	sf::Clock clock;
@@ -73,8 +72,8 @@ void SpecialEffect::fadeIn(sf::RenderWindow* window, Graphic* graphics[], int ar
 	while (clock.getElapsedTime() <= sf::seconds(0.3f))
 	{
 		//Set the transparency
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(255, 255, 255, alpha);
+		map->setColor(255, 255, 255, alpha);
+		player->setColor(255, 255, 255, alpha);
 
 		if (alpha != 255)
 			alpha += 15;
@@ -83,8 +82,7 @@ void SpecialEffect::fadeIn(sf::RenderWindow* window, Graphic* graphics[], int ar
 		window->clear();
 
 		//Draw all of the graphics
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->draw(window);
+		map->draw(window, player);
 
 		//Display everything in the window
 		window->display();
@@ -94,8 +92,8 @@ void SpecialEffect::fadeIn(sf::RenderWindow* window, Graphic* graphics[], int ar
 	if (alpha != 255)
 	{
 		//Set the transparency
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(255, 255, 255, 255);
+		map->setColor(255, 255, 255, 255);
+		player->setColor(255, 255, 255, 255);
 	}
 }
 

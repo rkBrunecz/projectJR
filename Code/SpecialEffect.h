@@ -10,14 +10,15 @@ The special effects object contains many methods for creating special effects su
 #define SpecialEffect_H
 
 #include <SFML\Graphics.hpp>
-#include "Graphic.h"
+#include "Player.h"
+#include "Map.h"
 
 class SpecialEffect
 {
 public:
 	//PUBLIC FUNCTIONS
-	static void fadeOut(sf::RenderWindow* window, Graphic* graphics[], int arraySize);
-	static void fadeIn(sf::RenderWindow* window, Graphic* graphics[], int arraySize);
+	static void fadeOut(sf::RenderWindow* window, Map* map, Player* player);
+	static void fadeIn(sf::RenderWindow* window, Map* map, Player* player);
 	static void screenDim(sf::RenderWindow* window);
 };
 
