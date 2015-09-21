@@ -477,12 +477,12 @@ bool Map::checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer)
 {
 	//Create a bounding box for the current tile.
 	sf::IntRect boundingBox = sf::IntRect((rect->left / TILE_SIZE) * TILE_SIZE + ((TILE_SIZE - layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].width) / 2),
-		(rect->top / TILE_SIZE) * TILE_SIZE + ((TILE_SIZE - layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].height) / 2),
+		(rect->top / TILE_SIZE) * TILE_SIZE,
 		layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].width, 
 		layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].height);
 
 	//Check to see if the entity is inside of a objects colliding point
-	if (boundingBox.contains(rect->left, rect->top + 8))
+	if (boundingBox.contains(rect->left, rect->top))
 		return true;
 
 	//No collision has been detected
