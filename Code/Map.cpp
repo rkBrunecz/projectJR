@@ -79,16 +79,26 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 	numRows = atoi(mapRows.c_str());
 	numColumns = atoi(mapColumns.c_str());
 
-	//Recreate the mapTexture ONLY when needed
+	//Recreate the mapTexture, canopyTexture and groundTexture ONLY when needed
 	if (mapTexture.getSize().x < numRows * TILE_SIZE && mapTexture.getSize().y < numColumns * TILE_SIZE)
+	{
 		mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		canopyTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		groundTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+	}
 
 	camera->setBounds(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 
-	//Dynamically Create an array to hold the map
+	//Dynamically Create the arrays to hold the map
 	map = new Tile*[numRows];
+	canopy = new Tile*[numRows];
+	ground = new Tile*[numRows];
 	for (int i = 0; i < numRows; i++)
+	{
 		map[i] = new Tile[numColumns];
+		canopy[i] = new Tile[numColumns];
+		ground[i] = new Tile[numColumns];
+	}
 
 	initializeTransitionPoints(mapFile); //Intialize all transition points in the map
 
@@ -163,26 +173,54 @@ void Map::populateMap(std::ifstream& mapFile)
 {
 	//LOCAL VARIABLES
 	std::string input; //Used to get input from the getline method from the file
-	int j = 0; //Iterator for the row when populating the array.
 	int x = 0;
 
 	//While the end of file marker has not been reached, continue to read the file
-	while (std::getline(mapFile, input))
+	for (int j = 0; j < numRows; j++)
 	{
+		std::getline(mapFile, input, '_');
+
 		//This loop instantiates all of the Tiles in the tile 2d array
 		for (int i = 0; i < numColumns; i++)
 		{
-			map[j][i].row = (unsigned int)input[x] - '0';
-			map[j][i].column = (unsigned int)input[x + 1] - '0';
-			map[j][i].transformation = (unsigned int)input[x + 2] - '0';
-			map[j][i].collidable = (unsigned int)input[x + 3] - '0'; //0 = false, 1 = true
-			map[j][i].transitionTile = (unsigned int)input[x + 4] - '0'; //0 = false, 1 = true
+			map[j][i].row = (unsigned int)input[0] - '0';
+			map[j][i].column = (unsigned int)input[1] - '0';
+			map[j][i].transformation = (unsigned int)input[2] - '0';
+			map[j][i].collidable = (unsigned int)input[3] - '0'; //0 = false, 1 = true
+			map[j][i].transitionTile = (unsigned int)input[4] - '0'; //0 = false, 1 = true
 
-			x += 6; //x determines where in the string read in the file to pull a character from. We add 4 to skip over the white spaces in the file
+			//Check to see if a canopy tile exists
+			if (input.size() > 5)
+			{
+				if (input[x + 9] - '0' == 1)
+				{
+					ground[j][i].row = input[6] - '0';
+					ground[j][i].column = input[7] - '0';
+					ground[j][i].transformation = input[8] - '0';
+					ground[j][i].collidable = input[9] - '0'; //0 = false, 1 = true				
+					ground[j][i].transitionTile = input[10] - '0'; //0 = false, 1 = true
+					ground[j][i].hasTile = true; //Set this to true if a tile exists in this space
+					
+					std::string s = input.substr(12, 13), ss = input.substr(15, 16);
+					ground[j][i].width = atoi(s.c_str());
+					ground[j][i].height = atoi(ss.c_str());
+				}
+				else
+				{
+					canopy[j][i].row = input[6] - '0';
+					canopy[j][i].column = input[7] - '0';
+					canopy[j][i].transformation = input[8] - '0';
+					canopy[j][i].collidable = input[9] - '0'; //0 = false, 1 = true				
+					canopy[j][i].transitionTile = input[10] - '0'; //0 = false, 1 = true
+					canopy[j][i].hasTile = true; //Set this to true if a tile exists in this space
+				}	
+			}
+
+			if (i < (numColumns - 1))
+				std::getline(mapFile, input, '_');
 		}
 
-		x = 0; //Reset x to 0
-		j++; //Increment to the next row
+		std::getline(mapFile, input);
 	}
 }
 
@@ -193,10 +231,16 @@ This method simply releases the memory used to store the previous map.
 */
 void Map::emptyMap()
 {
-	//Free memory that was allocated for the map array
+	//Free memory that was allocated for the map arrays
 	for (int i = 0; i < numRows; i++)
+	{
 		delete[] map[i];
+		delete[] canopy[i];
+		delete[] ground[i];
+	}
 	delete[] map;
+	delete[] canopy;
+	delete[] ground;
 }
 
 /*
@@ -207,77 +251,154 @@ This method draws the map statically to a texture.
 void Map::drawMap()
 {
 	mapTexture.clear();
+	canopyTexture.clear(sf::Color(0,0,0,0)); //Give the canopy a transparent background
+	groundTexture.clear(sf::Color(0, 0, 0, 0));
 
 	//Step through each row in the maps array.
 	for (int i = 0; i <= numRows - 1; i++)
 	{
-		//Step through each columns in the maps row
+		//Step through each columns in the maps row and add a tile where needed
 		for (int j = 0; j <= numColumns - 1; j++)
 		{
-			//Set the part of the tile map to draw to the window
-			tiles.setTextureRect(sf::IntRect(map[i][j].column * TILE_SIZE,
-				map[i][j].row * TILE_SIZE,
-				TILE_SIZE,
-				TILE_SIZE));
-			
-			if (map[i][j].transformation == 0)
-			{
-				tiles.setPosition(j * TILE_SIZE, i * TILE_SIZE); //Set the position of the tile to be drawn 
-				
-				mapTexture.draw(tiles); //Draw the tile
-			}
-			else if (map[i][j].transformation >= 1 && map[i][j].transformation <= 3) //Rotate the tile if the transformation value is between 1 and 3, inclusive
-			{
-				//Create a temporary texture to hold the tile
-				sf::Texture temp;
-				temp.loadFromImage(tiles.getTexture()->copyToImage(), tiles.getTextureRect());
-				
-				//Create a temporary sprite to display the rotation of sprites
-				sf::Sprite tmp(temp);
-				
-				//The tiles are 32x32, so the origin is 16, 16
-				tmp.setOrigin(16, 16);
-				tmp.rotate(map[i][j].transformation * 90);
+			drawToTexture(mapTexture, map, i, j);
 
-				tmp.setPosition(j * TILE_SIZE + 16, i * TILE_SIZE + 16); //Set the position of the tile to be drawn 
-
-				mapTexture.draw(tmp); //Draw the tile
-			}
-			else if (map[i][j].transformation == 4) //Mirro tile
-			{
-				//Create a temporary texture to hold the tile
-				sf::Texture temp;
-				temp.loadFromImage(tiles.getTexture()->copyToImage(), tiles.getTextureRect());
-
-				//Create a temporary sprite to display the rotation of sprites
-				sf::Sprite tmp(temp);
-
-				//The tiles are 32x32, so the origin is 16, 16
-				tmp.setOrigin(16, 16);
-				tmp.scale(-1.f, 1.f); //Mirror the tile
-
-				tmp.setPosition(j * TILE_SIZE + 16, i * TILE_SIZE + 16); //Set the position of the tile to be drawn 
-
-				mapTexture.draw(tmp); //Draw the tile
-			}
-		}			
+			//Do not add tiles to places where there are none.
+			if (canopy[i][j].hasTile)
+				drawToTexture(canopyTexture, canopy, i, j);
+			else if (ground[i][j].hasTile)
+				drawToTexture(groundTexture, ground, i, j);
+		}
 	}
 
-	mapTexture.display(); //Let the map texture know that it is no longer being drawn to
+	//Let the textures know that they are done being drawn to
+	mapTexture.display(); 
+	canopyTexture.display(); 
+	groundTexture.display();
 
-	mapSprite.setTexture(mapTexture.getTexture()); //Set the map texture to a sprite.
+	//Set the render textures to sprites
+	mapSprite.setTexture(mapTexture.getTexture());
+	canopySprite.setTexture(canopyTexture.getTexture());
+	groundSprite.setTexture(groundTexture.getTexture());
+}
+
+/*
+drawToTexture
+Parameters:
+	texture: This is the rendertexture that will be drawn to
+	layer: This is the layer we want to check for a tile
+	row: This is the row on the map we want to draw to
+	column: This is the column we want to draw to
+
+This method allows for a layer to have the proper tiles drawn to it. It checks for a tile,
+then applies the correct transformations to the tile, and then draws the tile.
+*/
+void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int column)
+{
+	//Set the part of the tile map to draw to the window
+	tiles.setTextureRect(sf::IntRect(layer[row][column].column * TILE_SIZE,
+		layer[row][column].row * TILE_SIZE,
+		TILE_SIZE,
+		TILE_SIZE));
+
+	if (layer[row][column].transformation == 0)
+	{
+		tiles.setPosition(column * TILE_SIZE, row * TILE_SIZE); //Set the position of the tile to be drawn 
+
+		texture.draw(tiles); //Draw the tile
+	}
+	else if (layer[row][column].transformation >= 1 && layer[row][column].transformation <= 3) //Rotate the tile if the transformation value is between 1 and 3, inclusive
+	{
+		//Create a temporary texture to hold the tile
+		sf::Texture temp;
+		temp.loadFromImage(tiles.getTexture()->copyToImage(), tiles.getTextureRect());
+
+		//Create a temporary sprite to display the rotation of sprites
+		sf::Sprite tmp(temp);
+
+		//The tiles are 32x32, so the origin is 16, 16
+		tmp.setOrigin(16, 16);
+		tmp.rotate(layer[row][column].transformation * 90);
+
+		tmp.setPosition(column * TILE_SIZE + 16, row * TILE_SIZE + 16); //Set the position of the tile to be drawn (The tile will be offset by 16 when rotated, so move it over and down by 16)
+
+		texture.draw(tmp); //Draw the tile
+	}
+	else if (layer[row][column].transformation == 4) //Mirro tile
+	{
+		//Create a temporary texture to hold the tile
+		sf::Texture temp;
+		temp.loadFromImage(tiles.getTexture()->copyToImage(), tiles.getTextureRect());
+
+		//Create a temporary sprite to display the rotation of sprites
+		sf::Sprite tmp(temp);
+
+		//The tiles are 32x32, so the origin is 16, 16
+		tmp.setOrigin(16, 16);
+		tmp.scale(-1.f, 1.f); //Mirror the tile
+
+		tmp.setPosition(column * TILE_SIZE + 16, row * TILE_SIZE + 16); //Set the position of the tile to be drawn 
+
+		texture.draw(tmp); //Draw the tile
+	}
 }
 
 /*
 draw
 Parameters:
 	window: This is the window that the map will be drawn on
+	player: This is used to get the players position in the game to determine the order of
+		    the drawing calls.
 
 Draws the map to the game window
 */
-void Map::draw(sf::RenderWindow* window)
+void Map::draw(sf::RenderWindow* window, Player* player)
 {
+	//LOCAL VARIABLES
+	std::vector<unsigned short> background;
+	std::vector<unsigned short> foreground;
+
 	window->draw(mapSprite);
+	
+	
+	//Check each row for collision with the player or with npc's
+	for (int i = 0; i < numRows; i++)
+	{
+		//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
+		if (ground[i][player->getPlayerCoordinates().x / TILE_SIZE].hasTile &&
+			ground[i][player->getPlayerCoordinates().x / TILE_SIZE].height + (i * TILE_SIZE) > player->getPlayerCoordinates().y + 16)
+			foreground.push_back(i * TILE_SIZE);
+		else //Otherwise, place the tiles in the background
+			background.push_back(i * TILE_SIZE);
+	}
+
+	//Draw the background
+	for (int i = 0; i < background.size(); i++)
+	{
+		groundSprite.setTextureRect(sf::IntRect(0,
+			background[i],
+			numColumns * TILE_SIZE,
+			TILE_SIZE));
+		groundSprite.setPosition(0, background[i]);
+
+		window->draw(groundSprite);
+	}
+
+	player->draw(window); //Draw the player in between the background and foreground
+	
+	
+	//Draw the foreground
+	for (int i = 0; i < foreground.size(); i++)
+	{
+		groundSprite.setTextureRect(sf::IntRect(0,
+			foreground[i],
+			numColumns * TILE_SIZE,
+			TILE_SIZE));
+		groundSprite.setPosition(0, foreground[i]);
+
+		window->draw(groundSprite);
+	}
+
+	window->draw(canopySprite); //Draw the canopy
 }
 
 /*
@@ -293,6 +414,8 @@ This method sets the color and transparency of a the tiles
 void Map::setColor(int r, int g, int b, int a)
 {
 	mapSprite.setColor(sf::Color(r, g, b, a));
+	groundSprite.setColor(sf::Color(r, g, b, a));
+	canopySprite.setColor(sf::Color(r, g, b, a));
 }
 
 /*
@@ -324,24 +447,42 @@ Parameters:
 This method checks for collision between a tile and some entity that exists within the map. Returns true 
 if collision has been detected. False otherwise.
 */
-bool Map::collisionDetected(sf::FloatRect rect)
+bool Map::collisionDetected(sf::IntRect* rect)
 {
 	//If the entity is at the maps edge along the x-axis, return true
-	if ((rect.left - rect.width) < 0 || rect.left + rect.width > numColumns * TILE_SIZE)
+	if ((rect->left - rect->width) < 0 || rect->left + rect->width > numColumns * TILE_SIZE)
 		return true;
 
 	//If the entity is at the maps edge along the y-axis, return true
-	if (rect.top < 0 || rect.top + rect.height > numRows * TILE_SIZE)
+	if (rect->top < 0 || rect->top + rect->height > numRows * TILE_SIZE)
 		return true;
 
-	//Check to see if one of the four sides of some entity has collided with a collidable tile
-	if (map[(int)rect.top / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].collidable) //Top left collision
-		return true;
-	else if (map[(int)rect.top / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable) //Top right collision
-		return true;
-	else if (map[(int)(rect.top + rect.height) / TILE_SIZE][(int)(rect.left - rect.width) / TILE_SIZE].collidable) //Bottom left collision
-		return true;
-	else if (map[(int)(rect.top + rect.height) / TILE_SIZE][(int)(rect.left + rect.width) / TILE_SIZE].collidable) //Bottom right collision
+	if (map[rect->top / TILE_SIZE][rect->left / TILE_SIZE].collidable)
+		return checkCollisionOnLayer(rect, map);
+	else if (ground[rect->top / TILE_SIZE][rect->left / TILE_SIZE].collidable)
+		return checkCollisionOnLayer(rect, ground);
+	else
+		return false;
+}
+
+/*
+checkCollisionOnLayer
+Parameters:
+	rect: This is an entity's bounding box
+	layer: This is the layer we are checking collision against
+
+This method is designed to provide more precise collision.
+*/
+bool Map::checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer)
+{
+	//Create a bounding box for the current tile.
+	sf::IntRect boundingBox = sf::IntRect((rect->left / TILE_SIZE) * TILE_SIZE + ((TILE_SIZE - layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].width) / 2),
+		(rect->top / TILE_SIZE) * TILE_SIZE + ((TILE_SIZE - layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].height) / 2),
+		layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].width, 
+		layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].height);
+
+	//Check to see if the entity is inside of a objects colliding point
+	if (boundingBox.contains(rect->left, rect->top + 8))
 		return true;
 
 	//No collision has been detected
@@ -370,8 +511,14 @@ This destructor frees up the memory that was dynamically allocated for the
 */
 Map::~Map()
 {
-	//Free memory that was allocated for the map array
+	//Free memory that was allocated for the map arrays
 	for (int i = 0; i < numRows; i++)
+	{
 		delete[] map[i];
+		delete[] canopy[i];
+		delete[] ground[i];
+	}
 	delete[] map;
+	delete[] canopy;
+	delete[] ground;
 }
