@@ -103,12 +103,11 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
 
 	//May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
-	if (positionUpdated && Collision::collisionDetected(sf::FloatRect(x + offSetX, y + offSetY, 8, 16)))
+	if (positionUpdated && Collision::collisionDetected(&sf::IntRect(x + offSetX, y + offSetY, 16, 16)))
 	{
 		Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
 		return;
 	}
-
 
 	//Update positions
 	x += offSetX;
