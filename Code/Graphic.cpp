@@ -52,7 +52,7 @@ void Graphic::setColor(int r, int g, int b, int a)
 	return;
 }
 
-bool Graphic::collisionDetected(sf::FloatRect tmp)
+bool Graphic::collisionDetected(sf::IntRect* tmp)
 {
 	return false;
 }
