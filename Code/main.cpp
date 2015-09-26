@@ -78,7 +78,7 @@ void runGame(sf::RenderWindow& window, Camera& camera, Map& map, Player& player)
 	case Pause:
 	{
 		//Draw all graphics
-		map.draw(&window, &player);
+		map.drawNoAni(&window, &player);
 
 		SpecialEffect::screenDim(&window);
 
