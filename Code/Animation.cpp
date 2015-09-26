@@ -35,7 +35,7 @@ void Animation::updateAnimation(bool positionUpdated, WalkingDirection currentDi
 
 			animationClock->restart(); //Restart the character animation clock
 		}
-		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f
+		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f and the direction the character is facing has changed
 		else if (sprite->getTextureRect().top != 0)
 			sprite->setTextureRect(sf::IntRect(0, 0, 32, 32));
 
@@ -54,7 +54,7 @@ void Animation::updateAnimation(bool positionUpdated, WalkingDirection currentDi
 
 			animationClock->restart(); //Restart the character animation clock
 		}
-		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f
+		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f and the direction the character is facing has changed
 		else if (sprite->getTextureRect().top != 32)
 			sprite->setTextureRect(sf::IntRect(0, 32, 32, 32));
 
@@ -73,7 +73,7 @@ void Animation::updateAnimation(bool positionUpdated, WalkingDirection currentDi
 
 			animationClock->restart(); //Restart the character animation clock
 		}
-		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f
+		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f and the direction the character is facing has changed
 		else if (sprite->getTextureRect().top != 64)
 			sprite->setTextureRect(sf::IntRect(0, 64, 32, 32));
 
@@ -92,9 +92,40 @@ void Animation::updateAnimation(bool positionUpdated, WalkingDirection currentDi
 
 			animationClock->restart(); //Restart the character animation clock
 		}
-		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f
+		//This insures that the character animation is updated in a timely matter in the event the elapsed time is less that 0.2f and the direction the character is facing has changed
 		else if (sprite->getTextureRect().top != 96)
 			sprite->setTextureRect(sf::IntRect(0, 96, 32, 32));
+
+		break;
+	}
+}
+
+void Animation::updateWaterAnimation(WaterDirection* direction, sf::Clock* waterAnimation, sf::Sprite* water, sf::RenderTexture* frames, unsigned short* currentFrame, unsigned short numFrames)
+{
+	if (waterAnimation->getElapsedTime() < sf::seconds(0.3f))
+		return;
+	
+	waterAnimation->restart();
+
+	switch (*direction)
+	{
+	case ShiftLeft:
+		*currentFrame = *currentFrame - 1;
+
+		water->setTexture(frames[*currentFrame].getTexture());
+
+		if (*currentFrame == 0)
+			*direction = ShiftRight;
+
+		break;
+
+	case ShiftRight:
+		*currentFrame = *currentFrame + 1;
+
+		water->setTexture(frames[*currentFrame].getTexture());
+
+		if (*currentFrame == numFrames - 1)
+			*direction = ShiftLeft;
 
 		break;
 	}
