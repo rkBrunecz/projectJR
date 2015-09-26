@@ -21,6 +21,7 @@ public:
 	~Map();
 	
 	void draw(sf::RenderWindow* window, Player* player);
+	void drawNoAni(sf::RenderWindow* window, Player* player);
 	void setColor(int r, int g, int b, int a);
 	void loadMap(std::string mapName, Camera* camera);
 	void moveToMap(Player* player, Camera* camera);
@@ -33,7 +34,8 @@ private:
 	struct Tile //Contains information about a tile such as the row and column it is found in the tileSheet, and special transformation information.
 	{
 		unsigned short row, column, transformation, height = 32, width = 32;
-		bool collidable = false, transitionTile, hasTile = false;
+		bool collidable = false, hasTile = false;
+		char tileType; //Indicates what kind of tile it is, such as water, grass, rock, object, etc.
 		std::string mapName = "";
 		sf::Vector2i transitionCoords;
 	};
@@ -49,16 +51,24 @@ private:
 	bool collisionDetected(sf::IntRect* rect);
 	bool checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer);
 
+	unsigned short addTileToMap(Tile** layer, std::string tile, unsigned int pos, unsigned short row, unsigned short column);
+
 	//PRIVATE CONSTANTS
-	int TILE_SIZE = 32; //This is the width and height of each of the tiles
+	const unsigned short TILE_SIZE = 32; //This is the width and height of each of the tiles
+	const unsigned short NUM_WATER_FRAMES = 4;
 
 	Tile** map; //This 2d array contains the all of the tile information needed for the map
 	Tile** ground; //This 2d contains objects like trees, rocks, etc.
 	Tile** canopy; //This 2d contains objects like trees, rocks, etc.
-	sf::Sprite tiles, mapSprite, canopySprite, groundSprite;
+	Tile** mask; //This layer contains masks that are layered on top of other tiles to give depth
+	sf::Sprite tiles, mapSprite, canopySprite, groundSprite, maskSprite, waterSprite;
 	sf::Texture tileSheet;
-	sf::RenderTexture mapTexture, canopyTexture, groundTexture;
-	
+	sf::RenderTexture mapTexture, canopyTexture, groundTexture, maskTexture;
+	sf::RenderTexture waterFrames[4];
+	sf::Clock waterAnimation;
+	Animation::WaterDirection waterShift = Animation::ShiftRight;
+
+	unsigned short currentWaterFrame = 0;
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
 };
 

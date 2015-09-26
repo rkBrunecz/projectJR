@@ -85,6 +85,9 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 		mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		canopyTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		groundTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		maskTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);		
+		for (int i = 0; i < NUM_WATER_FRAMES; i++)
+			waterFrames[i].create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 	}
 
 	camera->setBounds(numColumns * TILE_SIZE, numRows * TILE_SIZE);
@@ -93,11 +96,13 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 	map = new Tile*[numRows];
 	canopy = new Tile*[numRows];
 	ground = new Tile*[numRows];
+	mask = new Tile*[numRows];
 	for (int i = 0; i < numRows; i++)
 	{
 		map[i] = new Tile[numColumns];
 		canopy[i] = new Tile[numColumns];
 		ground[i] = new Tile[numColumns];
+		mask[i] = new Tile[numColumns];
 	}
 
 	initializeTransitionPoints(mapFile); //Intialize all transition points in the map
@@ -173,7 +178,7 @@ void Map::populateMap(std::ifstream& mapFile)
 {
 	//LOCAL VARIABLES
 	std::string input; //Used to get input from the getline method from the file
-	int x = 0;
+	unsigned short pos = 0;
 
 	//While the end of file marker has not been reached, continue to read the file
 	for (int j = 0; j < numRows; j++)
@@ -183,37 +188,17 @@ void Map::populateMap(std::ifstream& mapFile)
 		//This loop instantiates all of the Tiles in the tile 2d array
 		for (int i = 0; i < numColumns; i++)
 		{
-			map[j][i].row = (unsigned int)input[0] - '0';
-			map[j][i].column = (unsigned int)input[1] - '0';
-			map[j][i].transformation = (unsigned int)input[2] - '0';
-			map[j][i].collidable = (unsigned int)input[3] - '0'; //0 = false, 1 = true
-			map[j][i].transitionTile = (unsigned int)input[4] - '0'; //0 = false, 1 = true
+			pos = addTileToMap(map, input, 2, j, i);
 
 			//Check to see if a canopy tile exists
-			if (input.size() > 5)
-			{
-				if (input[x + 9] - '0' == 1)
-				{
-					ground[j][i].row = input[6] - '0';
-					ground[j][i].column = input[7] - '0';
-					ground[j][i].transformation = input[8] - '0';
-					ground[j][i].collidable = input[9] - '0'; //0 = false, 1 = true				
-					ground[j][i].transitionTile = input[10] - '0'; //0 = false, 1 = true
-					ground[j][i].hasTile = true; //Set this to true if a tile exists in this space
-					
-					std::string s = input.substr(12, 13), ss = input.substr(15, 16);
-					ground[j][i].width = atoi(s.c_str());
-					ground[j][i].height = atoi(ss.c_str());
-				}
-				else
-				{
-					canopy[j][i].row = input[6] - '0';
-					canopy[j][i].column = input[7] - '0';
-					canopy[j][i].transformation = input[8] - '0';
-					canopy[j][i].collidable = input[9] - '0'; //0 = false, 1 = true				
-					canopy[j][i].transitionTile = input[10] - '0'; //0 = false, 1 = true
-					canopy[j][i].hasTile = true; //Set this to true if a tile exists in this space
-				}	
+			while (pos < input.size())
+			{				
+				if (input[pos] == '1')
+					pos = addTileToMap(mask, input, pos + 2, j, i);
+				else if (input[pos] == '2')
+					pos = addTileToMap(ground, input, pos + 2, j, i);
+				else if (input[pos] == '3')
+					pos = addTileToMap(canopy, input, pos + 2, j, i);
 			}
 
 			if (i < (numColumns - 1))
@@ -222,6 +207,39 @@ void Map::populateMap(std::ifstream& mapFile)
 
 		std::getline(mapFile, input);
 	}
+}
+
+/*
+addTileToMap
+Parameters:
+	layer: This is the layer that a tile will be added to
+	input: This is the input string that contains all the info about a tile
+	pos: This is the current position in the string
+	row: This is the current row in the layer to add the tile
+	column: This is the current column in the layer to add a tile to
+
+This method adds tiles to a specific layer in the map.
+*/
+unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int pos, unsigned short row, unsigned short column)
+{
+	layer[row][column].row = input[pos] - '0';
+	layer[row][column].column = input[pos + 1] - '0';
+	layer[row][column].transformation = input[pos + 2] - '0';
+	layer[row][column].collidable = input[pos + 3] - '0'; //0 = false, 1 = true
+	layer[row][column].tileType = input[pos + 4];
+	layer[row][column].hasTile = true;
+
+	//If collidable, add a bounding box
+	if (layer[row][column].collidable && input[pos + 5] == ':')
+	{
+		std::string s = input.substr(pos + 6, pos + 7), ss = input.substr(pos + 9, pos + 10);
+		layer[row][column].width = atoi(s.c_str());
+		layer[row][column].height = atoi(ss.c_str());
+
+		return pos + 12;
+	}
+	else
+		return pos + 6;
 }
 
 /*
@@ -237,10 +255,12 @@ void Map::emptyMap()
 		delete[] map[i];
 		delete[] canopy[i];
 		delete[] ground[i];
+		delete[] mask[i];
 	}
 	delete[] map;
 	delete[] canopy;
 	delete[] ground;
+	delete[] mask;
 }
 
 /*
@@ -250,9 +270,13 @@ This method draws the map statically to a texture.
 */
 void Map::drawMap()
 {
-	mapTexture.clear();
-	canopyTexture.clear(sf::Color(0,0,0,0)); //Give the canopy a transparent background
-	groundTexture.clear(sf::Color(0, 0, 0, 0));
+	//Give the textures transparent backgrounds
+	mapTexture.clear(sf::Color(0,0,0,0));
+	canopyTexture.clear(sf::Color(0,0,0,0)); 
+	groundTexture.clear(sf::Color(0,0,0,0));
+	maskTexture.clear(sf::Color(0,0,0,0));
+	for (int i = 0; i < NUM_WATER_FRAMES; i++)
+		waterFrames[i].clear(sf::Color(0,0,0,0));
 
 	//Step through each row in the maps array.
 	for (int i = 0; i <= numRows - 1; i++)
@@ -260,13 +284,33 @@ void Map::drawMap()
 		//Step through each columns in the maps row and add a tile where needed
 		for (int j = 0; j <= numColumns - 1; j++)
 		{
-			drawToTexture(mapTexture, map, i, j);
+			//If the current tile is not a water tile, add it to the base map layer
+			if (map[i][j].tileType != 'W')
+				drawToTexture(mapTexture, map, i, j);
+			else //Draw it to the water layer
+			{
+				drawToTexture(waterFrames[0], map, i, j);
+
+				for (int y = 1; y < NUM_WATER_FRAMES; y++)
+				{
+					//Set the part of the tile map to draw to the window
+					tiles.setTextureRect(sf::IntRect((map[i][j].column + y) * TILE_SIZE,
+						map[i][j].row * TILE_SIZE,
+						TILE_SIZE,
+						TILE_SIZE));
+
+					tiles.setPosition(j * TILE_SIZE, i * TILE_SIZE);
+					waterFrames[y].draw(tiles);
+				}
+			}
 
 			//Do not add tiles to places where there are none.
 			if (canopy[i][j].hasTile)
 				drawToTexture(canopyTexture, canopy, i, j);
-			else if (ground[i][j].hasTile)
+			if (ground[i][j].hasTile)
 				drawToTexture(groundTexture, ground, i, j);
+			if (mask[i][j].hasTile)
+				drawToTexture(maskTexture, mask, i, j);
 		}
 	}
 
@@ -274,11 +318,16 @@ void Map::drawMap()
 	mapTexture.display(); 
 	canopyTexture.display(); 
 	groundTexture.display();
+	maskTexture.display();
+	for (int i = 0; i < NUM_WATER_FRAMES; i++)
+		waterFrames[i].display();
 
 	//Set the render textures to sprites
 	mapSprite.setTexture(mapTexture.getTexture());
 	canopySprite.setTexture(canopyTexture.getTexture());
 	groundSprite.setTexture(groundTexture.getTexture());
+	maskSprite.setTexture(maskTexture.getTexture());
+	waterSprite.setTexture(waterFrames[0].getTexture());
 }
 
 /*
@@ -357,8 +406,11 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 	std::vector<unsigned short> background;
 	std::vector<unsigned short> foreground;
 
+	Animation::updateWaterAnimation(&waterShift, &waterAnimation, &waterSprite, waterFrames, &currentWaterFrame, NUM_WATER_FRAMES);
+
+	window->draw(waterSprite);
 	window->draw(mapSprite);
-	
+	window->draw(maskSprite);
 	
 	//Check each row for collision with the player or with npc's
 	for (int i = 0; i < numRows; i++)
@@ -385,7 +437,66 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 
 	player->draw(window); //Draw the player in between the background and foreground
 	
-	
+	//Draw the foreground
+	for (int i = 0; i < foreground.size(); i++)
+	{
+		groundSprite.setTextureRect(sf::IntRect(0,
+			foreground[i],
+			numColumns * TILE_SIZE,
+			TILE_SIZE));
+		groundSprite.setPosition(0, foreground[i]);
+
+		window->draw(groundSprite);
+	}
+
+	window->draw(canopySprite); //Draw the canopy
+}
+
+
+/*
+drawNoAni
+Parameters:
+window: This is the window that the map will be drawn on
+player: This is used to get the players position in the game to determine the order of
+the drawing calls.
+
+Draws the map to the game window with no animations
+*/
+void Map::drawNoAni(sf::RenderWindow* window, Player* player)
+{
+	//LOCAL VARIABLES
+	std::vector<unsigned short> background;
+	std::vector<unsigned short> foreground;
+
+	window->draw(waterSprite);
+	window->draw(mapSprite);
+	window->draw(maskSprite);
+
+	//Check each row for collision with the player or with npc's
+	for (int i = 0; i < numRows; i++)
+	{
+		//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
+		if (ground[i][player->getPlayerCoordinates().x / TILE_SIZE].hasTile &&
+			ground[i][player->getPlayerCoordinates().x / TILE_SIZE].height + (i * TILE_SIZE) > player->getPlayerCoordinates().y + 16)
+			foreground.push_back(i * TILE_SIZE);
+		else //Otherwise, place the tiles in the background
+			background.push_back(i * TILE_SIZE);
+	}
+
+	//Draw the background
+	for (int i = 0; i < background.size(); i++)
+	{
+		groundSprite.setTextureRect(sf::IntRect(0,
+			background[i],
+			numColumns * TILE_SIZE,
+			TILE_SIZE));
+		groundSprite.setPosition(0, background[i]);
+
+		window->draw(groundSprite);
+	}
+
+	player->draw(window); //Draw the player in between the background and foreground
+
 	//Draw the foreground
 	for (int i = 0; i < foreground.size(); i++)
 	{
@@ -416,6 +527,8 @@ void Map::setColor(int r, int g, int b, int a)
 	mapSprite.setColor(sf::Color(r, g, b, a));
 	groundSprite.setColor(sf::Color(r, g, b, a));
 	canopySprite.setColor(sf::Color(r, g, b, a));
+	maskSprite.setColor(sf::Color(r, g, b, a));
+	waterSprite.setColor(sf::Color(r, g, b, a));
 }
 
 /*
@@ -461,6 +574,8 @@ bool Map::collisionDetected(sf::IntRect* rect)
 		return checkCollisionOnLayer(rect, map);
 	else if (ground[rect->top / TILE_SIZE][rect->left / TILE_SIZE].collidable)
 		return checkCollisionOnLayer(rect, ground);
+	else if (mask[rect->top / TILE_SIZE][rect->left / TILE_SIZE].collidable)
+		return checkCollisionOnLayer(rect, mask);
 	else
 		return false;
 }
@@ -497,7 +612,7 @@ This method is used to determine if the game state should switch to the transiti
 bool Map::transitioning(Player* player)
 {
 	//This checks to see if the tile being moved to is a transition tile
-	if (map[(int)player->getPlayerCoordinates().y / TILE_SIZE][(int)player->getPlayerCoordinates().x / TILE_SIZE].transitionTile)
+	if (map[(int)player->getPlayerCoordinates().y / TILE_SIZE][(int)player->getPlayerCoordinates().x / TILE_SIZE].tileType == 'E')
 		return true; //No collision has been detected
 
 	return false;
@@ -517,8 +632,10 @@ Map::~Map()
 		delete[] map[i];
 		delete[] canopy[i];
 		delete[] ground[i];
+		delete[] mask[i];
 	}
 	delete[] map;
 	delete[] canopy;
 	delete[] ground;
+	delete[] mask;
 }
