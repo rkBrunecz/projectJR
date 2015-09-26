@@ -84,7 +84,7 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 		offSetY = VELOCITY;
 			
 		currentDirection = Animation::Down; //Set the character direction state for animation purposes
-	}
+	}	
 	//Move right
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
