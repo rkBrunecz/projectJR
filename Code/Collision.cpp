@@ -33,7 +33,7 @@ Parameters:
 
 This method checks for collision in the game world. If collision is detected, the method returns false;
 */
-bool Collision::collisionDetected(sf::FloatRect rect)
+bool Collision::collisionDetected(sf::IntRect* rect)
 {
 	//LOCAL VARIABLES
 	bool collision = false;

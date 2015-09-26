@@ -21,9 +21,14 @@ public:
 		Right,
 		Left
 	};
+	const enum WaterDirection{
+		ShiftLeft,
+		ShiftRight
+	};
 
 	//PUBLIC FUNCTIONS
 	static void updateAnimation(bool positionUpdated, WalkingDirection currentDirection, sf::Clock* animationClock, sf::Sprite* sprite);
+	static void updateWaterAnimation(WaterDirection* direction, sf::Clock* waterAnimation, sf::Sprite* water, sf::RenderTexture* frames, unsigned short* currentFrame, unsigned short numFrames);
 };
 
 #endif

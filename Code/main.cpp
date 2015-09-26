@@ -18,7 +18,8 @@ in.
 #include <iostream>
 
 //CONSTANTS
-const int GRAPHICS_ARRAY_SIZE = 2;
+const unsigned short GRAPHICS_ARRAY_SIZE = 2;
+
 const enum Game_States //Dictates the state the game is in
 {
 	Play,
@@ -36,7 +37,7 @@ const enum Window_States //Determines the state the window is in
 };
 
 //GLOBAL VARIABLES
-Graphic* graphics[GRAPHICS_ARRAY_SIZE]; //Contains pointers to all graphic objects in the game
+Graphic* graphics[GRAPHICS_ARRAY_SIZE];
 Game_States state = Play;
 
 /*
@@ -49,7 +50,7 @@ Parameters:
 
 This method is where all game related work is done.
 */
-void runGame(sf::RenderWindow& window, Camera& camera, Map* map, Player* player)
+void runGame(sf::RenderWindow& window, Camera& camera, Map& map, Player& player)
 {
 	//Clear the window
 	window.clear();
@@ -60,17 +61,15 @@ void runGame(sf::RenderWindow& window, Camera& camera, Map* map, Player* player)
 	case Play:
 	{
 		//Update positions
-		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
-			graphics[i]->updatePosition(&window, &camera);
+		player.updatePosition(&window, &camera);
 
 		window.setView(camera); //Update the windows view
 
 		//Draw all graphics
-		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
-			graphics[i]->draw(&window);
+		map.draw(&window, &player);
 
 		//Check to see if a map transition is needed
-		if (map->transitioning(player))
+		if (map.transitioning(&player))
 			state = Transition;
 
 		break;
@@ -78,9 +77,8 @@ void runGame(sf::RenderWindow& window, Camera& camera, Map* map, Player* player)
 	}
 	case Pause:
 	{
-		//Draw the graphics on the screen
-		for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
-			graphics[i]->draw(&window);
+		//Draw all graphics
+		map.drawNoAni(&window, &player);
 
 		SpecialEffect::screenDim(&window);
 
@@ -88,13 +86,13 @@ void runGame(sf::RenderWindow& window, Camera& camera, Map* map, Player* player)
 	}
 	case Transition:
 	{
-		SpecialEffect::fadeOut(&window, graphics, GRAPHICS_ARRAY_SIZE);
+		SpecialEffect::fadeOut(&window, &map, &player);
 
-		map->moveToMap(player, &camera); //Transition to the next map
+		map.moveToMap(&player, &camera); //Transition to the next map
 
 		window.setView(camera); //Update the window view
 
-		SpecialEffect::fadeIn(&window, graphics, GRAPHICS_ARRAY_SIZE);
+		SpecialEffect::fadeIn(&window, &map, &player);
 
 		state = Play; //Continue playing the game
 	}
@@ -128,13 +126,13 @@ int main()
 	//LOCAL VARIABLES
 	Window_States windowState = Fullscreen; //Set window state to fullscreen
 	Camera camera;
-	Map * map = new Map();
+	Map map;
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 
-	Player * player = new Player(&window, &camera);
+	Player player(&window, &camera);
 
 	//Set up camera properties
 	camera.setSize(desktop.width, desktop.height);
@@ -142,9 +140,9 @@ int main()
 
 	window.setVerticalSyncEnabled(true);
 	
-	populateGraphicsArray(player, map); //Populate the graphics array
+	populateGraphicsArray(&player, &map); //Populate the graphics array
 
-	map->loadMap("bin/Maps/TestMap.jrm", &camera); //Load the map
+	map.loadMap("bin/Maps/TestMap.jrm", &camera); //Load the map
 
 	//GAME LOOP
 	while (state != Quit)
@@ -155,9 +153,9 @@ int main()
 			if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
 				state = Quit;
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num1) //DEBUG TEST FADE IN
-				SpecialEffect::fadeIn(&window, graphics, GRAPHICS_ARRAY_SIZE);
+				SpecialEffect::fadeIn(&window, &map, &player);
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num2) //DEBUG TEST FADE OUT
-				SpecialEffect::fadeOut(&window, graphics, GRAPHICS_ARRAY_SIZE);
+				SpecialEffect::fadeOut(&window, &map, &player);
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) //Pause the game if the spacebar is pressed
 			{
 				if (state == Play)
@@ -195,10 +193,6 @@ int main()
 
 		runGame(window, camera, map, player); //Run the game based on the current game state
 	}
-
-	//Free up the memory used by the graphics library
-	for (int i = 0; i < GRAPHICS_ARRAY_SIZE; i++)
-		delete	graphics[i];
 
 	window.close(); //Close the game window
 

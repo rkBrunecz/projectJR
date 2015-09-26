@@ -13,44 +13,43 @@ The special effects object contains many methods for creating special effects su
 fadeOut
 Parameters:
 	window: The game window
-	graphics[]: The array that holds all of the graphics
-	arraySize: Size of the graphics array
+	map: This object contains the core draw method needed to render the game properly
+	player: Used in the map draw call and to set it's transparency.
 
 This method performs a fade out effect.
 */
-void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int arraySize)
+void SpecialEffect::fadeOut(sf::RenderWindow* window, Map* map, Player* player)
 {
 	//LOCAL VARIABLES
 	sf::Clock clock;
-	int alpha = 255;
+	int alpha = 0;
+	sf::RectangleShape fade;
+
+	fade.setSize(sf::Vector2f(window->getSize().x, window->getSize().y));
+	fade.setPosition(window->getView().getCenter().x - (window->getSize().x * 0.5), window->getView().getCenter().y - (window->getSize().y * 0.5));
+	fade.setFillColor(sf::Color(0, 0, 0, alpha));
 
 	//Perform a fade out over a half second
-	while (clock.getElapsedTime() <= sf::seconds(0.3f))
+	while (alpha <= 255)
 	{
 		//Set the transparency
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(255, 255, 255, alpha);
-
-		if (alpha != 0)
-			alpha -= 15;
+		if (clock.getElapsedTime() > sf::seconds(0.01f))
+		{
+			fade.setFillColor(sf::Color(0, 0, 0, alpha));
+			alpha += 15;
+			
+			clock.restart();
+		}
 
 		//Clear window
 		window->clear();
 
 		//Draw all of the graphics
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->draw(window);
+		map->draw(window, player);
+		window->draw(fade);
 
 		//Display everything in the window
 		window->display();
-	}
-
-	//If for some reason the fade did not finish, set the graphics to be fully transparent
-	if (alpha != 0)
-	{
-		//Set the transparency
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(255, 255, 255, 0);
 	}
 }
 
@@ -58,44 +57,43 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Graphic* graphics[], int a
 fadeIn
 Parameters:
 	window: The game window
-	graphics[]: The array that holds all of the graphics
-	arraySize: Size of the graphics array
+	map: This object contains the core draw method needed to render the game properly
+	player: Used in the map draw call and to set it's transparency.
 
 This method performs a fade in effect.
 */
-void SpecialEffect::fadeIn(sf::RenderWindow* window, Graphic* graphics[], int arraySize)
+void SpecialEffect::fadeIn(sf::RenderWindow* window, Map* map, Player* player)
 {
 	//LOCAL VARIABLES
 	sf::Clock clock;
-	int alpha = 0;
+	int alpha = 255;
+	sf::RectangleShape fade;
+
+	fade.setSize(sf::Vector2f(window->getSize().x, window->getSize().y));
+	fade.setPosition(window->getView().getCenter().x - (window->getSize().x * 0.5), window->getView().getCenter().y - (window->getSize().y * 0.5));
+	fade.setFillColor(sf::Color(0, 0, 0, alpha));
 
 	//Perform a fade in over a half second
-	while (clock.getElapsedTime() <= sf::seconds(0.3f))
+	while (alpha >= 0)
 	{
 		//Set the transparency
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(255, 255, 255, alpha);
+		if (clock.getElapsedTime() > sf::seconds(0.01f))
+		{
+			fade.setFillColor(sf::Color(0, 0, 0, alpha));
+			alpha -= 15;
 
-		if (alpha != 255)
-			alpha += 15;
+			clock.restart();
+		}
 
 		//Clear window
 		window->clear();
 
 		//Draw all of the graphics
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->draw(window);
+		map->draw(window, player);
+		window->draw(fade);
 
 		//Display everything in the window
 		window->display();
-	}
-
-	//If for some reason the alpha is not 255, set all graphics objects to be have no transparency
-	if (alpha != 255)
-	{
-		//Set the transparency
-		for (int i = 0; i < arraySize; i++)
-			graphics[i]->setColor(255, 255, 255, 255);
 	}
 }
 

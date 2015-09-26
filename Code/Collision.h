@@ -16,7 +16,7 @@ class Collision
 {
 public:
 	static void intializeGraphicObjects(Graphic** graphics, int graphicsSize);
-	static bool collisionDetected(sf::FloatRect rect);
+	static bool collisionDetected(sf::IntRect* rect);
 
 private:
 	static Graphic** elements;
