@@ -25,11 +25,12 @@ public:
 	void setColor(int r, int g, int b, int a);
 	void setPlayerPosition(sf::Vector2i coords);
 
-	sf::Vector2i getPlayerCoordinates();
+	sf::IntRect getPlayerCoordinates();
 
 private:
 	//PRIVATE CONSTANTS
 	float VELOCITY = 3;
+	short WIDTH = 14, HEIGHT = 14;
 
 	//PRIVATE VARIABLES
 	Animation::WalkingDirection currentDirection = Animation::Down;

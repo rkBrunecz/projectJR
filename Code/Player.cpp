@@ -102,8 +102,20 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	else
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
 
+	//Create a bounding box to check for collision
+	sf::IntRect bb (x - (WIDTH * 0.5) + offSetX, y + offSetY, WIDTH, HEIGHT);
+	/*if (offSetX != 0)
+	{
+		if (offSetX > 0)
+			bb = sf::IntRect(x + offSetX, y, WIDTH, HEIGHT);
+		else
+			bb = sf::IntRect(x + offSetX, y, -WIDTH, HEIGHT);
+	}
+	else if (offSetY != 0)
+		bb = sf::IntRect(x, y + offSetY, 0, HEIGHT);*/
+
 	//May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
-	if (positionUpdated && Collision::collisionDetected(&sf::IntRect(x + offSetX, y + offSetY, 16, 16)))
+	if (positionUpdated && Collision::collisionDetected(&bb))
 	{
 		Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
 		return;
@@ -116,7 +128,7 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	//Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
 	character.setPosition(x, y);
 	camera->updatePosition(sf::Vector2i(x, y));
-	
+
 	Animation::updateAnimation(positionUpdated, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
 }
 
@@ -157,9 +169,9 @@ getPlayerCoordinates
 return:
 	This method returns the players current position in the game world
 
-This method simply stores the players position in a vector and returns it to the calling method.
+This method returns the players bounding box so that the calling method has information about the players position and the players height and width.
 */
-sf::Vector2i Player::getPlayerCoordinates()
+sf::IntRect Player::getPlayerCoordinates()
 {
-	return sf::Vector2i(x, y);
+	return sf::IntRect(x - (WIDTH * 0.5), y, WIDTH, HEIGHT);
 }
