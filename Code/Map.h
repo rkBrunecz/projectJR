@@ -29,11 +29,15 @@ public:
 	static bool tileCollision();
 	bool transitioning(Player* player);
 
+	//DEBUG
+	void displayCollsionLayer();
+	void displayGridLayer();
+
 private:
 	//PRIVATE structures
 	struct Tile //Contains information about a tile such as the row and column it is found in the tileSheet, and special transformation information.
 	{
-		unsigned short row, column, transformation, height = 32, width = 32;
+		unsigned short row, column, transformation, height = 32, width = 32, bBX = 0, bBY = 0;
 		bool collidable = false, hasTile = false;
 		char tileType; //Indicates what kind of tile it is, such as water, grass, rock, object, etc.
 		std::string mapName = "";
@@ -49,7 +53,7 @@ private:
 	void emptyMap();
 
 	bool collisionDetected(sf::IntRect* rect);
-	bool checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer);
+	bool checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer, int row, int column);
 
 	unsigned short addTileToMap(Tile** layer, std::string tile, unsigned int pos, unsigned short row, unsigned short column);
 
@@ -58,8 +62,8 @@ private:
 	const unsigned short NUM_WATER_FRAMES = 4;
 
 	Tile** map; //This 2d array contains the all of the tile information needed for the map
-	Tile** ground; //This 2d contains objects like trees, rocks, etc.
-	Tile** canopy; //This 2d contains objects like trees, rocks, etc.
+	Tile** ground; //This 2d contains objects like bases trees, rocks, etc.
+	Tile** canopy; //This 2d contains objects like trees, top of rocks, etc.
 	Tile** mask; //This layer contains masks that are layered on top of other tiles to give depth
 	sf::Sprite tiles, mapSprite, canopySprite, groundSprite, maskSprite, waterSprite;
 	sf::Texture tileSheet;
@@ -70,6 +74,11 @@ private:
 
 	unsigned short currentWaterFrame = 0;
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
+
+	//TOOLS
+	sf::RenderTexture collisionTexture, gridTexture;
+	sf::Sprite collisionSprite, gridSprite;
+	bool renderCollisionLayer = false, renderGridLayer = false;
 };
 
 #endif

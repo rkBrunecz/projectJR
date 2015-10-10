@@ -88,6 +88,10 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 		maskTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);		
 		for (int i = 0; i < NUM_WATER_FRAMES; i++)
 			waterFrames[i].create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+
+		//TOOLS
+		collisionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		gridTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 	}
 
 	camera->setBounds(numColumns * TILE_SIZE, numRows * TILE_SIZE);
@@ -232,11 +236,47 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 	//If collidable, add a bounding box
 	if (layer[row][column].collidable && input[pos + 5] == ':')
 	{
-		std::string s = input.substr(pos + 6, pos + 7), ss = input.substr(pos + 9, pos + 10);
-		layer[row][column].width = atoi(s.c_str());
-		layer[row][column].height = atoi(ss.c_str());
+		short t = layer[row][column].transformation;
+		std::string width = input.substr(pos + 6, pos + 7), height = input.substr(pos + 9, pos + 10), sBBX = input.substr(pos + 12, pos + 13), sBBY = input.substr(pos + 15, pos + 16);
 
-		return pos + 12;
+		//This reverses the tiles height and width if the tile is flipped 90 degrees (1) or 270 degrees (3)
+		if (t == 0 || t == 2)
+		{
+			layer[row][column].width = atoi(width.c_str());
+			layer[row][column].height = atoi(height.c_str());
+		}
+		else
+		{
+			layer[row][column].width = atoi(width.c_str());
+			layer[row][column].height = atoi(height.c_str());
+		}
+
+		//Sets the bounding box correctly if the tile is rotated
+		if (t == 0) //No transformation applied
+		{
+			layer[row][column].bBX = atoi(sBBX.c_str());
+			layer[row][column].bBY = atoi(sBBY.c_str());
+		}
+		else if (t == 2) //Tile rotated 180 degrees
+		{
+			layer[row][column].bBX = atoi(sBBX.c_str());
+			layer[row][column].bBY = layer[row][column].height - atoi(sBBY.c_str());
+
+			if (layer[row][column].height > atoi(sBBY.c_str()))
+				layer[row][column].bBY = 0;
+		}
+		else if (t == 1) //Tile rotated 90 degrees
+		{
+			layer[row][column].bBX = atoi(sBBY.c_str());
+			layer[row][column].bBY = atoi(sBBX.c_str());
+		}
+		else if (t == 3) //Tile rotate 270 degrees
+		{
+			layer[row][column].bBX = TILE_SIZE - atoi(sBBY.c_str());
+			layer[row][column].bBY = atoi(sBBX.c_str());
+		}
+
+		return pos + 18;
 	}
 	else
 		return pos + 6;
@@ -278,6 +318,14 @@ void Map::drawMap()
 	for (int i = 0; i < NUM_WATER_FRAMES; i++)
 		waterFrames[i].clear(sf::Color(0,0,0,0));
 
+	//TOOLS
+	collisionTexture.clear(sf::Color(0, 0, 0, 0));
+	gridTexture.clear(sf::Color(0, 0, 0, 0));
+
+	//Used to draw grids lines 
+	sf::RectangleShape r;
+	r.setFillColor(sf::Color(0, 0, 0, 255));
+
 	//Step through each row in the maps array.
 	for (int i = 0; i <= numRows - 1; i++)
 	{
@@ -311,7 +359,20 @@ void Map::drawMap()
 				drawToTexture(groundTexture, ground, i, j);
 			if (mask[i][j].hasTile)
 				drawToTexture(maskTexture, mask, i, j);
+
+			//TOOLS
+			if (i == numRows - 1)
+			{
+				r.setPosition(j * TILE_SIZE, 0);
+				r.setSize(sf::Vector2f(1, TILE_SIZE * numRows));
+				gridTexture.draw(r);
+			}
 		}
+
+		//TOOLS
+		r.setPosition(0, i * TILE_SIZE);
+		r.setSize(sf::Vector2f(TILE_SIZE * numColumns, 1));
+		gridTexture.draw(r);
 	}
 
 	//Let the textures know that they are done being drawn to
@@ -322,12 +383,20 @@ void Map::drawMap()
 	for (int i = 0; i < NUM_WATER_FRAMES; i++)
 		waterFrames[i].display();
 
+	//TOOLS
+	collisionTexture.display();
+	gridTexture.display();
+
 	//Set the render textures to sprites
 	mapSprite.setTexture(mapTexture.getTexture());
 	canopySprite.setTexture(canopyTexture.getTexture());
 	groundSprite.setTexture(groundTexture.getTexture());
 	maskSprite.setTexture(maskTexture.getTexture());
 	waterSprite.setTexture(waterFrames[0].getTexture());
+	
+	//TOOLS
+	collisionSprite.setTexture(collisionTexture.getTexture());
+	gridSprite.setTexture(gridTexture.getTexture());
 }
 
 /*
@@ -389,6 +458,17 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 
 		texture.draw(tmp); //Draw the tile
 	}
+
+	//TOOLS
+	if (layer[row][column].collidable)
+	{
+		sf::RectangleShape r;
+		r.setPosition(column * TILE_SIZE + layer[row][column].bBX, row * TILE_SIZE + layer[row][column].bBY);
+		r.setSize(sf::Vector2f(layer[row][column].width, layer[row][column].height));
+		r.setFillColor(sf::Color(255, 0, 0, 150));
+
+		collisionTexture.draw(r);
+	}
 }
 
 /*
@@ -412,12 +492,20 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 	window->draw(mapSprite);
 	window->draw(maskSprite);
 	
+	unsigned int column = (player->getPlayerCoordinates().left + (player->getPlayerCoordinates().width * 0.5)) / TILE_SIZE;
+
 	//Check each row for collision with the player or with npc's
 	for (int i = 0; i < numRows; i++)
 	{
 		//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
-		if (ground[i][player->getPlayerCoordinates().x / TILE_SIZE].hasTile &&
-			ground[i][player->getPlayerCoordinates().x / TILE_SIZE].height + (i * TILE_SIZE) > player->getPlayerCoordinates().y + 16)
+		if (ground[i][column].hasTile &&
+			(i * TILE_SIZE) + ground[i][column].bBY > player->getPlayerCoordinates().top + 8)
+			foreground.push_back(i * TILE_SIZE);
+		else if(column - 1 >= 0 && ground[i][column - 1].hasTile &&
+			(i * TILE_SIZE) + ground[i][column - 1].bBY > player->getPlayerCoordinates().top + 8)
+			foreground.push_back(i * TILE_SIZE);
+		else if (column + 1 < numRows && ground[i][column + 1].hasTile &&
+			(i * TILE_SIZE) + ground[i][column + 1].bBY > player->getPlayerCoordinates().top + 8)
 			foreground.push_back(i * TILE_SIZE);
 		else //Otherwise, place the tiles in the background
 			background.push_back(i * TILE_SIZE);
@@ -450,6 +538,12 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 	}
 
 	window->draw(canopySprite); //Draw the canopy
+	
+	//TOOLS
+	if (renderCollisionLayer)
+		window->draw(collisionSprite);
+	if (renderGridLayer)
+		window->draw(gridSprite);
 }
 
 
@@ -472,12 +566,14 @@ void Map::drawNoAni(sf::RenderWindow* window, Player* player)
 	window->draw(mapSprite);
 	window->draw(maskSprite);
 
+	unsigned int column = player->getPlayerCoordinates().left / TILE_SIZE;
+
 	//Check each row for collision with the player or with npc's
 	for (int i = 0; i < numRows; i++)
 	{
 		//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
-		if (ground[i][player->getPlayerCoordinates().x / TILE_SIZE].hasTile &&
-			ground[i][player->getPlayerCoordinates().x / TILE_SIZE].height + (i * TILE_SIZE) > player->getPlayerCoordinates().y + 16)
+		if (ground[i][column].hasTile &&
+			(i * TILE_SIZE) + ground[i][column].bBY > player->getPlayerCoordinates().top + player->getPlayerCoordinates().height)
 			foreground.push_back(i * TILE_SIZE);
 		else //Otherwise, place the tiles in the background
 			background.push_back(i * TILE_SIZE);
@@ -542,8 +638,8 @@ This method moves from one map to another when a transition tile is collided wit
 void Map::moveToMap(Player* player, Camera* camera)
 {
 	//LOCAL VARIABLES
-	int row = player->getPlayerCoordinates().y / TILE_SIZE;
-	int column = player->getPlayerCoordinates().x / TILE_SIZE;
+	int row = player->getPlayerCoordinates().top / TILE_SIZE;
+	int column = player->getPlayerCoordinates().left / TILE_SIZE;
 	sf::Vector2i startPosition = map[row][column].transitionCoords;
 
 	loadMap(map[row][column].mapName, camera); //Load the next map
@@ -563,21 +659,38 @@ if collision has been detected. False otherwise.
 bool Map::collisionDetected(sf::IntRect* rect)
 {
 	//If the entity is at the maps edge along the x-axis, return true
-	if ((rect->left - rect->width) < 0 || rect->left + rect->width > numColumns * TILE_SIZE)
+	if (rect->left < 0 || rect->left + rect->width > numColumns * TILE_SIZE)
 		return true;
 
 	//If the entity is at the maps edge along the y-axis, return true
-	if (rect->top < 0 || rect->top + rect->height > numRows * TILE_SIZE)
+	if (rect->top - rect->height < 0 || rect->top + rect->height > numRows * TILE_SIZE)
 		return true;
+	
+	unsigned int row = (rect->top + rect->height) / TILE_SIZE, column = rect->left / TILE_SIZE;
+	bool collision = false;
 
-	if (map[rect->top / TILE_SIZE][rect->left / TILE_SIZE].collidable)
-		return checkCollisionOnLayer(rect, map);
-	else if (ground[rect->top / TILE_SIZE][rect->left / TILE_SIZE].collidable)
-		return checkCollisionOnLayer(rect, ground);
-	else if (mask[rect->top / TILE_SIZE][rect->left / TILE_SIZE].collidable)
-		return checkCollisionOnLayer(rect, mask);
-	else
-		return false;
+	//Check collision of the player on the left side of player
+	if (map[row][column].collidable)
+		collision = checkCollisionOnLayer(rect, map, row, column);
+	else if (ground[row][column].collidable)
+		collision = checkCollisionOnLayer(rect, ground, row, column);
+	else if (mask[row][column].collidable)
+		collision = checkCollisionOnLayer(rect, mask, row, column);
+	
+	//Return true if collision has been detected
+	if (collision)
+		return collision;
+
+	//Check collision of the player on the right side of the player
+	column = (rect->left + rect->width) / TILE_SIZE;
+	if (map[row][column].collidable)
+		collision = checkCollisionOnLayer(rect, map, row, column);
+	else if (ground[row][column].collidable)
+		collision = checkCollisionOnLayer(rect, ground, row, column);
+	else if (mask[row][column].collidable)
+		collision = checkCollisionOnLayer(rect, mask, row, column);
+
+	return collision; //Return collision
 }
 
 /*
@@ -588,20 +701,16 @@ Parameters:
 
 This method is designed to provide more precise collision.
 */
-bool Map::checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer)
+bool Map::checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer, int row, int column)
 {
 	//Create a bounding box for the current tile.
-	sf::IntRect boundingBox = sf::IntRect((rect->left / TILE_SIZE) * TILE_SIZE + ((TILE_SIZE - layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].width) / 2),
-		(rect->top / TILE_SIZE) * TILE_SIZE,
-		layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].width, 
-		layer[rect->top / TILE_SIZE][rect->left / TILE_SIZE].height);
+	sf::IntRect boundingBox = sf::IntRect(column * TILE_SIZE + layer[row][column].bBX,
+		row * TILE_SIZE + layer[row][column].bBY,
+		layer[row][column].width,
+		layer[row][column].height);
 
 	//Check to see if the entity is inside of a objects colliding point
-	if (boundingBox.contains(rect->left, rect->top))
-		return true;
-
-	//No collision has been detected
-	return false;
+	return rect->intersects(boundingBox);
 }
 
 /*
@@ -612,10 +721,26 @@ This method is used to determine if the game state should switch to the transiti
 bool Map::transitioning(Player* player)
 {
 	//This checks to see if the tile being moved to is a transition tile
-	if (map[(int)player->getPlayerCoordinates().y / TILE_SIZE][(int)player->getPlayerCoordinates().x / TILE_SIZE].tileType == 'E')
+	if (map[(int)player->getPlayerCoordinates().top / TILE_SIZE][(int)player->getPlayerCoordinates().left / TILE_SIZE].tileType == 'E')
 		return true; //No collision has been detected
 
 	return false;
+}
+
+void Map::displayCollsionLayer()
+{
+	if (!renderCollisionLayer)
+		renderCollisionLayer = true;
+	else
+		renderCollisionLayer = false;
+}
+
+void Map::displayGridLayer()
+{
+	if (!renderGridLayer)
+		renderGridLayer = true;
+	else
+		renderGridLayer = false;
 }
 
 /*
