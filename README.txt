@@ -1,6 +1,6 @@
 --------------------------------------------
 * Authors:	Joshua Gray, Randy Brunecz *
-* Last Updated:	9/16/2015		   *					   
+* Last Updated:	10/10/2015		   *					   
 --------------------------------------------
 
 
@@ -21,6 +21,8 @@ Space : Pauses the game
 DEBUG CONTROLS
 1  : Perform a fade in transition
 2  : Perform a fade out transition
+TAB: Displays collision boundaries for objects in the game
+G  : Displays grid lines to show where tiles start and finish
 
 PERFORMANCE
 --------------------------------------------
