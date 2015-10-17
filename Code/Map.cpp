@@ -492,20 +492,20 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 	window->draw(mapSprite);
 	window->draw(maskSprite);
 	
-	unsigned int column = (player->getPlayerCoordinates().left + (player->getPlayerCoordinates().width * 0.5)) / TILE_SIZE;
-
+	int column = (player->getPlayerCoordinates().left + (player->getPlayerCoordinates().width * 0.5)) / TILE_SIZE;
+	
 	//Check each row for collision with the player or with npc's
 	for (int i = 0; i < numRows; i++)
 	{
 		//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
 		if (ground[i][column].hasTile &&
-			(i * TILE_SIZE) + ground[i][column].bBY > player->getPlayerCoordinates().top + 8)
+			(i * TILE_SIZE) + ground[i][column].bBY > player->getPlayerCoordinates().top)
 			foreground.push_back(i * TILE_SIZE);
 		else if(column - 1 >= 0 && ground[i][column - 1].hasTile &&
-			(i * TILE_SIZE) + ground[i][column - 1].bBY > player->getPlayerCoordinates().top + 8)
+			(i * TILE_SIZE) + ground[i][column - 1].bBY > player->getPlayerCoordinates().top)
 			foreground.push_back(i * TILE_SIZE);
 		else if (column + 1 < numRows && ground[i][column + 1].hasTile &&
-			(i * TILE_SIZE) + ground[i][column + 1].bBY > player->getPlayerCoordinates().top + 8)
+			(i * TILE_SIZE) + ground[i][column + 1].bBY > player->getPlayerCoordinates().top)
 			foreground.push_back(i * TILE_SIZE);
 		else //Otherwise, place the tiles in the background
 			background.push_back(i * TILE_SIZE);
@@ -663,7 +663,7 @@ bool Map::collisionDetected(sf::IntRect* rect)
 		return true;
 
 	//If the entity is at the maps edge along the y-axis, return true
-	if (rect->top - rect->height < 0 || rect->top + rect->height > numRows * TILE_SIZE)
+	if ((rect->top + rect->height + 2) - TILE_SIZE < 0 || rect->top + rect->height > numRows * TILE_SIZE)
 		return true;
 	
 	unsigned int row = (rect->top + rect->height) / TILE_SIZE, column = rect->left / TILE_SIZE;

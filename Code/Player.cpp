@@ -33,7 +33,7 @@ Player::Player(sf::RenderWindow* window, Camera* camera)
 	//Set up the sprites properties
 	character.sprite.setTexture(spriteMap);
 	character.sprite.setTextureRect(sf::IntRect(32, 0, 32, 32));
-	character.sprite.setOrigin(16, 16);
+	character.sprite.setOrigin(16, 27);
 
 	//Set up the sprites shadow properties
 	character.shadow.setRadius(8);
@@ -104,15 +104,6 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 
 	//Create a bounding box to check for collision
 	sf::IntRect bb (x - (WIDTH * 0.5) + offSetX, y + offSetY, WIDTH, HEIGHT);
-	/*if (offSetX != 0)
-	{
-		if (offSetX > 0)
-			bb = sf::IntRect(x + offSetX, y, WIDTH, HEIGHT);
-		else
-			bb = sf::IntRect(x + offSetX, y, -WIDTH, HEIGHT);
-	}
-	else if (offSetY != 0)
-		bb = sf::IntRect(x, y + offSetY, 0, HEIGHT);*/
 
 	//May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
 	if (positionUpdated && Collision::collisionDetected(&bb))

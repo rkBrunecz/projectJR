@@ -139,6 +139,7 @@ int main()
 	camera.zoom(0.6);
 
 	window.setVerticalSyncEnabled(true);
+	window.setMouseCursorVisible(false);
 	
 	populateGraphicsArray(&player, &map); //Populate the graphics array
 
