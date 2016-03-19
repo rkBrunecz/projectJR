@@ -65,6 +65,7 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 				mapColumns; //Used to store the total number of columns in the map that is read from the file.
 
 	//Get the path to the tile map and then open it.
+	std::getline(mapFile, input); //Read the first line out (intended for the map editor)
 	std::getline(mapFile, input);
 	if (!tileSheet.loadFromFile(input))
 		exit(EXIT_FAILURE); //Exit the application with a failure code if the tile map does not load
@@ -237,7 +238,7 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 	if (layer[row][column].collidable && input[pos + 5] == ':')
 	{
 		short t = layer[row][column].transformation;
-		std::string width = input.substr(pos + 6, pos + 7), height = input.substr(pos + 9, pos + 10), sBBX = input.substr(pos + 12, pos + 13), sBBY = input.substr(pos + 15, pos + 16);
+		std::string width = input.substr(pos + 6, 2), height = input.substr(pos + 9, 2), sBBX = input.substr(pos + 12, 2), sBBY = input.substr(pos + 15, 2);
 
 		//This reverses the tiles height and width if the tile is flipped 90 degrees (1) or 270 degrees (3)
 		if (t == 0 || t == 2)
