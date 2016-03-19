@@ -25,11 +25,12 @@ public:
 	void setColor(int r, int g, int b, int a);
 	void setPlayerPosition(sf::Vector2i coords);
 
-	sf::Vector2i getPlayerCoordinates();
+	sf::IntRect getPlayerCoordinates();
 
 private:
 	//PRIVATE CONSTANTS
 	float VELOCITY = 3;
+	short WIDTH = 14, HEIGHT = 3;
 
 	//PRIVATE VARIABLES
 	Animation::WalkingDirection currentDirection = Animation::Down;
@@ -44,7 +45,7 @@ private:
 		void setPosition(float x, float y)
 		{
 			sprite.setPosition(x, y);
-			shadow.setPosition(x, y);
+			shadow.setPosition(x, y - 11);
 		}
 	} character;
 };

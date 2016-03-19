@@ -33,7 +33,7 @@ Player::Player(sf::RenderWindow* window, Camera* camera)
 	//Set up the sprites properties
 	character.sprite.setTexture(spriteMap);
 	character.sprite.setTextureRect(sf::IntRect(32, 0, 32, 32));
-	character.sprite.setOrigin(16, 16);
+	character.sprite.setOrigin(16, 27);
 
 	//Set up the sprites shadow properties
 	character.shadow.setRadius(8);
@@ -102,8 +102,11 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	else
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
 
+	//Create a bounding box to check for collision
+	sf::IntRect bb (x - (WIDTH * 0.5) + offSetX, y + offSetY, WIDTH, HEIGHT);
+
 	//May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
-	if (positionUpdated && Collision::collisionDetected(&sf::IntRect(x + offSetX, y + offSetY, 16, 16)))
+	if (positionUpdated && Collision::collisionDetected(&bb))
 	{
 		Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
 		return;
@@ -116,7 +119,7 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	//Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
 	character.setPosition(x, y);
 	camera->updatePosition(sf::Vector2i(x, y));
-	
+
 	Animation::updateAnimation(positionUpdated, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
 }
 
@@ -157,9 +160,9 @@ getPlayerCoordinates
 return:
 	This method returns the players current position in the game world
 
-This method simply stores the players position in a vector and returns it to the calling method.
+This method returns the players bounding box so that the calling method has information about the players position and the players height and width.
 */
-sf::Vector2i Player::getPlayerCoordinates()
+sf::IntRect Player::getPlayerCoordinates()
 {
-	return sf::Vector2i(x, y);
+	return sf::IntRect(x - (WIDTH * 0.5), y, WIDTH, HEIGHT);
 }

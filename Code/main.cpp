@@ -139,6 +139,7 @@ int main()
 	camera.zoom(0.6);
 
 	window.setVerticalSyncEnabled(true);
+	window.setMouseCursorVisible(false);
 	
 	populateGraphicsArray(&player, &map); //Populate the graphics array
 
@@ -162,8 +163,11 @@ int main()
 					state = Pause;
 				else
 					state = Play;
-
 			}
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Tab)
+				map.displayCollsionLayer();
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::G)
+				map.displayGridLayer();
 			//Resize window if the F11 key is pressed
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F11)
 			{

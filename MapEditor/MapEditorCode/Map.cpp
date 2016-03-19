@@ -18,7 +18,29 @@ The constructor of the map class creates a map that can be drawn.
 */
 Map::Map()
 {
+	mousePos.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+	mousePos.setFillColor(sf::Color(0, 0, 200, 125));
 
+	selectedTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+	selectedTile.setFillColor(sf::Color(200, 200, 0, 125));
+
+	if(!deleteTex.loadFromFile("bin/Graphics/Delete.png")  || !transitionTex.loadFromFile("bin/Graphics/Transition.png"))
+		exit(EXIT_FAILURE);
+	
+	deleteTile.setSize(sf::Vector2f(32, 32));
+	deleteTile.setTexture(&deleteTex);
+
+	transitionTile.setSize(sf::Vector2f(32, 32));
+	transitionTile.setTexture(&transitionTex);
+}
+
+void Map::initializeTileSheetCoords(sf::RenderWindow* window)
+{
+	tileSheetCoords.x = window->getSize().x - 352;
+	tileSheetCoords.y = 64;
+
+	deleteTile.setPosition(window->getSize().x - (TILE_SIZE * 3) - (TILE_SIZE / 2), TILE_SIZE);
+	transitionTile.setPosition(window->getSize().x - (TILE_SIZE * 2), TILE_SIZE);
 }
 
 /*
@@ -34,19 +56,140 @@ void Map::loadMap(std::string mapName, Camera* camera)
 	//LOCAL VARIABLES
 	std::ifstream mapFile;
 
-	//If the rows and columns of the map have been set, you it is safe to clear out the map file.
+	//If the rows and columns of the map have been set, it is safe to clear out the map file.
 	if (numRows != 0 && numColumns != 0)
 		emptyMap(); //Empty out the map file to make room for a new map.
 
 	//Open the mapFile file
 	mapFile.open(mapName);
+	nameOfFile = mapName;
 
 	if (mapFile.is_open())
-		initialize(mapFile, camera); //Dynamically create an array to hold the map		
+		initialize(mapFile, camera); //Dynamically create an array to hold the map	
 	else
 		exit(EXIT_FAILURE); //Close the application with a failure code if the file does not open
-
+	
 	mapFile.close(); //Close the file
+
+	mapLoaded = true;
+}
+
+void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std::string mapName)
+{
+	//If the rows and columns of the map have been set, it is safe to clear out the map file.
+	if (numRows != 0 && numColumns != 0)
+		emptyMap(); //Empty out the map file to make room for a new map.
+
+	//LOCAL VARIABLES
+	numRows = rows; 
+	numColumns = columns;
+
+	nameOfFile = mapName;
+
+	//Recreate the mapTexture, canopyTexture and groundTexture ONLY when needed
+	if (mapTexture.getSize().x < numRows * TILE_SIZE && mapTexture.getSize().y < numColumns * TILE_SIZE)
+	{
+		mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		canopyTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		groundTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		maskTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		for (int i = 0; i < NUM_WATER_FRAMES; i++)
+			waterFrames[i].create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+
+		//TOOLS
+		collisionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		gridTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+	}
+
+	camera->setBounds((numColumns + 4) * TILE_SIZE, numRows * TILE_SIZE);
+
+	//Dynamically Create the arrays to hold the map
+	map = new Tile*[numRows];
+	canopy = new Tile*[numRows];
+	ground = new Tile*[numRows];
+	mask = new Tile*[numRows];
+	for (int i = 0; i < numRows; i++)
+	{
+		map[i] = new Tile[numColumns];
+		canopy[i] = new Tile[numColumns];
+		ground[i] = new Tile[numColumns];
+		mask[i] = new Tile[numColumns];
+	}
+
+	mapTexture.clear(sf::Color(0, 0, 0, 0));
+	canopyTexture.clear(sf::Color(0, 0, 0, 0));
+	groundTexture.clear(sf::Color(0, 0, 0, 0));
+	maskTexture.clear(sf::Color(0, 0, 0, 0));
+	for (int i = 0; i < NUM_WATER_FRAMES; i++)
+		waterFrames[i].clear(sf::Color(0, 0, 0, 0));
+	
+	collisionTexture.clear(sf::Color(0, 0, 0, 0));
+
+	createGrid();
+
+	//Let the textures know that they are done being drawn to
+	mapTexture.display();
+	canopyTexture.display();
+	groundTexture.display();
+	maskTexture.display();
+	for (int i = 0; i < NUM_WATER_FRAMES; i++)
+		waterFrames[i].display();
+
+	//TOOLS
+	collisionTexture.display();
+
+	//Set the render textures to sprites
+	mapSprite.setTexture(mapTexture.getTexture());
+	canopySprite.setTexture(canopyTexture.getTexture());
+	groundSprite.setTexture(groundTexture.getTexture());
+	maskSprite.setTexture(maskTexture.getTexture());
+	waterSprite.setTexture(waterFrames[0].getTexture());
+
+	//TOOLS
+	collisionSprite.setTexture(collisionTexture.getTexture());
+
+	mapLoaded = true;
+}
+
+void Map::createGrid()
+{
+	gridTexture.clear(sf::Color(0, 0, 0, 0));
+
+	//Used to draw grids lines 
+	sf::RectangleShape r;
+	r.setFillColor(sf::Color(0, 0, 0, 255));
+
+	//Step through each row and draw grid lines
+	for (int i = 0; i <= numRows - 1; i++)
+	{
+		//Step through each column and draw grid lines
+		for (int j = 0; j <= numColumns - 1; j++)
+		{
+			if (i == numRows - 1)
+			{
+				//TOOLS
+				r.setPosition(j * TILE_SIZE, 0);
+				r.setSize(sf::Vector2f(1, TILE_SIZE * numRows));
+				gridTexture.draw(r);
+			}
+		}
+
+		//TOOLS
+		r.setPosition(0, i * TILE_SIZE);
+		r.setSize(sf::Vector2f(TILE_SIZE * numColumns, 1));
+		gridTexture.draw(r);
+	}
+
+	r.setPosition(numRows * TILE_SIZE, 0);
+	r.setSize(sf::Vector2f(1, TILE_SIZE * numRows));
+	gridTexture.draw(r);
+
+	r.setPosition(0, numColumns * TILE_SIZE);
+	r.setSize(sf::Vector2f(TILE_SIZE * numColumns, 1));
+	gridTexture.draw(r);
+
+	gridTexture.display();
+	gridSprite.setTexture(gridTexture.getTexture());
 }
 
 /*
@@ -63,11 +206,30 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 	std::string input, //Used to get input from the getline method from the file
 				mapRows,  //Used to store the total number of rows in the map that is read from the file.
 				mapColumns; //Used to store the total number of columns in the map that is read from the file.
+	std::ifstream tileFile;
+
+	//Get the tile data so that tiles can be added to the map
+	std::getline(mapFile, nameOfSheetFile);
+	tileFile.open(nameOfSheetFile);
+
+	if (!tileFile.is_open())
+		exit(EXIT_FAILURE);
+
+	for (int i = 0; i < NUM_TILES_IN_SHEET; i++)
+	{
+		std::getline(tileFile, input, '_');
+		tileData[i] = input;
+
+		//Get the end of line delimiter
+		if ((i + 1) % 10 == 0)
+			std::getline(tileFile, input);
+	}
+
+	tileFile.close(); //Close the tile file
 
 	//Get the path to the tile map and then open it.
-	std::getline(mapFile, input); //Read the first line out (intended for the map editor)
-	std::getline(mapFile, input);
-	if (!tileSheet.loadFromFile(input))
+	std::getline(mapFile, nameOfTileSheet);
+	if (!tileSheet.loadFromFile(nameOfTileSheet))
 		exit(EXIT_FAILURE); //Exit the application with a failure code if the tile map does not load
 
 	tiles.setTexture(tileSheet);
@@ -94,8 +256,10 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 		collisionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		gridTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 	}
+	
+	createGrid();
 
-	camera->setBounds(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+	camera->setBounds((numColumns + 4) * TILE_SIZE, numRows * TILE_SIZE);
 
 	//Dynamically Create the arrays to hold the map
 	map = new Tile*[numRows];
@@ -113,7 +277,6 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 	initializeTransitionPoints(mapFile); //Intialize all transition points in the map
 
 	populateMap(mapFile); //Fill the array with the map data
-
 	drawMap(); //Draw the map
 }
 
@@ -129,19 +292,20 @@ name of the map file.
 void Map::initializeTransitionPoints(std::ifstream& mapFile)
 {
 	//LOCAL VARIABLES
-	std::string input, mapFileName;
-	int tileRow, tileColumn, numTransitionAreas, numCoords;
+	std::string input;
+	int numCoords;
 	sf::Vector2i coords;
 
 	//Get the number connected maps
 	std::getline(mapFile, input);
-	numTransitionAreas = atoi(input.c_str());
+	numTransitionPoints = atoi(input.c_str());
 
-	for (int i = 0; i < numTransitionAreas; i++)
+	for (int i = 0; i < numTransitionPoints; i++)
 	{
+		TransitionPoint p;
+
 		//Get the file name for a connected map
-		std::getline(mapFile, input, '-');
-		mapFileName = input;
+		std::getline(mapFile, p.transitionMapName, '-');
 
 		//Get the coordinates that the player character will start on in the next map
 		std::getline(mapFile, input, 'x');
@@ -149,23 +313,34 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 		std::getline(mapFile, input, '-');
 		coords.x = atoi(input.c_str()) * TILE_SIZE;
 
+		p.startingCoords.x = coords.x;
+		p.startingCoords.y = coords.y;
+
 		//Get the total number of map tiles that move the same map. Allows for an area to be defined to allow for more map transition flexibility
 		std::getline(mapFile, input, '-');
 		numCoords = atoi(input.c_str());
 
+		p.numCoords = numCoords;
+
 		//Loop to find all possible map transition points and store the coordinates for the next map, and the map name to the file.
 		for (int i = 0; i < numCoords; i++)
 		{
+			sf::Vector2i tp;
+
 			//Get the coordinates of a tile that is a transition point
 			std::getline(mapFile, input, 'x');
-			tileRow = atoi(input.c_str()) - 1;
+			tp.y = atoi(input.c_str()) - 1;
 			std::getline(mapFile, input, ',');
-			tileColumn = atoi(input.c_str()) - 1;
+			tp.x = atoi(input.c_str()) - 1;
 
 			//Store the file name and coordinates for the spawning position in the next map
-			map[tileRow][tileColumn].mapName = mapFileName;
-			map[tileRow][tileColumn].transitionCoords = coords;
+			map[tp.y][tp.x].mapName = p.transitionMapName;
+			map[tp.y][tp.x].transitionCoords = coords;
+
+			p.transitionPoints.push_back(tp);
 		}
+
+		transitions.push_back(p);
 	}
 
 	//Clear out the line to get ready to read the map.
@@ -173,7 +348,7 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 }
 
 /*
-populateArray
+populateMap
 Parameters:
 	mapFile: This variable contains the file that will be read to initailize the array.
 
@@ -209,7 +384,6 @@ void Map::populateMap(std::ifstream& mapFile)
 			if (i < (numColumns - 1))
 				std::getline(mapFile, input, '_');
 		}
-
 		std::getline(mapFile, input);
 	}
 }
@@ -239,6 +413,7 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 	{
 		short t = layer[row][column].transformation;
 		std::string width = input.substr(pos + 6, 2), height = input.substr(pos + 9, 2), sBBX = input.substr(pos + 12, 2), sBBY = input.substr(pos + 15, 2);
+		layer[row][column].boundingBox = width + "x" + height + "x" + sBBX + "x" + sBBY;
 
 		//This reverses the tiles height and width if the tile is flipped 90 degrees (1) or 270 degrees (3)
 		if (t == 0 || t == 2)
@@ -321,7 +496,6 @@ void Map::drawMap()
 
 	//TOOLS
 	collisionTexture.clear(sf::Color(0, 0, 0, 0));
-	gridTexture.clear(sf::Color(0, 0, 0, 0));
 
 	//Used to draw grids lines 
 	sf::RectangleShape r;
@@ -360,20 +534,7 @@ void Map::drawMap()
 				drawToTexture(groundTexture, ground, i, j);
 			if (mask[i][j].hasTile)
 				drawToTexture(maskTexture, mask, i, j);
-
-			//TOOLS
-			if (i == numRows - 1)
-			{
-				r.setPosition(j * TILE_SIZE, 0);
-				r.setSize(sf::Vector2f(1, TILE_SIZE * numRows));
-				gridTexture.draw(r);
-			}
 		}
-
-		//TOOLS
-		r.setPosition(0, i * TILE_SIZE);
-		r.setSize(sf::Vector2f(TILE_SIZE * numColumns, 1));
-		gridTexture.draw(r);
 	}
 
 	//Let the textures know that they are done being drawn to
@@ -386,7 +547,6 @@ void Map::drawMap()
 
 	//TOOLS
 	collisionTexture.display();
-	gridTexture.display();
 
 	//Set the render textures to sprites
 	mapSprite.setTexture(mapTexture.getTexture());
@@ -397,7 +557,6 @@ void Map::drawMap()
 	
 	//TOOLS
 	collisionSprite.setTexture(collisionTexture.getTexture());
-	gridSprite.setTexture(gridTexture.getTexture());
 }
 
 /*
@@ -413,7 +572,7 @@ then applies the correct transformations to the tile, and then draws the tile.
 */
 void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int column)
 {
-	//Set the part of the tile map to draw to the window
+	//Set the part of the tile map to draw to the texture
 	tiles.setTextureRect(sf::IntRect(layer[row][column].column * TILE_SIZE,
 		layer[row][column].row * TILE_SIZE,
 		TILE_SIZE,
@@ -442,7 +601,7 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 
 		texture.draw(tmp); //Draw the tile
 	}
-	else if (layer[row][column].transformation == 4) //Mirro tile
+	else if (layer[row][column].transformation == 4) //Mirror tile
 	{
 		//Create a temporary texture to hold the tile
 		sf::Texture temp;
@@ -481,7 +640,7 @@ Parameters:
 
 Draws the map to the game window
 */
-void Map::draw(sf::RenderWindow* window, Player* player)
+void Map::draw(sf::RenderWindow* window, sf::Vector2f mouseCoords)
 {
 	//LOCAL VARIABLES
 	std::vector<unsigned short> background;
@@ -492,52 +651,7 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 	window->draw(waterSprite);
 	window->draw(mapSprite);
 	window->draw(maskSprite);
-	
-	int column = (player->getPlayerCoordinates().left + (player->getPlayerCoordinates().width * 0.5)) / TILE_SIZE;
-	
-	//Check each row for collision with the player or with npc's
-	for (int i = 0; i < numRows; i++)
-	{
-		//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
-		if (ground[i][column].hasTile &&
-			(i * TILE_SIZE) + ground[i][column].bBY > player->getPlayerCoordinates().top)
-			foreground.push_back(i * TILE_SIZE);
-		else if(column - 1 >= 0 && ground[i][column - 1].hasTile &&
-			(i * TILE_SIZE) + ground[i][column - 1].bBY > player->getPlayerCoordinates().top)
-			foreground.push_back(i * TILE_SIZE);
-		else if (column + 1 < numRows && ground[i][column + 1].hasTile &&
-			(i * TILE_SIZE) + ground[i][column + 1].bBY > player->getPlayerCoordinates().top)
-			foreground.push_back(i * TILE_SIZE);
-		else //Otherwise, place the tiles in the background
-			background.push_back(i * TILE_SIZE);
-	}
-
-	//Draw the background
-	for (int i = 0; i < background.size(); i++)
-	{
-		groundSprite.setTextureRect(sf::IntRect(0,
-			background[i],
-			numColumns * TILE_SIZE,
-			TILE_SIZE));
-		groundSprite.setPosition(0, background[i]);
-
-		window->draw(groundSprite);
-	}
-
-	player->draw(window); //Draw the player in between the background and foreground
-	
-	//Draw the foreground
-	for (int i = 0; i < foreground.size(); i++)
-	{
-		groundSprite.setTextureRect(sf::IntRect(0,
-			foreground[i],
-			numColumns * TILE_SIZE,
-			TILE_SIZE));
-		groundSprite.setPosition(0, foreground[i]);
-
-		window->draw(groundSprite);
-	}
-
+	window->draw(groundSprite);
 	window->draw(canopySprite); //Draw the canopy
 	
 	//TOOLS
@@ -545,68 +659,28 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 		window->draw(collisionSprite);
 	if (renderGridLayer)
 		window->draw(gridSprite);
+
+	if (!sf::Mouse::isButtonPressed(sf::Mouse::Right))
+	{
+		mousePos.setPosition(sf::Vector2f(floor(mouseCoords.x / TILE_SIZE) * TILE_SIZE,
+			floor(mouseCoords.y / TILE_SIZE) * TILE_SIZE));
+	
+		if (mousePos.getPosition().x <= TILE_SIZE * (numColumns - 1) && mousePos.getPosition().y <= TILE_SIZE * (numRows - 1))
+			window->draw(mousePos);
+	}
 }
 
-
-/*
-drawNoAni
-Parameters:
-window: This is the window that the map will be drawn on
-player: This is used to get the players position in the game to determine the order of
-the drawing calls.
-
-Draws the map to the game window with no animations
-*/
-void Map::drawNoAni(sf::RenderWindow* window, Player* player)
+void Map::drawTileSheet(sf::RenderWindow* window)
 {
-	//LOCAL VARIABLES
-	std::vector<unsigned short> background;
-	std::vector<unsigned short> foreground;
+	sf::Sprite tmp;
+	tmp.setTexture(tileSheet);
+	tmp.setPosition(tileSheetCoords.x, tileSheetCoords.y);
+	window->draw(tmp);
+	window->draw(deleteTile);
+	window->draw(transitionTile);
 
-	window->draw(waterSprite);
-	window->draw(mapSprite);
-	window->draw(maskSprite);
-
-	unsigned int column = player->getPlayerCoordinates().left / TILE_SIZE;
-
-	//Check each row for collision with the player or with npc's
-	for (int i = 0; i < numRows; i++)
-	{
-		//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
-		if (ground[i][column].hasTile &&
-			(i * TILE_SIZE) + ground[i][column].bBY > player->getPlayerCoordinates().top + player->getPlayerCoordinates().height)
-			foreground.push_back(i * TILE_SIZE);
-		else //Otherwise, place the tiles in the background
-			background.push_back(i * TILE_SIZE);
-	}
-
-	//Draw the background
-	for (int i = 0; i < background.size(); i++)
-	{
-		groundSprite.setTextureRect(sf::IntRect(0,
-			background[i],
-			numColumns * TILE_SIZE,
-			TILE_SIZE));
-		groundSprite.setPosition(0, background[i]);
-
-		window->draw(groundSprite);
-	}
-
-	player->draw(window); //Draw the player in between the background and foreground
-
-	//Draw the foreground
-	for (int i = 0; i < foreground.size(); i++)
-	{
-		groundSprite.setTextureRect(sf::IntRect(0,
-			foreground[i],
-			numColumns * TILE_SIZE,
-			TILE_SIZE));
-		groundSprite.setPosition(0, foreground[i]);
-
-		window->draw(groundSprite);
-	}
-
-	window->draw(canopySprite); //Draw the canopy
+	if (currentTile.compare("No Tile") != 0)
+		window->draw(selectedTile);
 }
 
 /*
@@ -628,26 +702,6 @@ void Map::setColor(int r, int g, int b, int a)
 	waterSprite.setColor(sf::Color(r, g, b, a));
 }
 
-/*
-moveToMap
-Parameters:
-	player: The player character will have its position set to the indicated spawning point
-	camera: The camera will have its position updated to center on the player
-
-This method moves from one map to another when a transition tile is collided with.
-*/
-void Map::moveToMap(Player* player, Camera* camera)
-{
-	//LOCAL VARIABLES
-	int row = player->getPlayerCoordinates().top / TILE_SIZE;
-	int column = player->getPlayerCoordinates().left / TILE_SIZE;
-	sf::Vector2i startPosition = map[row][column].transitionCoords;
-
-	loadMap(map[row][column].mapName, camera); //Load the next map
-
-	player->setPlayerPosition(startPosition); 
-	camera->updatePosition(startPosition);
-}
 
 /*
 collisionDetected
@@ -664,7 +718,7 @@ bool Map::collisionDetected(sf::IntRect* rect)
 		return true;
 
 	//If the entity is at the maps edge along the y-axis, return true
-	if ((rect->top + rect->height + 2) - TILE_SIZE < 0 || rect->top + rect->height > numRows * TILE_SIZE)
+	if (rect->top - rect->height < 0 || rect->top + rect->height > numRows * TILE_SIZE)
 		return true;
 	
 	unsigned int row = (rect->top + rect->height) / TILE_SIZE, column = rect->left / TILE_SIZE;
@@ -714,18 +768,108 @@ bool Map::checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer, int row, int c
 	return rect->intersects(boundingBox);
 }
 
-/*
-transitioning
-
-This method is used to determine if the game state should switch to the transitioning state or not.
-*/
-bool Map::transitioning(Player* player)
+bool Map::isMapLoaded()
 {
-	//This checks to see if the tile being moved to is a transition tile
-	if (map[(int)player->getPlayerCoordinates().top / TILE_SIZE][(int)player->getPlayerCoordinates().left / TILE_SIZE].tileType == 'E')
-		return true; //No collision has been detected
+	return mapLoaded;
+}
 
+sf::Vector2f Map::mapSize()
+{
+	return sf::Vector2f(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+}
+
+void Map::setTile(sf::Vector2i mouseCoords)
+{
+	if (mouseCoords.x < tileSheetCoords.x || mouseCoords.y < tileSheetCoords.y)
+		return;
+
+	//LOCAL VARIABLES
+	int column = (mouseCoords.x - tileSheetCoords.x) / TILE_SIZE;
+	int row = (mouseCoords.y - tileSheetCoords.y) / TILE_SIZE;
+	int pos = row * 10 + column; // Multiply by 10 since there are 10 columns per row
+
+	if (column > 9 || row > 19)
+		return;
+
+	currentTile = tileData[pos];
+	
+	if (currentTile.compare("&") != 0)
+		selectedTile.setPosition(sf::Vector2f((mouseCoords.x / TILE_SIZE) * TILE_SIZE, (mouseCoords.y / TILE_SIZE) * TILE_SIZE));
+	else
+		currentTile = "No Tile";
+}
+
+void Map::addTileToPos()
+{
+	if (currentTile.compare("No Tile") == 0)
+		return;
+
+	//LOCAL VARIABLES
+	int column = mousePos.getPosition().x / TILE_SIZE;
+	int row = mousePos.getPosition().y / TILE_SIZE;
+
+	if (column > numColumns - 1 || row > numRows - 1 || column < 0 || row < 0)
+		return;
+
+	if (currentTile[0] == '0' && !isSameTile(map, row, column))
+	{
+		addTileToMap(map, currentTile, 2, row, column);
+		drawToTexture(mapTexture, map, row, column);
+		mapTexture.display();
+	}
+	else if (currentTile[0] == '1' /*&& !isSameTile(map, row, column)*/)
+	{
+		addTileToMap(mask, currentTile, 2, row, column);
+		
+		if (currentTile[5] == '1' && map[row][column].collidable)
+			map[row][column].collidable = false;
+
+		updateMap(maskTexture, mask);
+	}
+	else if (currentTile[0] == '2' && !isSameTile(map, row, column))
+	{
+		addTileToMap(ground, currentTile, 2, row, column);
+		updateMap(groundTexture, ground);
+	}
+	else if (currentTile[0] == '3' && !isSameTile(map, row, column))
+	{
+		addTileToMap(canopy, currentTile, 2, row, column);
+		updateMap(canopyTexture, canopy);
+	}
+}
+
+bool Map::isSameTile(Tile**& layer, int row, int column)
+{
+	Tile t;
+	t.row = currentTile[2] - '0';
+	t.column = currentTile[3] - '0';
+	t.transformation = currentTile[4] - '0';
+	t.collidable = currentTile[5] - '0'; //0 = false, 1 = true
+	t.tileType = currentTile[6];
+
+	if (layer[row][column].row == t.row &&
+		layer[row][column].column == t.column &&
+		layer[row][column].transformation == t.transformation &&
+		layer[row][column].collidable == t.collidable &&
+		layer[row][column].tileType == t.tileType)
+		return true;
+	
 	return false;
+}
+
+void Map::updateMap(sf::RenderTexture& texture, Tile**& layer)
+{
+	texture.clear(sf::Color(0, 0, 0, 0));
+
+	//Step through each row in the maps array.
+	for (int i = 0; i <= numRows - 1; i++)
+	{
+		//Step through each columns in the maps row and add a tile where needed
+		for (int j = 0; j <= numColumns - 1; j++)
+			drawToTexture(texture, layer, i, j);
+	}
+
+	texture.display();
 }
 
 void Map::displayCollsionLayer()
@@ -742,6 +886,100 @@ void Map::displayGridLayer()
 		renderGridLayer = true;
 	else
 		renderGridLayer = false;
+}
+
+unsigned short Map::getTileSize()
+{
+	return TILE_SIZE;
+}
+
+void Map::saveMap()
+{
+	//LOCAL VARIABLES
+	std::ofstream mapFile;
+	bool hasTile = false;
+
+	mapFile.open(nameOfFile);
+
+	mapFile << nameOfSheetFile << "\n";
+	mapFile << nameOfTileSheet << "\n";
+	mapFile << numRows << "x" << numColumns << "\n";
+	mapFile << numTransitionPoints << "\n";
+
+	for (int i = 0; i < numTransitionPoints; i++)
+	{
+		mapFile << transitions[i].transitionMapName << "-" << transitions[i].startingCoords.y << "x" << transitions[i].startingCoords.x << "-" << transitions[i].numCoords << "-";
+
+		for (int j = 0; j < transitions[i].numCoords; j++)
+			mapFile << transitions[i].transitionPoints[j].y << "x" << transitions[i].transitionPoints[j].x << ",";
+
+		mapFile << "\n";
+	}
+
+	for (int row = 0; row < numRows; row++)
+	{
+		for (int column = 0; column < numColumns; column++)
+		{
+			if (map[row][column].hasTile)
+			{
+				mapFile << "0-" << tileToString(map, row, column);
+				hasTile = true;
+			}
+			if (mask[row][column].hasTile)
+			{
+				if (hasTile)
+				{
+					mapFile << ",";
+					hasTile = false;
+				}
+				mapFile << "1-" << tileToString(mask, row, column);
+				hasTile = true;
+			}
+			if (ground[row][column].hasTile)
+			{
+				if (hasTile)
+				{
+					mapFile << ",";
+					hasTile = false;
+				}
+				mapFile << "2-" << tileToString(ground, row, column);
+				hasTile = true;
+			}
+			if (canopy[row][column].hasTile)
+			{
+				if (hasTile)
+				{
+					mapFile << ",";
+					hasTile = false;
+				}
+				mapFile << "3-" << tileToString(canopy, row, column);
+				hasTile = true;
+			}
+
+			mapFile << "_";
+		}
+
+		mapFile << "\n";
+	}
+
+	mapFile.close();
+}
+
+std::string Map::tileToString(Tile**& layer, int row, int column)
+{
+	std::string s = std::to_string(layer[row][column].row) + std::to_string(layer[row][column].column) + std::to_string(layer[row][column].transformation);
+	
+	if (layer[row][column].collidable)
+	{
+		s = s + "1" + layer[row][column].tileType;
+
+		if (layer[row][column].tileType != 'W')
+			s = s + ":" + layer[row][column].boundingBox;
+	}
+	else
+		s = s + "0" + layer[row][column].tileType;
+
+	return s;
 }
 
 /*
