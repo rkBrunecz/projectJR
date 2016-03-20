@@ -103,7 +103,7 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
 
 	//Create a bounding box to check for collision
-	sf::IntRect bb (x - (WIDTH * 0.5) + offSetX, y + offSetY, WIDTH, HEIGHT);
+	sf::IntRect	bb = sf::IntRect(x - (WIDTH * 0.5) + offSetX, y + offSetY, WIDTH, HEIGHT);
 
 	//May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
 	if (positionUpdated && Collision::collisionDetected(&bb))

@@ -710,6 +710,9 @@ bool Map::checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer, int row, int c
 		layer[row][column].width,
 		layer[row][column].height);
 
+	if (boundingBox.top == rect->height + rect->top)
+		boundingBox.top -= 1;
+
 	//Check to see if the entity is inside of a objects colliding point
 	return rect->intersects(boundingBox);
 }
