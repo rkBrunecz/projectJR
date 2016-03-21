@@ -780,6 +780,22 @@ sf::Vector2f Map::mapSize()
 
 void Map::setTile(sf::Vector2i mouseCoords)
 {
+	if (mouseCoords.x > deleteTile.getPosition().x && mouseCoords.x < deleteTile.getPosition().x + TILE_SIZE &&
+		mouseCoords.y > deleteTile.getPosition().y && mouseCoords.y < deleteTile.getPosition().y + TILE_SIZE)
+	{
+		currentTile = "Delete";
+		selectedTile.setPosition(sf::Vector2f(deleteTile.getPosition().x, deleteTile.getPosition().y));
+		return;
+	}
+
+	if (mouseCoords.x > transitionTile.getPosition().x && mouseCoords.x < transitionTile.getPosition().x + TILE_SIZE &&
+		mouseCoords.y > transitionTile.getPosition().y && mouseCoords.y < transitionTile.getPosition().y + TILE_SIZE)
+	{
+		currentTile = "Transition";
+		selectedTile.setPosition(sf::Vector2f(transitionTile.getPosition().x, transitionTile.getPosition().y));
+		return;
+	}
+
 	if (mouseCoords.x < tileSheetCoords.x || mouseCoords.y < tileSheetCoords.y)
 		return;
 
@@ -811,7 +827,9 @@ void Map::addTileToPos()
 	if (column > numColumns - 1 || row > numRows - 1 || column < 0 || row < 0)
 		return;
 
-	if (currentTile[0] == '0' && !isSameTile(map, row, column))
+	if (currentTile.compare("Delete") == 0)
+		deleteTileFromPos(row, column);
+	else if (currentTile[0] == '0' && !isSameTile(map, row, column))
 	{
 		addTileToMap(map, currentTile, 2, row, column);
 		drawToTexture(mapTexture, map, row, column);
@@ -835,6 +853,25 @@ void Map::addTileToPos()
 	{
 		addTileToMap(canopy, currentTile, 2, row, column);
 		updateMap(canopyTexture, canopy);
+	}
+}
+
+void Map::deleteTileFromPos(int row, int column)
+{
+	if (canopy[row][column].hasTile)
+	{
+		canopy[row][column].hasTile = false;
+		updateMap(canopyTexture, canopy);
+	}
+	else if (ground[row][column].hasTile)
+	{
+		ground[row][column].hasTile = false;
+		updateMap(groundTexture, ground);
+	}
+	else if (mask[row][column].hasTile)
+	{
+		mask[row][column].hasTile = false;
+		updateMap(maskTexture, mask);
 	}
 }
 
@@ -864,9 +901,12 @@ void Map::updateMap(sf::RenderTexture& texture, Tile**& layer)
 	//Step through each row in the maps array.
 	for (int i = 0; i <= numRows - 1; i++)
 	{
-		//Step through each columns in the maps row and add a tile where needed
+		//Step through each column in the maps row and add a tile where needed
 		for (int j = 0; j <= numColumns - 1; j++)
-			drawToTexture(texture, layer, i, j);
+		{
+			if (layer[i][j].hasTile)
+				drawToTexture(texture, layer, i, j);
+		}
 	}
 
 	texture.display();
