@@ -118,6 +118,9 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 				map.addTileToPos();
 			else if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				map.setTile(sf::Mouse::getPosition(window));
+			
+			if (!sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				map.allowTileManipulation();
 
 			window.setView(window.getDefaultView());
 			window.draw(tilePane);

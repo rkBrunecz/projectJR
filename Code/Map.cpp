@@ -217,11 +217,11 @@ void Map::populateMap(std::ifstream& mapFile)
 /*
 addTileToMap
 Parameters:
-	layer: This is the layer that a tile will be added to
-	input: This is the input string that contains all the info about a tile
-	pos: This is the current position in the string
-	row: This is the current row in the layer to add the tile
-	column: This is the current column in the layer to add a tile to
+layer: This is the layer that a tile will be added to
+input: This is the input string that contains all the info about a tile
+pos: This is the current position in the string
+row: This is the current row in the layer to add the tile
+column: This is the current column in the layer to add a tile to
 
 This method adds tiles to a specific layer in the map.
 */
@@ -248,8 +248,8 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 		}
 		else
 		{
-			layer[row][column].width = atoi(width.c_str());
-			layer[row][column].height = atoi(height.c_str());
+			layer[row][column].width = atoi(height.c_str());
+			layer[row][column].height = atoi(width.c_str());
 		}
 
 		//Sets the bounding box correctly if the tile is rotated
@@ -268,12 +268,12 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 		}
 		else if (t == 1) //Tile rotated 90 degrees
 		{
-			layer[row][column].bBX = atoi(sBBY.c_str());
+			layer[row][column].bBX = atoi(sBBX.c_str());
 			layer[row][column].bBY = atoi(sBBX.c_str());
 		}
 		else if (t == 3) //Tile rotate 270 degrees
 		{
-			layer[row][column].bBX = TILE_SIZE - atoi(sBBY.c_str());
+			layer[row][column].bBX = atoi(sBBY.c_str());
 			layer[row][column].bBY = atoi(sBBX.c_str());
 		}
 
