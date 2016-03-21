@@ -29,6 +29,7 @@ public:
 	void drawTileSheet(sf::RenderWindow* window);
 	void setTile(sf::Vector2i mouseCoords);
 	void addTileToPos();
+	void deleteTileFromPos(int row, int column);
 	void saveMap();
 
 	static unsigned short getTileSize();
