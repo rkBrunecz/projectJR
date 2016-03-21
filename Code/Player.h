@@ -18,7 +18,7 @@ class Player : public Graphic
 {
 public:
 	//PUBLIC FUNCTIONS
-	Player(sf::RenderWindow* window, Camera* camera);
+	Player(Camera* camera);
 
 	void draw(sf::RenderWindow* window);
 	void updatePosition(sf::RenderWindow* window, Camera* camera);
