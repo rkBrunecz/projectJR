@@ -24,14 +24,17 @@ Map::Map()
 	selectedTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
 	selectedTile.setFillColor(sf::Color(200, 200, 0, 125));
 
-	if(!deleteTex.loadFromFile("bin/Graphics/Delete.png")  || !transitionTex.loadFromFile("bin/Graphics/Transition.png"))
+	if(!deleteTex.loadFromFile("bin/Graphics/Delete.png")  || !transitionTex.loadFromFile("bin/Graphics/Transition.png") || !rotateTex.loadFromFile("bin/Graphics/Rotate.png"))
 		exit(EXIT_FAILURE);
 	
-	deleteTile.setSize(sf::Vector2f(32, 32));
+	deleteTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
 	deleteTile.setTexture(&deleteTex);
 
-	transitionTile.setSize(sf::Vector2f(32, 32));
+	transitionTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
 	transitionTile.setTexture(&transitionTex);
+
+	rotationTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+	rotationTile.setTexture(&rotateTex);
 }
 
 void Map::initializeTileSheetCoords(sf::RenderWindow* window)
@@ -39,6 +42,7 @@ void Map::initializeTileSheetCoords(sf::RenderWindow* window)
 	tileSheetCoords.x = window->getSize().x - 352;
 	tileSheetCoords.y = 64;
 
+	rotationTile.setPosition(window->getSize().x - (TILE_SIZE * 4) - TILE_SIZE, TILE_SIZE);
 	deleteTile.setPosition(window->getSize().x - (TILE_SIZE * 3) - (TILE_SIZE / 2), TILE_SIZE);
 	transitionTile.setPosition(window->getSize().x - (TILE_SIZE * 2), TILE_SIZE);
 }
@@ -423,8 +427,8 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 		}
 		else
 		{
-			layer[row][column].width = atoi(width.c_str());
-			layer[row][column].height = atoi(height.c_str());
+			layer[row][column].width = atoi(height.c_str());
+			layer[row][column].height = atoi(width.c_str());
 		}
 
 		//Sets the bounding box correctly if the tile is rotated
@@ -443,12 +447,12 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 		}
 		else if (t == 1) //Tile rotated 90 degrees
 		{
-			layer[row][column].bBX = atoi(sBBY.c_str());
+			layer[row][column].bBX = atoi(sBBX.c_str());
 			layer[row][column].bBY = atoi(sBBX.c_str());
 		}
 		else if (t == 3) //Tile rotate 270 degrees
 		{
-			layer[row][column].bBX = TILE_SIZE - atoi(sBBY.c_str());
+			layer[row][column].bBX = atoi(sBBY.c_str());
 			layer[row][column].bBY = atoi(sBBX.c_str());
 		}
 
@@ -678,6 +682,7 @@ void Map::drawTileSheet(sf::RenderWindow* window)
 	window->draw(tmp);
 	window->draw(deleteTile);
 	window->draw(transitionTile);
+	window->draw(rotationTile);
 
 	if (currentTile.compare("No Tile") != 0)
 		window->draw(selectedTile);
@@ -787,8 +792,14 @@ void Map::setTile(sf::Vector2i mouseCoords)
 		selectedTile.setPosition(sf::Vector2f(deleteTile.getPosition().x, deleteTile.getPosition().y));
 		return;
 	}
-
-	if (mouseCoords.x > transitionTile.getPosition().x && mouseCoords.x < transitionTile.getPosition().x + TILE_SIZE &&
+	else if (mouseCoords.x > rotationTile.getPosition().x && mouseCoords.x < rotationTile.getPosition().x + TILE_SIZE &&
+		mouseCoords.y > rotationTile.getPosition().y && mouseCoords.y < rotationTile.getPosition().y + TILE_SIZE)
+	{
+		currentTile = "Rotate";
+		selectedTile.setPosition(sf::Vector2f(rotationTile.getPosition().x, rotationTile.getPosition().y));
+		return;
+	}
+	else if (mouseCoords.x > transitionTile.getPosition().x && mouseCoords.x < transitionTile.getPosition().x + TILE_SIZE &&
 		mouseCoords.y > transitionTile.getPosition().y && mouseCoords.y < transitionTile.getPosition().y + TILE_SIZE)
 	{
 		currentTile = "Transition";
@@ -829,6 +840,8 @@ void Map::addTileToPos()
 
 	if (currentTile.compare("Delete") == 0)
 		deleteTileFromPos(row, column);
+	else if (currentTile.compare("Rotate") == 0)
+		rotateTile(row, column);
 	else if (currentTile[0] == '0' && !isSameTile(map, row, column))
 	{
 		addTileToMap(map, currentTile, 2, row, column);
@@ -873,6 +886,50 @@ void Map::deleteTileFromPos(int row, int column)
 		mask[row][column].hasTile = false;
 		updateMap(maskTexture, mask);
 	}
+}
+
+void Map::rotateTile(int row, int column)
+{
+	if (tileRotatedRecently)
+		return;
+
+	//Rotations are as follows: 1 = 0 degrees, 1 = 90 degrees, 2 = 180 degrees, 3 = 270 degrees
+	if (canopy[row][column].hasTile)
+	{
+		canopy[row][column].transformation += 1;
+		if (canopy[row][column].transformation > 3)
+			canopy[row][column].transformation = 0;
+		updateMap(canopyTexture, canopy);
+	}
+	else if (ground[row][column].hasTile)
+	{
+		ground[row][column].transformation += 1;
+		if (ground[row][column].transformation > 3)
+			ground[row][column].transformation = 0;
+		updateMap(groundTexture, ground);
+	}
+	else if (mask[row][column].hasTile)
+	{
+		mask[row][column].transformation += 1;
+		if (mask[row][column].transformation > 3)
+			mask[row][column].transformation = 0;
+		updateMap(maskTexture, mask);
+	}
+	else if (map[row][column].hasTile)
+	{
+		map[row][column].transformation += 1;
+		if (map[row][column].transformation > 3) 
+			map[row][column].transformation = 0;
+		drawToTexture(mapTexture, map, row, column);
+		mapTexture.display();
+	}
+
+	tileRotatedRecently = true;
+}
+
+void Map::allowTileManipulation()
+{
+	tileRotatedRecently = false;
 }
 
 bool Map::isSameTile(Tile**& layer, int row, int column)

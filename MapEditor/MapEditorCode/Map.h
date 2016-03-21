@@ -29,8 +29,8 @@ public:
 	void drawTileSheet(sf::RenderWindow* window);
 	void setTile(sf::Vector2i mouseCoords);
 	void addTileToPos();
-	void deleteTileFromPos(int row, int column);
 	void saveMap();
+	void allowTileManipulation();
 
 	static unsigned short getTileSize();
 
@@ -73,6 +73,8 @@ private:
 	void createGrid();
 	void updateMap(sf::RenderTexture& texture, Tile**& layer);
 	void quickTextureDraw(sf::RenderTexture& texture, Tile**& layer, int row, int column);
+	void deleteTileFromPos(int row, int column);
+	void rotateTile(int row, int column);
 
 	bool collisionDetected(sf::IntRect* rect);
 	bool checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer, int row, int column);
@@ -92,21 +94,21 @@ private:
 	Tile** canopy; //This 2d contains objects like trees, top of rocks, etc.
 	Tile** mask; //This layer contains masks that are layered on top of other tiles to give depth
 	sf::Sprite tiles, mapSprite, canopySprite, groundSprite, maskSprite, waterSprite;
-	sf::Texture tileSheet, deleteTex, transitionTex;
+	sf::Texture tileSheet, deleteTex, transitionTex, rotateTex;
 	sf::RenderTexture mapTexture, canopyTexture, groundTexture, maskTexture;
 	sf::RenderTexture waterFrames[4];
 	sf::Clock waterAnimation;
 	Animation::WaterDirection waterShift = Animation::ShiftRight;
 
-	sf::RectangleShape mousePos, selectedTile, deleteTile, transitionTile;
+	sf::RectangleShape mousePos, selectedTile, deleteTile, transitionTile, rotationTile;
 
 	unsigned short currentWaterFrame = 0;
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
 	int numTransitionPoints = 0;
-	bool mapLoaded = false;
+	bool mapLoaded = false, tileRotatedRecently = false;
 	sf::Vector2i tileSheetCoords;
 	std::string tileData[200];
-	std::string currentTile = "No Tile", nameOfFile = "NULL", nameOfTileSheet = "NULL", nameOfSheetFile = "NULL"; //Options are tile data, "No Tile", and "Delete"
+	std::string currentTile = "No Tile", nameOfFile = "NULL", nameOfTileSheet = "NULL", nameOfSheetFile = "NULL"; //Options are tile data, "No Tile", "Rotate", "Transition", and "Delete"
 	std::vector<TransitionPoint> transitions; //Vector containing information about all transition points in a map
 
 	//TOOLS
