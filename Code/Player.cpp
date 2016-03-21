@@ -20,12 +20,8 @@ Parameters:
 
 Creates the main characters sprite and sets other important information.
 */
-Player::Player(sf::RenderWindow* window, Camera* camera)
+Player::Player(Camera* camera)
 {
-	//Set the start position for the character sprite
-	x = window->getSize().x / 2;
-	y = window->getSize().y / 2;
-
 	//Load sprite map
 	if (!spriteMap.loadFromFile("bin/Graphics/test.png"))
 		exit(EXIT_FAILURE);

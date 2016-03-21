@@ -132,7 +132,8 @@ int main()
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 
-	Player player(&window, &camera);
+	Player player(&camera);
+	player.setPlayerPosition(sf::Vector2i(32, 6 * 32)); //TESTING START SPOT. WILL CHANGE
 
 	//Set up camera properties
 	camera.setSize(desktop.width, desktop.height);
