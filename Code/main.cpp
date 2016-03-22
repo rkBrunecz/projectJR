@@ -133,7 +133,7 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 
 	Player player(&camera);
-	player.setPlayerPosition(sf::Vector2i(32, 6 * 32)); //TESTING START SPOT. WILL CHANGE
+	player.setPlayerPosition(sf::Vector2i( 6 * 32, 6 * 32)); //TESTING START SPOT. WILL CHANGE
 
 	//Set up camera properties
 	camera.setSize(desktop.width, desktop.height);

@@ -195,3 +195,37 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 	*str = fileName;
 	return sf::Vector2i(atoi(width.c_str()) / Map::getTileSize(), atoi(height.c_str()) / Map::getTileSize());
 }
+
+std::string UI::getMap(sf::RenderWindow* window)
+{
+	OPENFILENAME ofn;
+
+	char currentDirectory[MAX_PATH];
+	GetModuleFileName(NULL, currentDirectory, MAX_PATH);
+	std::string::size_type pos = std::string(currentDirectory).find_last_of("\\/");
+
+	// a another memory buffer to contain the file name	
+	char szFile[100];
+
+	// open a file name
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = window->getSystemHandle();
+	ofn.lpstrFile = szFile;
+	ofn.lpstrFile[0] = '\0';
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = "JRM\0*.jrm\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+	GetOpenFileName(&ofn);
+
+	std::string s = ofn.lpstrFile;
+
+	SetCurrentDirectory(std::string(currentDirectory).substr(0, pos).c_str());
+
+	return s;
+}

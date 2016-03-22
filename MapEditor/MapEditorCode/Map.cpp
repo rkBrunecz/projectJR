@@ -24,17 +24,27 @@ Map::Map()
 	selectedTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
 	selectedTile.setFillColor(sf::Color(200, 200, 0, 125));
 
-	if(!deleteTex.loadFromFile("bin/Graphics/Delete.png")  || !transitionTex.loadFromFile("bin/Graphics/Transition.png") || !rotateTex.loadFromFile("bin/Graphics/Rotate.png"))
+	if (!deleteTex.loadFromFile("bin/Graphics/Delete.png") || !transitionTex.loadFromFile("bin/Graphics/Transition.png") || !rotateTex.loadFromFile("bin/Graphics/Rotate.png") || !deleteTransTex.loadFromFile("bin/Graphics/DeleteTrans.png") || !mirrorTex.loadFromFile("bin/Graphics/Mirror.png") || !font.loadFromFile("bin/Font/arial.ttf"))
 		exit(EXIT_FAILURE);
-	
+
+	currentRowColumn.setFont(font);
+	currentRowColumn.setCharacterSize(12);
+	currentRowColumn.setColor(sf::Color::Black);
+
 	deleteTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
 	deleteTile.setTexture(&deleteTex);
+
+	deleteTransTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+	deleteTransTile.setTexture(&deleteTransTex);
 
 	transitionTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
 	transitionTile.setTexture(&transitionTex);
 
 	rotationTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
 	rotationTile.setTexture(&rotateTex);
+
+	mirrorTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+	mirrorTile.setTexture(&mirrorTex);
 }
 
 void Map::initializeTileSheetCoords(sf::RenderWindow* window)
@@ -42,9 +52,14 @@ void Map::initializeTileSheetCoords(sf::RenderWindow* window)
 	tileSheetCoords.x = window->getSize().x - 352;
 	tileSheetCoords.y = 64;
 
-	rotationTile.setPosition(window->getSize().x - (TILE_SIZE * 4) - TILE_SIZE, TILE_SIZE);
-	deleteTile.setPosition(window->getSize().x - (TILE_SIZE * 3) - (TILE_SIZE / 2), TILE_SIZE);
-	transitionTile.setPosition(window->getSize().x - (TILE_SIZE * 2), TILE_SIZE);
+	currentRowColumn.setPosition(window->getSize().x - (TILE_SIZE * 8) - (TILE_SIZE * 3), TILE_SIZE);
+
+	mirrorTile.setPosition(window->getSize().x - (TILE_SIZE * 6) - (TILE_SIZE * 2), TILE_SIZE);
+	rotationTile.setPosition(window->getSize().x - (TILE_SIZE * 5) - (TILE_SIZE * 1.5), TILE_SIZE);
+	transitionTile.setPosition(window->getSize().x - (TILE_SIZE * 4) - TILE_SIZE, TILE_SIZE);
+	deleteTransTile.setPosition(window->getSize().x - (TILE_SIZE * 3) - (TILE_SIZE / 2), TILE_SIZE);
+	deleteTile.setPosition(window->getSize().x - (TILE_SIZE * 2), TILE_SIZE);
+
 }
 
 /*
@@ -63,6 +78,9 @@ void Map::loadMap(std::string mapName, Camera* camera)
 	//If the rows and columns of the map have been set, it is safe to clear out the map file.
 	if (numRows != 0 && numColumns != 0)
 		emptyMap(); //Empty out the map file to make room for a new map.
+
+	if (mapName.compare(".jrm") < 0)
+		return;
 
 	//Open the mapFile file
 	mapFile.open(mapName);
@@ -333,9 +351,9 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 
 			//Get the coordinates of a tile that is a transition point
 			std::getline(mapFile, input, 'x');
-			tp.y = atoi(input.c_str()) - 1;
+			tp.y = atoi(input.c_str());
 			std::getline(mapFile, input, ',');
-			tp.x = atoi(input.c_str()) - 1;
+			tp.x = atoi(input.c_str());
 
 			//Store the file name and coordinates for the spawning position in the next map
 			map[tp.y][tp.x].mapName = p.transitionMapName;
@@ -674,15 +692,24 @@ void Map::draw(sf::RenderWindow* window, sf::Vector2f mouseCoords)
 	}
 }
 
-void Map::drawTileSheet(sf::RenderWindow* window)
+void Map::drawTileSheet(sf::RenderWindow* window, sf::Vector2f mousePos)
 {
 	sf::Sprite tmp;
 	tmp.setTexture(tileSheet);
 	tmp.setPosition(tileSheetCoords.x, tileSheetCoords.y);
+
 	window->draw(tmp);
 	window->draw(deleteTile);
+	window->draw(deleteTransTile);
 	window->draw(transitionTile);
 	window->draw(rotationTile);
+	window->draw(mirrorTile);
+
+	if (sf::Mouse::getPosition(*window).x <= tileSheetCoords.x && sf::Mouse::getPosition(*window).y >= TILE_SIZE)
+	{
+		currentRowColumn.setString(std::to_string((int)(mousePos.y / TILE_SIZE)) + ", " + std::to_string((int)(mousePos.x / TILE_SIZE)));
+		window->draw(currentRowColumn);
+	}
 
 	if (currentTile.compare("No Tile") != 0)
 		window->draw(selectedTile);
@@ -792,15 +819,29 @@ void Map::setTile(sf::Vector2i mouseCoords)
 		selectedTile.setPosition(sf::Vector2f(deleteTile.getPosition().x, deleteTile.getPosition().y));
 		return;
 	}
+	else if (mouseCoords.x > deleteTransTile.getPosition().x && mouseCoords.x < deleteTransTile.getPosition().x + TILE_SIZE &&
+		     mouseCoords.y > deleteTransTile.getPosition().y && mouseCoords.y < deleteTransTile.getPosition().y + TILE_SIZE)
+	{
+		currentTile = "DeleteTransition";
+		selectedTile.setPosition(sf::Vector2f(deleteTransTile.getPosition().x, deleteTransTile.getPosition().y));
+		return;
+	}
 	else if (mouseCoords.x > rotationTile.getPosition().x && mouseCoords.x < rotationTile.getPosition().x + TILE_SIZE &&
-		mouseCoords.y > rotationTile.getPosition().y && mouseCoords.y < rotationTile.getPosition().y + TILE_SIZE)
+		     mouseCoords.y > rotationTile.getPosition().y && mouseCoords.y < rotationTile.getPosition().y + TILE_SIZE)
 	{
 		currentTile = "Rotate";
 		selectedTile.setPosition(sf::Vector2f(rotationTile.getPosition().x, rotationTile.getPosition().y));
 		return;
 	}
+	else if (mouseCoords.x > mirrorTile.getPosition().x && mouseCoords.x < mirrorTile.getPosition().x + TILE_SIZE &&
+		     mouseCoords.y > mirrorTile.getPosition().y && mouseCoords.y < mirrorTile.getPosition().y + TILE_SIZE)
+	{
+		currentTile = "Mirror";
+		selectedTile.setPosition(sf::Vector2f(mirrorTile.getPosition().x, mirrorTile.getPosition().y));
+		return;
+	}
 	else if (mouseCoords.x > transitionTile.getPosition().x && mouseCoords.x < transitionTile.getPosition().x + TILE_SIZE &&
-		mouseCoords.y > transitionTile.getPosition().y && mouseCoords.y < transitionTile.getPosition().y + TILE_SIZE)
+		     mouseCoords.y > transitionTile.getPosition().y && mouseCoords.y < transitionTile.getPosition().y + TILE_SIZE)
 	{
 		currentTile = "Transition";
 		selectedTile.setPosition(sf::Vector2f(transitionTile.getPosition().x, transitionTile.getPosition().y));
@@ -842,6 +883,8 @@ void Map::addTileToPos()
 		deleteTileFromPos(row, column);
 	else if (currentTile.compare("Rotate") == 0)
 		rotateTile(row, column);
+	else if (currentTile.compare("Mirror") == 0)
+		mirrorTileAtPos(row, column);
 	else if (currentTile[0] == '0' && !isSameTile(map, row, column))
 	{
 		addTileToMap(map, currentTile, 2, row, column);
@@ -884,8 +927,14 @@ void Map::deleteTileFromPos(int row, int column)
 	else if (mask[row][column].hasTile)
 	{
 		mask[row][column].hasTile = false;
+
+		if (mask[row][column].collidable && map[row][column].tileType == 'W')
+			map[row][column].collidable = true;
+
 		updateMap(maskTexture, mask);
 	}
+
+	tileDeletedRecently = true;
 }
 
 void Map::rotateTile(int row, int column)
@@ -899,6 +948,8 @@ void Map::rotateTile(int row, int column)
 		canopy[row][column].transformation += 1;
 		if (canopy[row][column].transformation > 3)
 			canopy[row][column].transformation = 0;
+
+		addTileToMap(canopy, canopy[row][column].toString(), 0, row, column);
 		updateMap(canopyTexture, canopy);
 	}
 	else if (ground[row][column].hasTile)
@@ -906,6 +957,8 @@ void Map::rotateTile(int row, int column)
 		ground[row][column].transformation += 1;
 		if (ground[row][column].transformation > 3)
 			ground[row][column].transformation = 0;
+
+		addTileToMap(ground, ground[row][column].toString(), 0, row, column);
 		updateMap(groundTexture, ground);
 	}
 	else if (mask[row][column].hasTile)
@@ -913,6 +966,8 @@ void Map::rotateTile(int row, int column)
 		mask[row][column].transformation += 1;
 		if (mask[row][column].transformation > 3)
 			mask[row][column].transformation = 0;
+
+		addTileToMap(mask, mask[row][column].toString(), 0, row, column);
 		updateMap(maskTexture, mask);
 	}
 	else if (map[row][column].hasTile)
@@ -920,6 +975,8 @@ void Map::rotateTile(int row, int column)
 		map[row][column].transformation += 1;
 		if (map[row][column].transformation > 3) 
 			map[row][column].transformation = 0;
+
+		addTileToMap(map, map[row][column].toString(), 0, row, column);
 		drawToTexture(mapTexture, map, row, column);
 		mapTexture.display();
 	}
@@ -927,9 +984,61 @@ void Map::rotateTile(int row, int column)
 	tileRotatedRecently = true;
 }
 
+void Map::mirrorTileAtPos(int row, int column)
+{
+	if (tileMirroredRecently)
+		return;
+	
+	if (canopy[row][column].hasTile)
+	{
+		if (canopy[row][column].transformation == 0)
+			canopy[row][column].transformation = 4;
+		else
+			canopy[row][column].transformation = 0;
+
+		addTileToMap(canopy, canopy[row][column].toString(), 0, row, column);
+		updateMap(canopyTexture, canopy);
+	}
+	else if (ground[row][column].hasTile)
+	{
+		if (ground[row][column].transformation == 0)
+			ground[row][column].transformation = 4;
+		else
+			ground[row][column].transformation = 0;
+
+		addTileToMap(ground, ground[row][column].toString(), 0, row, column);
+		updateMap(groundTexture, ground);
+	}
+	else if (mask[row][column].hasTile)
+	{
+		if (mask[row][column].transformation == 0)
+			mask[row][column].transformation = 4;
+		else
+			mask[row][column].transformation = 0;
+
+		addTileToMap(mask, mask[row][column].toString(), 0, row, column);
+		updateMap(maskTexture, mask);
+	}
+	else if (map[row][column].hasTile)
+	{
+		if (map[row][column].transformation == 0)
+			map[row][column].transformation = 4;
+		else
+			map[row][column].transformation = 0;
+
+		addTileToMap(map, map[row][column].toString(), 0, row, column);
+		drawToTexture(mapTexture, map, row, column);
+		mapTexture.display();
+	}
+
+	tileMirroredRecently = true;
+}
+
 void Map::allowTileManipulation()
 {
 	tileRotatedRecently = false;
+	tileMirroredRecently = false;
+	tileDeletedRecently = false;
 }
 
 bool Map::isSameTile(Tile**& layer, int row, int column)
@@ -1005,7 +1114,7 @@ void Map::saveMap()
 
 	for (int i = 0; i < numTransitionPoints; i++)
 	{
-		mapFile << transitions[i].transitionMapName << "-" << transitions[i].startingCoords.y << "x" << transitions[i].startingCoords.x << "-" << transitions[i].numCoords << "-";
+		mapFile << transitions[i].transitionMapName << "-" << transitions[i].startingCoords.y / TILE_SIZE << "x" << transitions[i].startingCoords.x / TILE_SIZE << "-" << transitions[i].numCoords << "-";
 
 		for (int j = 0; j < transitions[i].numCoords; j++)
 			mapFile << transitions[i].transitionPoints[j].y << "x" << transitions[i].transitionPoints[j].x << ",";
@@ -1077,6 +1186,67 @@ std::string Map::tileToString(Tile**& layer, int row, int column)
 		s = s + "0" + layer[row][column].tileType;
 
 	return s;
+}
+
+void Map::forceUpdate()
+{
+	//Give the textures transparent backgrounds
+	mapTexture.clear(sf::Color(0, 0, 0, 0));
+	canopyTexture.clear(sf::Color(0, 0, 0, 0));
+	groundTexture.clear(sf::Color(0, 0, 0, 0));
+	maskTexture.clear(sf::Color(0, 0, 0, 0));
+	for (int i = 0; i < NUM_WATER_FRAMES; i++)
+		waterFrames[i].clear(sf::Color(0, 0, 0, 0));
+
+	//TOOLS
+	collisionTexture.clear(sf::Color(0, 0, 0, 0));
+
+	//Step through each row in the maps array.
+	for (int i = 0; i <= numRows - 1; i++)
+	{
+		//Step through each columns in the maps row and add a tile where needed
+		for (int j = 0; j <= numColumns - 1; j++)
+		{
+			//If the current tile is not a water tile, add it to the base map layer
+			if (map[i][j].tileType != 'W')
+				drawToTexture(mapTexture, map, i, j);
+			else //Draw it to the water layer
+			{
+				drawToTexture(waterFrames[0], map, i, j);
+
+				for (int y = 1; y < NUM_WATER_FRAMES; y++)
+				{
+					//Set the part of the tile map to draw to the window
+					tiles.setTextureRect(sf::IntRect((map[i][j].column + y) * TILE_SIZE,
+						map[i][j].row * TILE_SIZE,
+						TILE_SIZE,
+						TILE_SIZE));
+
+					tiles.setPosition(j * TILE_SIZE, i * TILE_SIZE);
+					waterFrames[y].draw(tiles);
+				}
+			}
+
+			//Do not add tiles to places where there are none.
+			if (canopy[i][j].hasTile)
+				drawToTexture(canopyTexture, canopy, i, j);
+			if (ground[i][j].hasTile)
+				drawToTexture(groundTexture, ground, i, j);
+			if (mask[i][j].hasTile)
+				drawToTexture(maskTexture, mask, i, j);
+		}
+	}
+
+	//Let the textures know that they are done being drawn to
+	mapTexture.display();
+	canopyTexture.display();
+	groundTexture.display();
+	maskTexture.display();
+	for (int i = 0; i < NUM_WATER_FRAMES; i++)
+		waterFrames[i].display();
+
+	//TOOLS
+	collisionTexture.display();
 }
 
 /*
