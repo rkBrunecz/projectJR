@@ -158,9 +158,9 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 		{
 			//Get the coordinates of a tile that is a transition point
 			std::getline(mapFile, input, 'x');
-			tileRow = atoi(input.c_str()) - 1;
+			tileRow = atoi(input.c_str());
 			std::getline(mapFile, input, ',');
-			tileColumn = atoi(input.c_str()) - 1;
+			tileColumn = atoi(input.c_str());
 
 			//Store the file name and coordinates for the spawning position in the next map
 			map[tileRow][tileColumn].mapName = mapFileName;
