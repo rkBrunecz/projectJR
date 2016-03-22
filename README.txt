@@ -93,6 +93,7 @@ N  : Allows the user to create a new map (feature is still under development and
 S  : Allows the user to save a map
 TAB: Displays collision boundaries for objects in the game
 G  : Displays grid lines to show where tiles start and finish
+U  : Forces the editor to update all layers
 
 Right Mouse Button: When a map is created or loaded, right clicking and holding will allow for the user to drag the camera. The further the user pulls, the faster the camera moves.
 Left Mouse Button : Click a tile in the tile pane (right side of the window) to select a tile. A transparent yellow box will highlight a tile if it is valid. Left click anywhere 
