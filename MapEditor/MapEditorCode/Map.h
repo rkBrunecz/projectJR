@@ -26,11 +26,12 @@ public:
 	void setColor(int r, int g, int b, int a);
 	void loadMap(std::string mapName, Camera* camera);
 	void createMap(unsigned int rows, unsigned int columns, Camera* camera, std::string mapName);
-	void drawTileSheet(sf::RenderWindow* window);
+	void drawTileSheet(sf::RenderWindow* window, sf::Vector2f mousePos);
 	void setTile(sf::Vector2i mouseCoords);
 	void addTileToPos();
 	void saveMap();
 	void allowTileManipulation();
+	void forceUpdate();
 
 	static unsigned short getTileSize();
 
@@ -51,7 +52,17 @@ private:
 		char tileType; //Indicates what kind of tile it is, such as water, grass, rock, object, etc.
 		std::string mapName = "";
 		sf::Vector2i transitionCoords;
-		std::string boundingBox;
+		std::string boundingBox = "none";
+
+		std::string toString()
+		{
+			std::string s = std::to_string(row) + std::to_string(column) + std::to_string(transformation) + std::to_string(collidable) + tileType;
+
+			if (boundingBox.compare("none") != 0)
+				return  s + ":" + boundingBox;
+			else
+				return s;
+		}
 	};
 
 	struct TransitionPoint
@@ -75,6 +86,8 @@ private:
 	void quickTextureDraw(sf::RenderTexture& texture, Tile**& layer, int row, int column);
 	void deleteTileFromPos(int row, int column);
 	void rotateTile(int row, int column);
+	void mirrorTileAtPos(int row, int column);
+	void getTransitionPoint();
 
 	bool collisionDetected(sf::IntRect* rect);
 	bool checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer, int row, int column);
@@ -94,21 +107,23 @@ private:
 	Tile** canopy; //This 2d contains objects like trees, top of rocks, etc.
 	Tile** mask; //This layer contains masks that are layered on top of other tiles to give depth
 	sf::Sprite tiles, mapSprite, canopySprite, groundSprite, maskSprite, waterSprite;
-	sf::Texture tileSheet, deleteTex, transitionTex, rotateTex;
+	sf::Texture tileSheet, deleteTex, transitionTex, deleteTransTex, rotateTex, mirrorTex;
 	sf::RenderTexture mapTexture, canopyTexture, groundTexture, maskTexture;
 	sf::RenderTexture waterFrames[4];
 	sf::Clock waterAnimation;
+	sf::Text currentRowColumn;
+	sf::Font font;
 	Animation::WaterDirection waterShift = Animation::ShiftRight;
 
-	sf::RectangleShape mousePos, selectedTile, deleteTile, transitionTile, rotationTile;
+	sf::RectangleShape mousePos, selectedTile, deleteTile, transitionTile, rotationTile, mirrorTile, deleteTransTile;
 
 	unsigned short currentWaterFrame = 0;
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
 	int numTransitionPoints = 0;
-	bool mapLoaded = false, tileRotatedRecently = false;
+	bool mapLoaded = false, tileRotatedRecently = false, tileMirroredRecently = false, tileDeletedRecently = false;
 	sf::Vector2i tileSheetCoords;
 	std::string tileData[200];
-	std::string currentTile = "No Tile", nameOfFile = "NULL", nameOfTileSheet = "NULL", nameOfSheetFile = "NULL"; //Options are tile data, "No Tile", "Rotate", "Transition", and "Delete"
+	std::string currentTile = "No Tile", nameOfFile = "NULL", nameOfTileSheet = "NULL", nameOfSheetFile = "NULL"; //Options are tile data, "No Tile", "Rotate", "Transition", "Mirror", "DeleteTransition", and "Delete"
 	std::vector<TransitionPoint> transitions; //Vector containing information about all transition points in a map
 
 	//TOOLS
