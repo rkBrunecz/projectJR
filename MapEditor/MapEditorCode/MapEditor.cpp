@@ -12,7 +12,6 @@ MapEditor.cpp
 #include "Collision.h"
 #include "UI.h"
 #include <iostream>
-#include <Windows.h>
 
 const enum Editor_States //Dictates the state the game is in
 {
@@ -20,6 +19,7 @@ const enum Editor_States //Dictates the state the game is in
 	New,
 	Load,
 	Save,
+	ForceUpdate,
 	Quit
 };
 
@@ -52,39 +52,6 @@ void moveCamera(Camera& camera, sf::RenderWindow& window, Map& map)
 	camera.updatePosition(sf::Vector2i(pos));
 }
 
-std::string loadMap(sf::RenderWindow& window)
-{
-	OPENFILENAME ofn;
-
-	char currentDirectory[MAX_PATH];
-	GetModuleFileName(NULL, currentDirectory, MAX_PATH);
-	std::string::size_type pos = std::string(currentDirectory).find_last_of("\\/");
-
-	// a another memory buffer to contain the file name	
-	char szFile[100];
-
-	// open a file name
-	ZeroMemory(&ofn, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = window.getSystemHandle();
-	ofn.lpstrFile = szFile;
-	ofn.lpstrFile[0] = '\0';
-	ofn.nMaxFile = sizeof(szFile);
-	ofn.lpstrFilter = "JRM\0*.jrm\0";
-	ofn.nFilterIndex = 1;
-	ofn.lpstrFileTitle = NULL;
-	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = NULL;
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-	GetOpenFileName(&ofn);
-
-	std::string s = ofn.lpstrFile;
-
-	SetCurrentDirectory(std::string(currentDirectory).substr(0, pos).c_str());
-
-	return s;
-}
 
 /*
 runGame
@@ -114,22 +81,23 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 			sf::Vector2f mouse_pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 			map.draw(&window, mouse_pos);
 
-			if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && sf::Mouse::getPosition(window).x < window.getSize().x - tilePane.getSize().x && sf::Mouse::getPosition(window).y > menuBar.getSize().y)
+			sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && mousePos.x < window.getSize().x - tilePane.getSize().x && mousePos.y > menuBar.getSize().y)
 				map.addTileToPos();
 			else if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-				map.setTile(sf::Mouse::getPosition(window));
+				map.setTile(mousePos);
 			
 			if (!sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				map.allowTileManipulation();
 
 			window.setView(window.getDefaultView());
 			window.draw(tilePane);
-			map.drawTileSheet(&window);
+			map.drawTileSheet(&window, mouse_pos);
 		}
 
 		break;
 	case Load:
-		map.loadMap(loadMap(window), &camera);
+		map.loadMap(UI::getMap(&window), &camera);
 		camera.setCenter(window.getSize().x / 2, window.getSize().y / 2);
 
 		state = Build;
@@ -137,7 +105,16 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 		break;
 
 	case Save:
-		map.saveMap();
+		if (map.isMapLoaded())
+			map.saveMap();
+
+		state = Build;
+
+		break;
+
+	case ForceUpdate:
+		if (map.isMapLoaded())
+			map.forceUpdate();
 
 		state = Build;
 
@@ -230,6 +207,8 @@ int main()
 					state = New;
 				else if (event.key.code == sf::Keyboard::S)
 					state = Save;
+				else if (event.key.code == sf::Keyboard::U)
+					state = ForceUpdate;
 				break;
 
 			case sf::Event::MouseButtonPressed: 
