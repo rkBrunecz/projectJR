@@ -1,9 +1,9 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
-Collision
-9/11/2015
+Collision.cpp
+The collision class provides methods for detecting collision.
 
-The collision class provides methods for detecting collision
+@author Randall Brunecz
+@version 1.0 9/11/2015
 */
 
 #include "Collision.h"

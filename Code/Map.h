@@ -1,9 +1,12 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
-Map
-9/5/2015
+Map.h
+This class handles createing and drawing a map. It also performs other map related useful functions.
 
-This class handles creates and draws a map. It also performs other map related useful functions.
+@author Randall Brunecz
+@version 2.0 3/23/2016
+	-Overhauled how the map draws itself. Will allow for straight forward implementation of NPC's. The new version is also a large optimization over the previous implementation.
+
+@version 1.0 9/5/2015
 */
 
 #ifndef Map_H

@@ -1,9 +1,9 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
 SpecialEffect.h
-9/3/2015
-
 The special effects object contains many methods for creating special effects such as fades, screen dims, etc.
+
+@author Randall Brunecz
+@version 1.0 9/3/2015
 */
 
 #ifndef SpecialEffect_H
