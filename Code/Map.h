@@ -32,6 +32,7 @@ public:
 	//DEBUG
 	void displayCollsionLayer();
 	void displayGridLayer();
+	void displayTransitionLayer();
 
 private:
 	//PRIVATE structures
@@ -76,9 +77,9 @@ private:
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
 
 	//TOOLS
-	sf::RenderTexture collisionTexture, gridTexture;
-	sf::Sprite collisionSprite, gridSprite;
-	bool renderCollisionLayer = false, renderGridLayer = false;
+	sf::RenderTexture collisionTexture, gridTexture, transitionTexture;
+	sf::Sprite collisionSprite, gridSprite, transitionSprite;
+	bool renderCollisionLayer = false, renderGridLayer = false, renderTransitionLayer = false;
 };
 
 #endif
