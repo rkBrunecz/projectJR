@@ -480,7 +480,7 @@ Parameters:
 		    the drawing calls.
 
 Draws the map to the game window
-*/
+*//*
 void Map::draw(sf::RenderWindow* window, Player* player)
 {
 	//LOCAL VARIABLES
@@ -512,6 +512,7 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 			background.push_back(i * TILE_SIZE);
 	}
 
+	
 	//Draw the background
 	for (int i = 0; i < background.size(); i++)
 	{
@@ -525,6 +526,7 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 	}
 
 	player->draw(window); //Draw the player in between the background and foreground
+	
 	
 	//Draw the foreground
 	for (int i = 0; i < foreground.size(); i++)
@@ -540,6 +542,60 @@ void Map::draw(sf::RenderWindow* window, Player* player)
 
 	window->draw(canopySprite); //Draw the canopy
 	
+	//TOOLS
+	if (renderCollisionLayer)
+		window->draw(collisionSprite);
+	if (renderGridLayer)
+		window->draw(gridSprite);
+}*/
+
+/*
+draw
+Parameters:
+window: This is the window that the map will be drawn on
+player: This is used to get the players position in the game to determine the order of
+the drawing calls.
+
+Draws the map to the game window
+*/
+void Map::draw(sf::RenderWindow* window, Player* player)
+{
+	//LOCAL VARIABLES
+	std::vector<Graphic*> drawListBeforeGroundLayer;
+	std::vector<Graphic*> drawListAfterGroundLayer;
+
+	Animation::updateWaterAnimation(&waterShift, &waterAnimation, &waterSprite, waterFrames, &currentWaterFrame, NUM_WATER_FRAMES);
+
+	window->draw(waterSprite);
+	window->draw(mapSprite);
+	window->draw(maskSprite);
+
+	int column = (player->getPlayerCoordinates().left + (player->getPlayerCoordinates().width * 0.5)) / TILE_SIZE;
+	int row = (player->getPlayerCoordinates().top + player->getPlayerCoordinates().height) / TILE_SIZE;
+
+	//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
+	if (ground[row][column].hasTile &&
+		(row * TILE_SIZE) + ground[row][column].bBY > player->getPlayerCoordinates().top)
+		drawListBeforeGroundLayer.push_back(player);
+	else if (column - 1 >= 0 && ground[row][column - 1].hasTile &&
+		(row * TILE_SIZE) + ground[row][column - 1].bBY > player->getPlayerCoordinates().top)
+		drawListBeforeGroundLayer.push_back(player);
+	else if (column + 1 < numRows && ground[row][column + 1].hasTile &&
+		(row * TILE_SIZE) + ground[row][column + 1].bBY > player->getPlayerCoordinates().top)
+		drawListBeforeGroundLayer.push_back(player);
+	else
+		drawListAfterGroundLayer.push_back(player);
+
+	for (int i = 0; i < drawListBeforeGroundLayer.size(); i++)
+		drawListBeforeGroundLayer[i]->draw(window);
+
+	window->draw(groundSprite);
+
+	for (int i = 0; i < drawListAfterGroundLayer.size(); i++)
+		drawListAfterGroundLayer[i]->draw(window);
+
+	window->draw(canopySprite); //Draw the canopy
+
 	//TOOLS
 	if (renderCollisionLayer)
 		window->draw(collisionSprite);
