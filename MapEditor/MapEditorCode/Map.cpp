@@ -72,15 +72,21 @@ Load map simply loads in all relavent map data to the map array to ready it to b
 */
 void Map::loadMap(std::string mapName, Camera* camera)
 {
+	if (mapName.compare(".jrm") < 0)
+		return;
+
 	//LOCAL VARIABLES
 	std::ifstream mapFile;
+
+	//Reset all tile manipulations and debug layers
+	allowTileManipulation();
+	renderCollisionLayer = false;
+	renderGridLayer = false;
+	renderTransitionLayer = false;
 
 	//If the rows and columns of the map have been set, it is safe to clear out the map file.
 	if (numRows != 0 && numColumns != 0)
 		emptyMap(); //Empty out the map file to make room for a new map.
-
-	if (mapName.compare(".jrm") < 0)
-		return;
 
 	//Open the mapFile file
 	mapFile.open(mapName);
@@ -98,6 +104,12 @@ void Map::loadMap(std::string mapName, Camera* camera)
 
 void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std::string mapName)
 {
+	//Reset all tile manipulations and debug layers
+	allowTileManipulation();
+	renderCollisionLayer = false;
+	renderGridLayer = false;
+	renderTransitionLayer = false;
+
 	//If the rows and columns of the map have been set, it is safe to clear out the map file.
 	if (numRows != 0 && numColumns != 0)
 		emptyMap(); //Empty out the map file to make room for a new map.
@@ -277,6 +289,7 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 		//TOOLS
 		collisionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		gridTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		transitionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 	}
 	
 	createGrid();
@@ -299,6 +312,7 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 	initializeTransitionPoints(mapFile); //Intialize all transition points in the map
 
 	populateMap(mapFile); //Fill the array with the map data
+
 	drawMap(); //Draw the map
 }
 
@@ -335,10 +349,9 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 		std::getline(mapFile, input, '-');
 		coords.x = atoi(input.c_str()) * TILE_SIZE;
 
-		p.startingCoords.x = coords.x;
-		p.startingCoords.y = coords.y;
+		p.startingCoords = sf::Vector2i(coords.x / TILE_SIZE, coords.y / TILE_SIZE);
 
-		//Get the total number of map tiles that move the same map. Allows for an area to be defined to allow for more map transition flexibility
+		//Get the total number of map tiles that move to the same map. Allows for an area to be defined to allow for more map transition flexibility
 		std::getline(mapFile, input, '-');
 		numCoords = atoi(input.c_str());
 
@@ -363,10 +376,8 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 		}
 
 		transitions.push_back(p);
+		std::getline(mapFile, input);
 	}
-
-	//Clear out the line to get ready to read the map.
-	std::getline(mapFile, input);
 }
 
 /*
@@ -518,6 +529,7 @@ void Map::drawMap()
 
 	//TOOLS
 	collisionTexture.clear(sf::Color(0, 0, 0, 0));
+	transitionTexture.clear(sf::Color(0, 0, 0, 0));
 
 	//Used to draw grids lines 
 	sf::RectangleShape r;
@@ -569,6 +581,7 @@ void Map::drawMap()
 
 	//TOOLS
 	collisionTexture.display();
+	transitionTexture.display();
 
 	//Set the render textures to sprites
 	mapSprite.setTexture(mapTexture.getTexture());
@@ -579,6 +592,7 @@ void Map::drawMap()
 	
 	//TOOLS
 	collisionSprite.setTexture(collisionTexture.getTexture());
+	transitionSprite.setTexture(transitionTexture.getTexture());
 }
 
 /*
@@ -651,6 +665,16 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 
 		collisionTexture.draw(r);
 	}
+
+	if (layer[row][column].tileType == 'E')
+	{
+		sf::RectangleShape r;
+		r.setPosition(column * TILE_SIZE, row * TILE_SIZE);
+		r.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+		r.setFillColor(sf::Color(0, 255, 0, 255));
+
+		transitionTexture.draw(r);
+	}
 }
 
 /*
@@ -681,6 +705,9 @@ void Map::draw(sf::RenderWindow* window, sf::Vector2f mouseCoords)
 		window->draw(collisionSprite);
 	if (renderGridLayer)
 		window->draw(gridSprite);
+	if (renderTransitionLayer)
+		window->draw(transitionSprite);
+
 
 	if (!sf::Mouse::isButtonPressed(sf::Mouse::Right))
 	{
@@ -817,6 +844,7 @@ void Map::setTile(sf::Vector2i mouseCoords)
 	{
 		currentTile = "Delete";
 		selectedTile.setPosition(sf::Vector2f(deleteTile.getPosition().x, deleteTile.getPosition().y));
+		renderTransitionLayer = false; //Turn off the transition layer
 		return;
 	}
 	else if (mouseCoords.x > deleteTransTile.getPosition().x && mouseCoords.x < deleteTransTile.getPosition().x + TILE_SIZE &&
@@ -824,6 +852,7 @@ void Map::setTile(sf::Vector2i mouseCoords)
 	{
 		currentTile = "DeleteTransition";
 		selectedTile.setPosition(sf::Vector2f(deleteTransTile.getPosition().x, deleteTransTile.getPosition().y));
+		renderTransitionLayer = true;
 		return;
 	}
 	else if (mouseCoords.x > rotationTile.getPosition().x && mouseCoords.x < rotationTile.getPosition().x + TILE_SIZE &&
@@ -831,6 +860,7 @@ void Map::setTile(sf::Vector2i mouseCoords)
 	{
 		currentTile = "Rotate";
 		selectedTile.setPosition(sf::Vector2f(rotationTile.getPosition().x, rotationTile.getPosition().y));
+		renderTransitionLayer = false; //Turn off the transition layer
 		return;
 	}
 	else if (mouseCoords.x > mirrorTile.getPosition().x && mouseCoords.x < mirrorTile.getPosition().x + TILE_SIZE &&
@@ -838,6 +868,7 @@ void Map::setTile(sf::Vector2i mouseCoords)
 	{
 		currentTile = "Mirror";
 		selectedTile.setPosition(sf::Vector2f(mirrorTile.getPosition().x, mirrorTile.getPosition().y));
+		renderTransitionLayer = false; //Turn off the transition layer
 		return;
 	}
 	else if (mouseCoords.x > transitionTile.getPosition().x && mouseCoords.x < transitionTile.getPosition().x + TILE_SIZE &&
@@ -845,11 +876,14 @@ void Map::setTile(sf::Vector2i mouseCoords)
 	{
 		currentTile = "Transition";
 		selectedTile.setPosition(sf::Vector2f(transitionTile.getPosition().x, transitionTile.getPosition().y));
+		renderTransitionLayer = true;
 		return;
 	}
 
 	if (mouseCoords.x < tileSheetCoords.x || mouseCoords.y < tileSheetCoords.y)
 		return;
+
+	renderTransitionLayer = false; //Turn off the transition layer
 
 	//LOCAL VARIABLES
 	int column = (mouseCoords.x - tileSheetCoords.x) / TILE_SIZE;
@@ -881,10 +915,14 @@ void Map::addTileToPos()
 
 	if (currentTile.compare("Delete") == 0)
 		deleteTileFromPos(row, column);
+	else if (currentTile.compare("DeleteTransition") == 0)
+		deleteTransitionPoint(row, column);
 	else if (currentTile.compare("Rotate") == 0)
 		rotateTile(row, column);
 	else if (currentTile.compare("Mirror") == 0)
 		mirrorTileAtPos(row, column);
+	else if (currentTile.compare("Transition") == 0)
+		setTransitionPoint(row, column);
 	else if (currentTile[0] == '0' && !isSameTile(map, row, column))
 	{
 		addTileToMap(map, currentTile, 2, row, column);
@@ -935,6 +973,55 @@ void Map::deleteTileFromPos(int row, int column)
 	}
 
 	tileDeletedRecently = true;
+}
+
+void Map::deleteTransitionPoint(int row, int column)
+{
+	if (transitionRemovedRecently || map[row][column].mapName.compare("") == 0)
+		return; 
+
+	//LOCAL VARIABLES
+	int i = 0;
+	bool tileRemoved = false;
+	sf::Vector2i transitionCoordsAtPos;
+
+	transitionCoordsAtPos.x = map[row][column].transitionCoords.x / TILE_SIZE;
+	transitionCoordsAtPos.y = map[row][column].transitionCoords.y / TILE_SIZE;
+
+	transitionRemovedRecently = true;
+
+	while (i < transitions.size() && !tileRemoved)
+	{
+		if (transitions[i].transitionMapName.compare(map[row][column].mapName) == 0 && transitions[i].startingCoords == transitionCoordsAtPos)
+		{
+			//ADDITIONAL LOCAL VARIABLES
+			int j = 0;
+			bool coordsFound = false;
+
+			while (j < transitions[i].transitionPoints.size() && !coordsFound)
+			{
+				if (transitions[i].transitionPoints[j] == sf::Vector2i(column, row))
+					coordsFound = true;
+				else
+					j++;
+			}
+
+			transitions[i].transitionPoints.erase(transitions[i].transitionPoints.begin() + j, transitions[i].transitionPoints.begin() + j + 1);
+			transitions[i].numCoords--;
+
+			if (transitions[i].transitionPoints.size() == 0)
+			{
+				transitions.erase(transitions.begin() + i, transitions.begin() + i + 1);
+				numTransitionPoints--;
+			}
+
+			map[row][column].tileType = tileData[map[row][column].row * 10 + map[row][column].column][6];
+
+			tileRemoved = true;
+		}
+
+		i++;
+	}
 }
 
 void Map::rotateTile(int row, int column)
@@ -1034,11 +1121,70 @@ void Map::mirrorTileAtPos(int row, int column)
 	tileMirroredRecently = true;
 }
 
+void Map::setTransitionPoint(int row, int column)
+{
+	//If a transition point already exists, exit the function
+	if (map[row][column].tileType == 'E')
+		return;
+
+	//LOCAL VARIABLES
+	std::string mapFileName = UI::getMap("JRM");
+	if (mapFileName.compare(".jrm") < 0) // If the user closes the file chooser, exit the function
+		return;
+
+	sf::Vector2i transitionToCoords = UI::getTransitionCoordinates();
+	sf::Vector2i transitionPoint = sf::Vector2i(column, row);
+
+	//If the user closes the transition coordinates window, exit the function
+	if (transitionToCoords == sf::Vector2i(-1, -1))
+		return;
+
+	mapFileName = mapFileName.substr(mapFileName.find_last_of("bin") - 2, mapFileName.size());
+	mapFileName[3] = '/';
+	mapFileName[8] = '/';
+
+	//Set-up tile to be a transition tile
+	map[row][column].tileType = 'E';
+	map[row][column].transitionCoords = transitionPoint;
+	map[row][column].mapName = mapFileName;
+
+	sf::RectangleShape r;
+	r.setPosition(column * TILE_SIZE, row * TILE_SIZE);
+	r.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+	r.setFillColor(sf::Color(0, 255, 0, 255));
+
+	transitionTexture.draw(r);
+
+	transitionPlacedRecently = true;
+
+	for (int i = 0; i < transitions.size(); i++)
+	{
+		if (transitions[i].startingCoords == transitionToCoords && transitions[i].transitionMapName.compare(mapFileName) == 0)
+		{
+			transitions[i].numCoords++;
+			transitions[i].transitionPoints.push_back(transitionPoint);
+			return;
+		}
+	}
+
+	numTransitionPoints++;
+
+	TransitionPoint tp;
+	tp.transitionMapName = mapFileName;
+	tp.startingCoords = transitionToCoords;
+	tp.transitionPoints.push_back(transitionPoint);
+	tp.numCoords++;
+
+	transitions.push_back(tp);
+}
+
 void Map::allowTileManipulation()
 {
 	tileRotatedRecently = false;
 	tileMirroredRecently = false;
 	tileDeletedRecently = false;
+	transitionPlacedRecently = false;
+	transitionRemovedRecently = false;
 }
 
 bool Map::isSameTile(Tile**& layer, int row, int column)
@@ -1094,6 +1240,14 @@ void Map::displayGridLayer()
 		renderGridLayer = false;
 }
 
+void Map::displayTransitionLayer()
+{
+	if (!renderTransitionLayer)
+		renderTransitionLayer = true;
+	else
+		renderTransitionLayer = false;
+}
+
 unsigned short Map::getTileSize()
 {
 	return TILE_SIZE;
@@ -1107,19 +1261,19 @@ void Map::saveMap()
 
 	mapFile.open(nameOfFile);
 
-	mapFile << nameOfSheetFile << "\n";
-	mapFile << nameOfTileSheet << "\n";
-	mapFile << numRows << "x" << numColumns << "\n";
-	mapFile << numTransitionPoints << "\n";
+	mapFile << nameOfSheetFile << std::endl;
+	mapFile << nameOfTileSheet << std::endl;
+	mapFile << numRows << "x" << numColumns << std::endl;
+	mapFile << numTransitionPoints << std::endl;
 
 	for (int i = 0; i < numTransitionPoints; i++)
 	{
-		mapFile << transitions[i].transitionMapName << "-" << transitions[i].startingCoords.y / TILE_SIZE << "x" << transitions[i].startingCoords.x / TILE_SIZE << "-" << transitions[i].numCoords << "-";
+		mapFile << transitions[i].transitionMapName << "-" << transitions[i].startingCoords.y << "x" << transitions[i].startingCoords.x << "-" << transitions[i].numCoords << "-";
 
 		for (int j = 0; j < transitions[i].numCoords; j++)
 			mapFile << transitions[i].transitionPoints[j].y << "x" << transitions[i].transitionPoints[j].x << ",";
 
-		mapFile << "\n";
+		mapFile << std::endl;
 	}
 
 	for (int row = 0; row < numRows; row++)
@@ -1165,7 +1319,7 @@ void Map::saveMap()
 			mapFile << "_";
 		}
 
-		mapFile << "\n";
+		mapFile << std::endl;
 	}
 
 	mapFile.close();
@@ -1200,6 +1354,7 @@ void Map::forceUpdate()
 
 	//TOOLS
 	collisionTexture.clear(sf::Color(0, 0, 0, 0));
+	transitionTexture.clear(sf::Color(0, 0, 0, 0));
 
 	//Step through each row in the maps array.
 	for (int i = 0; i <= numRows - 1; i++)
@@ -1247,6 +1402,7 @@ void Map::forceUpdate()
 
 	//TOOLS
 	collisionTexture.display();
+	transitionTexture.display();
 }
 
 /*

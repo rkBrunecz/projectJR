@@ -11,6 +11,7 @@ This class handles creates and draws a map. It also performs other map related u
 
 #include "Graphic.h"
 #include "Animation.h"
+#include "UI.h"
 #include <SFML\Graphics.hpp>
 #include <vector>
 
@@ -39,9 +40,10 @@ public:
 
 	sf::Vector2f mapSize();
 
-	//DEBUG
+	//TOOLS
 	void displayCollsionLayer();
 	void displayGridLayer();
+	void displayTransitionLayer();
 
 private:
 	//PRIVATE structures
@@ -69,7 +71,7 @@ private:
 	{
 		std::string transitionMapName;
 		sf::Vector2i startingCoords;
-		int numCoords;
+		int numCoords = 0;
 		std::vector<sf::Vector2i> transitionPoints;
 	};
 
@@ -83,11 +85,11 @@ private:
 	void emptyMap();
 	void createGrid();
 	void updateMap(sf::RenderTexture& texture, Tile**& layer);
-	void quickTextureDraw(sf::RenderTexture& texture, Tile**& layer, int row, int column);
 	void deleteTileFromPos(int row, int column);
+	void deleteTransitionPoint(int row, int column);
 	void rotateTile(int row, int column);
 	void mirrorTileAtPos(int row, int column);
-	void getTransitionPoint();
+	void setTransitionPoint(int row, int column);
 
 	bool collisionDetected(sf::IntRect* rect);
 	bool checkCollisionOnLayer(sf::IntRect* rect, Tile**& layer, int row, int column);
@@ -120,16 +122,16 @@ private:
 	unsigned short currentWaterFrame = 0;
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
 	int numTransitionPoints = 0;
-	bool mapLoaded = false, tileRotatedRecently = false, tileMirroredRecently = false, tileDeletedRecently = false;
+	bool mapLoaded = false, tileRotatedRecently = false, tileMirroredRecently = false, tileDeletedRecently = false, transitionPlacedRecently = false, transitionRemovedRecently = false;
 	sf::Vector2i tileSheetCoords;
 	std::string tileData[200];
 	std::string currentTile = "No Tile", nameOfFile = "NULL", nameOfTileSheet = "NULL", nameOfSheetFile = "NULL"; //Options are tile data, "No Tile", "Rotate", "Transition", "Mirror", "DeleteTransition", and "Delete"
 	std::vector<TransitionPoint> transitions; //Vector containing information about all transition points in a map
 
 	//TOOLS
-	sf::RenderTexture collisionTexture, gridTexture;
-	sf::Sprite collisionSprite, gridSprite;
-	bool renderCollisionLayer = false, renderGridLayer = false;
+	sf::RenderTexture collisionTexture, gridTexture, transitionTexture;
+	sf::Sprite collisionSprite, gridSprite, transitionSprite;
+	bool renderCollisionLayer = false, renderGridLayer = false, renderTransitionLayer = false;
 };
 
 #endif

@@ -1,5 +1,12 @@
 #include "UI.h"
 
+sf::RenderWindow* UI::mainWindow = NULL;
+
+void UI::intializeMainWindow(sf::RenderWindow* window)
+{
+	mainWindow = window;
+}
+
 sf::Vector2i UI::getNewMapParams(std::string* str)
 {
 	sf::RenderWindow window(sf::VideoMode(400, 225, 0), "New Map", sf::Style::Close);
@@ -119,7 +126,12 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 					}
 				}
 				else if (event.key.code == sf::Keyboard::Return && atoi(width.c_str()) > 2 && atoi(height.c_str()) > 2 && fileName.length() > 0)
-					valuesEntered = true;				
+					valuesEntered = true;	
+				else if (event.key.code == sf::Keyboard::Escape)
+				{
+					window.close();
+					return sf::Vector2i(-1, -1);
+				}
 
 				break;
 
@@ -196,7 +208,7 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 	return sf::Vector2i(atoi(width.c_str()) / Map::getTileSize(), atoi(height.c_str()) / Map::getTileSize());
 }
 
-std::string UI::getMap(sf::RenderWindow* window)
+std::string UI::getMap(std::string filter)
 {
 	OPENFILENAME ofn;
 
@@ -210,11 +222,16 @@ std::string UI::getMap(sf::RenderWindow* window)
 	// open a file name
 	ZeroMemory(&ofn, sizeof(ofn));
 	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = window->getSystemHandle();
+	ofn.hwndOwner = mainWindow->getSystemHandle();
 	ofn.lpstrFile = szFile;
 	ofn.lpstrFile[0] = '\0';
 	ofn.nMaxFile = sizeof(szFile);
-	ofn.lpstrFilter = "JRM\0*.jrm\0";
+
+	if (filter.compare("JRM") == 0)
+		ofn.lpstrFilter = "JRM\0*.jrm\0";
+	else if (filter.compare("JRS") == 0)
+		ofn.lpstrFilter = "JRS\0*.jrs\0";
+
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
@@ -228,4 +245,164 @@ std::string UI::getMap(sf::RenderWindow* window)
 	SetCurrentDirectory(std::string(currentDirectory).substr(0, pos).c_str());
 
 	return s;
+}
+
+sf::Vector2i UI::getTransitionCoordinates()
+{
+	sf::RenderWindow window(sf::VideoMode(400, 200, 0), "Transition Map Coordinates", sf::Style::Close);
+	sf::Font font;
+	if (!font.loadFromFile("bin/Font/arial.ttf"))
+		exit(EXIT_FAILURE);
+
+	//LOCAL VARIABLES
+	sf::Text Row("Row :", font, 20), Column("Column :", font, 20);
+	sf::Text enteredRow, enteredColumn;
+	sf::RectangleShape textField(sf::Vector2f(window.getSize().x * 0.5, 25)), textField2(sf::Vector2f(window.getSize().x * 0.5, 25));
+	sf::RectangleShape bar(sf::Vector2f(3, 20));
+	sf::Clock barBlink;
+	std::string row, column;
+	bool valuesEntered = false, enteringRow = true, enteringColumn = false;
+
+	Row.setPosition((window.getSize().x / 2) - (Row.getLocalBounds().width / 2) - 120, (window.getSize().y / 2) - 35);
+	Row.setColor(sf::Color::White);
+
+	Column.setPosition((window.getSize().x / 2) - (Column.getLocalBounds().width / 2) - 134, (window.getSize().y / 2));
+	Column.setColor(sf::Color::White);
+
+
+	//Set up properties of the enteredW text field
+	enteredRow.setFont(font);
+	enteredRow.setColor(sf::Color(0, 155, 0, 255));
+	enteredRow.setCharacterSize(20);
+	enteredRow.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 33);
+	enteredRow.setColor(sf::Color::Black);
+
+	bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17, (window.getSize().y / 2) - 33);
+
+	//Set up properties of the enteredH text field
+	enteredColumn.setFont(font);
+	enteredColumn.setColor(sf::Color(0, 0, 0, 255));
+	enteredColumn.setCharacterSize(20);
+	enteredColumn.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) + 7);
+	enteredColumn.setColor(sf::Color::Black);
+
+	//Set up properties of the text field
+	textField.setFillColor(sf::Color::White);
+	textField.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 35);
+
+	textField2.setFillColor(sf::Color::White);
+	textField2.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) + 5);
+
+	while (!valuesEntered)
+	{
+		window.clear(sf::Color(205, 201, 201, 255));
+
+		if (barBlink.getElapsedTime() >= sf::seconds(0.5f))
+		{
+			barBlink.restart();
+
+			if (bar.getFillColor().a == 0)
+				bar.setFillColor(sf::Color(0, 0, 0, 255));
+			else
+				bar.setFillColor(sf::Color(0, 0, 0, 0));
+		}
+
+		//Poll keyboard events
+		sf::Event event;
+		while (window.pollEvent(event))
+		{
+			switch (event.type)
+			{
+			case sf::Event::Closed:
+				window.close();
+				return sf::Vector2i(-1, -1);
+
+				break;
+
+			case sf::Event::KeyPressed:
+				if (event.key.code == sf::Keyboard::BackSpace)
+				{
+					if (row.length() > 0 && enteringRow)
+						row.erase(row.length() - 1);
+					if (column.length() > 0 && enteringColumn)
+						column.erase(column.length() - 1);
+
+					enteredRow.setString(row);
+					enteredColumn.setString(column);
+				}
+				else if (event.key.code == sf::Keyboard::Tab)
+				{
+					if (enteringRow)
+					{
+						enteringRow = false;
+						enteringColumn = true;
+					}
+					else if (enteringColumn)
+					{
+						enteringColumn = false;
+						enteringRow = true;
+					}
+				}
+				else if (event.key.code == sf::Keyboard::Return && atoi(row.c_str()) > 1 && atoi(column.c_str()))
+					valuesEntered = true;
+				else if (event.key.code == sf::Keyboard::Escape)
+				{
+					window.close();
+					return sf::Vector2i(-1, -1);
+				}
+
+				break;
+
+			case sf::Event::TextEntered:
+				if (event.text.unicode >= 48 && event.text.unicode <= 57)
+				{
+					if (row.length() < 5 && enteringRow)
+						row += static_cast<char>(event.text.unicode);
+					if (column.length() < 5 && enteringColumn)
+						column += static_cast<char>(event.text.unicode);
+
+					enteredRow.setString(row);
+					enteredColumn.setString(column);
+				}
+
+				break;
+
+			case sf::Event::MouseButtonPressed:
+				if (event.mouseButton.button == sf::Mouse::Left)
+				{
+					if (textField.getGlobalBounds().contains(sf::Vector2f(sf::Mouse::getPosition(window))))
+					{
+						enteringRow = true;
+						enteringColumn = false;
+					}
+					else if (textField2.getGlobalBounds().contains(sf::Vector2f(sf::Mouse::getPosition(window))))
+					{
+						enteringColumn = true;
+						enteringRow = false;
+					}
+				}
+
+				break;
+			}
+		}
+
+		if (enteringRow)
+			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (row.length() * 10), (window.getSize().y / 2) - 33);
+		else if (enteringColumn)
+			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (column.length() * 10), (window.getSize().y / 2) + 7);
+
+		window.draw(Row);
+		window.draw(Column);
+		window.draw(textField);
+		window.draw(textField2);
+		window.draw(enteredRow);
+		window.draw(enteredColumn);
+		window.draw(bar);
+
+		window.display();
+	}
+
+	window.close();
+
+	return sf::Vector2i(atoi(column.c_str()), atoi(row.c_str()));
 }

@@ -97,7 +97,7 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 
 		break;
 	case Load:
-		map.loadMap(UI::getMap(&window), &camera);
+		map.loadMap(UI::getMap("JRM"), &camera);
 		camera.setCenter(window.getSize().x / 2, window.getSize().y / 2);
 
 		state = Build;
@@ -181,6 +181,7 @@ int main()
 	//Intialize additional parameters
 	window.setVerticalSyncEnabled(true);
 	map.initializeTileSheetCoords(&window);
+	UI::intializeMainWindow(&window);
 
 	//GAME LOOP
 	while (state != Quit)
@@ -201,6 +202,8 @@ int main()
 					map.displayCollsionLayer();
 				else if (event.key.code == sf::Keyboard::G)
 					map.displayGridLayer();
+				else if (event.key.code == sf::Keyboard::T)
+					map.displayTransitionLayer();
 				else if (event.key.code == sf::Keyboard::L)
 					state = Load;
 				else if (event.key.code == sf::Keyboard::N)

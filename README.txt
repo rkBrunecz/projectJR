@@ -23,6 +23,7 @@ DEBUG CONTROLS
 2  : Perform a fade out transition
 TAB: Displays collision boundaries for objects in the game
 G  : Displays grid lines to show where tiles start and finish
+T  : Displays all the transition points on the map
 
 PERFORMANCE
 --------------------------------------------
@@ -94,9 +95,9 @@ S  : Allows the user to save a map
 TAB: Displays collision boundaries for objects in the game
 G  : Displays grid lines to show where tiles start and finish
 U  : Forces the editor to update all layers
+T  : Displays all the transition points on the map
 
 Right Mouse Button: When a map is created or loaded, right clicking and holding will allow for the user to drag the camera. The further the user pulls, the faster the camera moves.
-Left Mouse Button : Click a tile in the tile pane (right side of the window) to select a tile. A transparent yellow box will highlight a tile if it is valid. Left click anywhere 
-		    in the map to place the tile.
+Left Mouse Button : Click a tile in the tile pane (right side of the window) to select a tile. A transparent yellow box will highlight a tile if it is valid. Left click anywhere in the map to place the tile.
 
 ESC : Closes the application

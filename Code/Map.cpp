@@ -93,6 +93,7 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 		//TOOLS
 		collisionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		gridTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		transitionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 	}
 
 	camera->setBounds(numColumns * TILE_SIZE, numRows * TILE_SIZE);
@@ -166,10 +167,9 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 			map[tileRow][tileColumn].mapName = mapFileName;
 			map[tileRow][tileColumn].transitionCoords = coords;
 		}
-	}
 
-	//Clear out the line to get ready to read the map.
-	std::getline(mapFile, input);
+		std::getline(mapFile, input);
+	}
 }
 
 /*
@@ -322,6 +322,7 @@ void Map::drawMap()
 	//TOOLS
 	collisionTexture.clear(sf::Color(0, 0, 0, 0));
 	gridTexture.clear(sf::Color(0, 0, 0, 0));
+	transitionTexture.clear(sf::Color(0, 0, 0, 0));
 
 	//Used to draw grids lines 
 	sf::RectangleShape r;
@@ -387,6 +388,7 @@ void Map::drawMap()
 	//TOOLS
 	collisionTexture.display();
 	gridTexture.display();
+	transitionTexture.display();
 
 	//Set the render textures to sprites
 	mapSprite.setTexture(mapTexture.getTexture());
@@ -398,6 +400,7 @@ void Map::drawMap()
 	//TOOLS
 	collisionSprite.setTexture(collisionTexture.getTexture());
 	gridSprite.setTexture(gridTexture.getTexture());
+	transitionSprite.setTexture(transitionTexture.getTexture());
 }
 
 /*
@@ -470,81 +473,71 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 
 		collisionTexture.draw(r);
 	}
+
+	if (layer[row][column].tileType == 'E')
+	{
+		sf::RectangleShape r;
+		r.setPosition(column * TILE_SIZE, row * TILE_SIZE);
+		r.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+		r.setFillColor(sf::Color(0, 255, 0, 255));
+		transitionTexture.draw(r);
+	}
 }
 
 /*
 draw
 Parameters:
-	window: This is the window that the map will be drawn on
-	player: This is used to get the players position in the game to determine the order of
-		    the drawing calls.
+window: This is the window that the map will be drawn on
+player: This is used to get the players position in the game to determine the order of
+the drawing calls.
 
 Draws the map to the game window
 */
 void Map::draw(sf::RenderWindow* window, Player* player)
 {
 	//LOCAL VARIABLES
-	std::vector<unsigned short> background;
-	std::vector<unsigned short> foreground;
+	std::vector<Graphic*> drawListBeforeGroundLayer;
+	std::vector<Graphic*> drawListAfterGroundLayer;
 
 	Animation::updateWaterAnimation(&waterShift, &waterAnimation, &waterSprite, waterFrames, &currentWaterFrame, NUM_WATER_FRAMES);
 
 	window->draw(waterSprite);
 	window->draw(mapSprite);
 	window->draw(maskSprite);
-	
+
 	int column = (player->getPlayerCoordinates().left + (player->getPlayerCoordinates().width * 0.5)) / TILE_SIZE;
-	
-	//Check each row for collision with the player or with npc's
-	for (int i = 0; i < numRows; i++)
-	{
-		//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
-		if (ground[i][column].hasTile &&
-			(i * TILE_SIZE) + ground[i][column].bBY > player->getPlayerCoordinates().top)
-			foreground.push_back(i * TILE_SIZE);
-		else if(column - 1 >= 0 && ground[i][column - 1].hasTile &&
-			(i * TILE_SIZE) + ground[i][column - 1].bBY > player->getPlayerCoordinates().top)
-			foreground.push_back(i * TILE_SIZE);
-		else if (column + 1 < numRows && ground[i][column + 1].hasTile &&
-			(i * TILE_SIZE) + ground[i][column + 1].bBY > player->getPlayerCoordinates().top)
-			foreground.push_back(i * TILE_SIZE);
-		else //Otherwise, place the tiles in the background
-			background.push_back(i * TILE_SIZE);
-	}
+	int row = (player->getPlayerCoordinates().top + player->getPlayerCoordinates().height) / TILE_SIZE;
 
-	//Draw the background
-	for (int i = 0; i < background.size(); i++)
-	{
-		groundSprite.setTextureRect(sf::IntRect(0,
-			background[i],
-			numColumns * TILE_SIZE,
-			TILE_SIZE));
-		groundSprite.setPosition(0, background[i]);
+	//If the current row of tiles y position is greater than the players bottom y position, render the tiles in the foreground.
+	if (ground[row][column].hasTile &&
+		(row * TILE_SIZE) + ground[row][column].bBY > player->getPlayerCoordinates().top)
+		drawListBeforeGroundLayer.push_back(player);
+	else if (column - 1 >= 0 && ground[row][column - 1].hasTile &&
+		(row * TILE_SIZE) + ground[row][column - 1].bBY > player->getPlayerCoordinates().top)
+		drawListBeforeGroundLayer.push_back(player);
+	else if (column + 1 < numRows && ground[row][column + 1].hasTile &&
+		(row * TILE_SIZE) + ground[row][column + 1].bBY > player->getPlayerCoordinates().top)
+		drawListBeforeGroundLayer.push_back(player);
+	else
+		drawListAfterGroundLayer.push_back(player);
 
-		window->draw(groundSprite);
-	}
+	for (int i = 0; i < drawListBeforeGroundLayer.size(); i++)
+		drawListBeforeGroundLayer[i]->draw(window);
 
-	player->draw(window); //Draw the player in between the background and foreground
-	
-	//Draw the foreground
-	for (int i = 0; i < foreground.size(); i++)
-	{
-		groundSprite.setTextureRect(sf::IntRect(0,
-			foreground[i],
-			numColumns * TILE_SIZE,
-			TILE_SIZE));
-		groundSprite.setPosition(0, foreground[i]);
+	window->draw(groundSprite);
 
-		window->draw(groundSprite);
-	}
+	for (int i = 0; i < drawListAfterGroundLayer.size(); i++)
+		drawListAfterGroundLayer[i]->draw(window);
 
 	window->draw(canopySprite); //Draw the canopy
-	
+
 	//TOOLS
 	if (renderCollisionLayer)
 		window->draw(collisionSprite);
 	if (renderGridLayer)
 		window->draw(gridSprite);
+	if (renderTransitionLayer)
+		window->draw(transitionSprite);
 }
 
 
@@ -745,6 +738,14 @@ void Map::displayGridLayer()
 		renderGridLayer = true;
 	else
 		renderGridLayer = false;
+}
+
+void Map::displayTransitionLayer()
+{
+	if (!renderTransitionLayer)
+		renderTransitionLayer = true;
+	else
+		renderTransitionLayer = false;
 }
 
 /*

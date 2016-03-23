@@ -68,28 +68,28 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	float offSetX = 0, offSetY = 0;
 
 	//Move up
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
 		offSetY = -VELOCITY;
 
 		currentDirection = Animation::Up; //Set the character direction state for animation purposes
 	}
 	//Move down
-	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
 		offSetY = VELOCITY;
 			
 		currentDirection = Animation::Down; //Set the character direction state for animation purposes
 	}	
 	//Move right
-	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 	{
 		offSetX = VELOCITY;
 
 		currentDirection = Animation::Right; //Set the character direction state for animation purposes
 	}
 	//Move left
-	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 	{
 		offSetX = -VELOCITY;
 

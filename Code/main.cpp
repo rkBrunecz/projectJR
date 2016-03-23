@@ -169,6 +169,8 @@ int main()
 				map.displayCollsionLayer();
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::G)
 				map.displayGridLayer();
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::T)
+				map.displayTransitionLayer();
 			//Resize window if the F11 key is pressed
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F11)
 			{
