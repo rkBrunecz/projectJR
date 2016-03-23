@@ -1,9 +1,12 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
-Map
-9/5/2015
+Map.cpp
+This class handles creating and drawing a map. It contains additional functionality in the map editor to allow a user to easily manipulate
+tile using a fairly simple user interface. 
 
-This class handles creates and draws a map. It also performs other useful map related functions.
+@author Randall Brunecz
+@version 2.0 3/23/2016
+
+@version 1.0 9/5/2015
 */
 
 #include "Map.h"

@@ -1,9 +1,9 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
 MapEditor.cpp
-10/12/2015
+This file is the driving force behind the map editor. It directs user input in various ways and uses a state based system to determine how it will process requests.
 
-
+@author Randall Brunecz
+@version 1.0 10/12/2015
 */
 
 #include <SFML\Graphics.hpp>

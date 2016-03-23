@@ -1,9 +1,9 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
 UI.h
-10/15/2015
+UI handles several user interface components. Primarily used to create additional windows and open file selectors.
 
-
+@author Randall Brunecz
+@version 1.0 10/15/2015
 */
 
 #ifndef UI_H
