@@ -1,9 +1,9 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
 Graphic.cpp
-9/1/2015
+Parent class that defines the behaviour of any graphic object within the game.
 
-Parent class that defines common elements that child objects will share.
+@author Randall Brunecz
+@version 1.0 9/1/2015
 */
 
 #include "Graphic.h"

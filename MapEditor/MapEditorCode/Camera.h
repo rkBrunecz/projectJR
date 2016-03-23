@@ -1,9 +1,9 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
-Camera
-9/11/2015
-
+Camera.h
 This class inherits functions from the sf::View class and implements a few extra features.
+
+@author Randall Brunecz
+@version 1.0 9/11/2015
 */
 
 #ifndef Camera_H

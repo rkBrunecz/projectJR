@@ -1,3 +1,11 @@
+/*
+UI.cpp
+UI handles several user interface components. Primarily used to create additional windows and open file selectors.
+
+@author Randall Brunecz
+@version 1.0 10/15/2015
+*/
+
 #include "UI.h"
 
 sf::RenderWindow* UI::mainWindow = NULL;

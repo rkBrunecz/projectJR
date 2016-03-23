@@ -1,12 +1,12 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
 main.cpp
-8/31/2015
-
 The main.cpp file is the entry point for the game. This is where the window is created
 and displays the graphics for the game. The main.cpp file contains a state variable which
 keeps track of the games current state and makes decisions based on the state the game is
 in.
+
+@author Randall Brunecz
+@version 1.0 8/31/2015
 */
 
 #include <SFML\Graphics.hpp>

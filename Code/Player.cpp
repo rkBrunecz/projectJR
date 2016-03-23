@@ -1,10 +1,10 @@
 /*
-Authors: Randy Brunecz, Joshua Gray
-Player.h
-9/3/2015
-
+Player.cpp
 This class contains information about the player character such as position, graphic used and
 characteristics.
+
+@author Randall Brunecz
+@version 1.0 9/3/2015
 */
 
 #include <SFML\Graphics.hpp>
