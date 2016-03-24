@@ -178,7 +178,6 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 	//Set the render textures to sprites
 	mapSprite.setTexture(mapTexture.getTexture());
 	canopySprite.setTexture(canopyTexture.getTexture());
-	groundSprite.setTexture(groundTexture.getTexture());
 	maskSprite.setTexture(maskTexture.getTexture());
 	waterSprite.setTexture(waterFrames[0].getTexture());
 
@@ -312,6 +311,8 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 		mask[i] = new Tile[numColumns];
 	}
 
+	groundSprites = new sf::Sprite[numRows];
+
 	initializeTransitionPoints(mapFile); //Intialize all transition points in the map
 
 	populateMap(mapFile); //Fill the array with the map data
@@ -439,16 +440,17 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 {
 	layer[row][column].row = input[pos] - '0';
 	layer[row][column].column = input[pos + 1] - '0';
-	layer[row][column].transformation = input[pos + 2] - '0';
-	layer[row][column].collidable = input[pos + 3] - '0'; //0 = false, 1 = true
-	layer[row][column].tileType = input[pos + 4];
+	layer[row][column].rotation = input[pos + 2] - '0';
+	layer[row][column].mirror = input[pos + 3] - '0'; //0 = false, 1 = true
+	layer[row][column].collidable = input[pos + 4] - '0'; //0 = false, 1 = true
+	layer[row][column].tileType = input[pos + 5];
 	layer[row][column].hasTile = true;
 
 	//If collidable, add a bounding box
-	if (layer[row][column].collidable && input[pos + 5] == ':')
+	if (layer[row][column].collidable && input[pos + 6] == ':')
 	{
-		short t = layer[row][column].transformation;
-		std::string width = input.substr(pos + 6, 2), height = input.substr(pos + 9, 2), sBBX = input.substr(pos + 12, 2), sBBY = input.substr(pos + 15, 2);
+		short t = layer[row][column].rotation;
+		std::string width = input.substr(pos + 7, 2), height = input.substr(pos + 10, 2), sBBX = input.substr(pos + 13, 2), sBBY = input.substr(pos + 16, 2);
 		layer[row][column].boundingBox = width + "x" + height + "x" + sBBX + "x" + sBBY;
 
 		//This reverses the tiles height and width if the tile is flipped 90 degrees (1) or 270 degrees (3)
@@ -473,9 +475,6 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 		{
 			layer[row][column].bBX = atoi(sBBX.c_str());
 			layer[row][column].bBY = layer[row][column].height - atoi(sBBY.c_str());
-
-			if (layer[row][column].height > atoi(sBBY.c_str()))
-				layer[row][column].bBY = 0;
 		}
 		else if (t == 1) //Tile rotated 90 degrees
 		{
@@ -488,10 +487,10 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 			layer[row][column].bBY = atoi(sBBX.c_str());
 		}
 
-		return pos + 18;
+		return pos + 19;
 	}
 	else
-		return pos + 6;
+		return pos + 7;
 }
 
 /*
@@ -513,6 +512,7 @@ void Map::emptyMap()
 	delete[] canopy;
 	delete[] ground;
 	delete[] mask;
+	delete[] groundSprites;
 }
 
 /*
@@ -589,9 +589,18 @@ void Map::drawMap()
 	//Set the render textures to sprites
 	mapSprite.setTexture(mapTexture.getTexture());
 	canopySprite.setTexture(canopyTexture.getTexture());
-	groundSprite.setTexture(groundTexture.getTexture());
 	maskSprite.setTexture(maskTexture.getTexture());
 	waterSprite.setTexture(waterFrames[0].getTexture());
+
+	for (int i = 0; i < numRows; i++)
+	{
+		groundSprites[i].setTexture(groundTexture.getTexture());
+		groundSprites[i].setTextureRect(sf::IntRect(0,
+			i * TILE_SIZE,
+			numColumns * TILE_SIZE,
+			TILE_SIZE));
+		groundSprites[i].setPosition(0, i * TILE_SIZE);
+	}
 	
 	//TOOLS
 	collisionSprite.setTexture(collisionTexture.getTexture());
@@ -617,13 +626,13 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 		TILE_SIZE,
 		TILE_SIZE));
 
-	if (layer[row][column].transformation == 0)
+	if (layer[row][column].rotation == 0 && !layer[row][column].mirror)
 	{
 		tiles.setPosition(column * TILE_SIZE, row * TILE_SIZE); //Set the position of the tile to be drawn 
 
 		texture.draw(tiles); //Draw the tile
 	}
-	else if (layer[row][column].transformation >= 1 && layer[row][column].transformation <= 3) //Rotate the tile if the transformation value is between 1 and 3, inclusive
+	else if (layer[row][column].rotation >= 1 && layer[row][column].rotation <= 3) //Rotate the tile if the transformation value is between 1 and 3, inclusive
 	{
 		//Create a temporary texture to hold the tile
 		sf::Texture temp;
@@ -634,13 +643,15 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 
 		//The tiles are 32x32, so the origin is 16, 16
 		tmp.setOrigin(16, 16);
-		tmp.rotate(layer[row][column].transformation * 90);
+		tmp.rotate(layer[row][column].rotation * 90);
+		if (layer[row][column].mirror)
+			tmp.scale(-1.f, 1.f); //Mirror the tile
 
 		tmp.setPosition(column * TILE_SIZE + 16, row * TILE_SIZE + 16); //Set the position of the tile to be drawn (The tile will be offset by 16 when rotated, so move it over and down by 16)
 
 		texture.draw(tmp); //Draw the tile
-	}
-	else if (layer[row][column].transformation == 4) //Mirror tile
+	}	
+	else if (layer[row][column].mirror) //Mirror tile
 	{
 		//Create a temporary texture to hold the tile
 		sf::Texture temp;
@@ -700,7 +711,8 @@ void Map::draw(sf::RenderWindow* window, sf::Vector2f mouseCoords)
 	window->draw(waterSprite);
 	window->draw(mapSprite);
 	window->draw(maskSprite);
-	window->draw(groundSprite);
+	for (int i = 0; i < numRows; i++)
+		window->draw(groundSprites[i]);
 	window->draw(canopySprite); //Draw the canopy
 	
 	//TOOLS
@@ -758,7 +770,8 @@ This method sets the color and transparency of a the tiles
 void Map::setColor(int r, int g, int b, int a)
 {
 	mapSprite.setColor(sf::Color(r, g, b, a));
-	groundSprite.setColor(sf::Color(r, g, b, a));
+	for (int i = 0; i < numRows; i++)
+		groundSprites[i].setColor(sf::Color(r, g, b, a));
 	canopySprite.setColor(sf::Color(r, g, b, a));
 	maskSprite.setColor(sf::Color(r, g, b, a));
 	waterSprite.setColor(sf::Color(r, g, b, a));
@@ -1018,7 +1031,7 @@ void Map::deleteTransitionPoint(int row, int column)
 				numTransitionPoints--;
 			}
 
-			map[row][column].tileType = tileData[map[row][column].row * 10 + map[row][column].column][6];
+			map[row][column].tileType = tileData[map[row][column].row * 10 + map[row][column].column][7];
 
 			tileRemoved = true;
 		}
@@ -1035,36 +1048,36 @@ void Map::rotateTile(int row, int column)
 	//Rotations are as follows: 1 = 0 degrees, 1 = 90 degrees, 2 = 180 degrees, 3 = 270 degrees
 	if (canopy[row][column].hasTile)
 	{
-		canopy[row][column].transformation += 1;
-		if (canopy[row][column].transformation > 3)
-			canopy[row][column].transformation = 0;
+		canopy[row][column].rotation += 1;
+		if (canopy[row][column].rotation > 3)
+			canopy[row][column].rotation = 0;
 
 		addTileToMap(canopy, canopy[row][column].toString(), 0, row, column);
 		updateMap(canopyTexture, canopy);
 	}
 	else if (ground[row][column].hasTile)
 	{
-		ground[row][column].transformation += 1;
-		if (ground[row][column].transformation > 3)
-			ground[row][column].transformation = 0;
+		ground[row][column].rotation += 1;
+		if (ground[row][column].rotation > 3)
+			ground[row][column].rotation = 0;
 
 		addTileToMap(ground, ground[row][column].toString(), 0, row, column);
 		updateMap(groundTexture, ground);
 	}
 	else if (mask[row][column].hasTile)
 	{
-		mask[row][column].transformation += 1;
-		if (mask[row][column].transformation > 3)
-			mask[row][column].transformation = 0;
+		mask[row][column].rotation += 1;
+		if (mask[row][column].rotation > 3)
+			mask[row][column].rotation = 0;
 
 		addTileToMap(mask, mask[row][column].toString(), 0, row, column);
 		updateMap(maskTexture, mask);
 	}
 	else if (map[row][column].hasTile)
 	{
-		map[row][column].transformation += 1;
-		if (map[row][column].transformation > 3) 
-			map[row][column].transformation = 0;
+		map[row][column].rotation += 1;
+		if (map[row][column].rotation > 3) 
+			map[row][column].rotation = 0;
 
 		addTileToMap(map, map[row][column].toString(), 0, row, column);
 		drawToTexture(mapTexture, map, row, column);
@@ -1081,40 +1094,41 @@ void Map::mirrorTileAtPos(int row, int column)
 	
 	if (canopy[row][column].hasTile)
 	{
-		if (canopy[row][column].transformation == 0)
-			canopy[row][column].transformation = 4;
+		if (!canopy[row][column].mirror)
+			canopy[row][column].mirror = true;
 		else
-			canopy[row][column].transformation = 0;
+			canopy[row][column].mirror = false;
 
+		printf("%d\n", canopy[row][column].mirror);
 		addTileToMap(canopy, canopy[row][column].toString(), 0, row, column);
 		updateMap(canopyTexture, canopy);
 	}
 	else if (ground[row][column].hasTile)
 	{
-		if (ground[row][column].transformation == 0)
-			ground[row][column].transformation = 4;
+		if (!ground[row][column].mirror)
+			ground[row][column].mirror = true;
 		else
-			ground[row][column].transformation = 0;
+			ground[row][column].mirror = false;
 
 		addTileToMap(ground, ground[row][column].toString(), 0, row, column);
 		updateMap(groundTexture, ground);
 	}
 	else if (mask[row][column].hasTile)
 	{
-		if (mask[row][column].transformation == 0)
-			mask[row][column].transformation = 4;
+		if (!mask[row][column].mirror)
+			mask[row][column].mirror  = true;
 		else
-			mask[row][column].transformation = 0;
+			mask[row][column].mirror = false;
 
 		addTileToMap(mask, mask[row][column].toString(), 0, row, column);
 		updateMap(maskTexture, mask);
 	}
 	else if (map[row][column].hasTile)
 	{
-		if (map[row][column].transformation == 0)
-			map[row][column].transformation = 4;
+		if (!map[row][column].mirror)
+			map[row][column].mirror = true;
 		else
-			map[row][column].transformation = 0;
+			map[row][column].mirror = false;
 
 		addTileToMap(map, map[row][column].toString(), 0, row, column);
 		drawToTexture(mapTexture, map, row, column);
@@ -1195,13 +1209,13 @@ bool Map::isSameTile(Tile**& layer, int row, int column)
 	Tile t;
 	t.row = currentTile[2] - '0';
 	t.column = currentTile[3] - '0';
-	t.transformation = currentTile[4] - '0';
+	t.rotation = currentTile[4] - '0';
 	t.collidable = currentTile[5] - '0'; //0 = false, 1 = true
 	t.tileType = currentTile[6];
 
 	if (layer[row][column].row == t.row &&
 		layer[row][column].column == t.column &&
-		layer[row][column].transformation == t.transformation &&
+		layer[row][column].rotation == t.rotation &&
 		layer[row][column].collidable == t.collidable &&
 		layer[row][column].tileType == t.tileType)
 		return true;
@@ -1330,19 +1344,22 @@ void Map::saveMap()
 
 std::string Map::tileToString(Tile**& layer, int row, int column)
 {
-	std::string s = std::to_string(layer[row][column].row) + std::to_string(layer[row][column].column) + std::to_string(layer[row][column].transformation);
+	std::string s = std::to_string(layer[row][column].row) + std::to_string(layer[row][column].column) + std::to_string(layer[row][column].rotation) + std::to_string(boolToString(layer[row][column].mirror));
 	
-	if (layer[row][column].collidable)
-	{
-		s = s + "1" + layer[row][column].tileType;
-
-		if (layer[row][column].tileType != 'W')
-			s = s + ":" + layer[row][column].boundingBox;
-	}
-	else
-		s = s + "0" + layer[row][column].tileType;
+	s = s + std::to_string(boolToString(layer[row][column].collidable)) + layer[row][column].tileType;
+	
+	if (layer[row][column].tileType != 'W' && layer[row][column].collidable)
+		s = s + ":" + layer[row][column].boundingBox;
 
 	return s;
+}
+
+int Map::boolToString(bool b)
+{
+	if (b == true)
+		return 1;
+	else
+		return 0;
 }
 
 void Map::forceUpdate()
@@ -1428,4 +1445,5 @@ Map::~Map()
 	delete[] canopy;
 	delete[] ground;
 	delete[] mask;
+	delete[] groundSprites;
 }
