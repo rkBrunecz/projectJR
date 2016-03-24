@@ -158,7 +158,7 @@ return:
 
 This method returns the players bounding box so that the calling method has information about the players position and the players height and width.
 */
-sf::IntRect Player::getPlayerCoordinates()
+sf::IntRect Player::getRect()
 {
 	return sf::IntRect(x - (WIDTH * 0.5), y, WIDTH, HEIGHT);
 }

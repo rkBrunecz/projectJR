@@ -25,7 +25,7 @@ public:
 	void setColor(int r, int g, int b, int a);
 	void setPlayerPosition(sf::Vector2i coords);
 
-	sf::IntRect getPlayerCoordinates();
+	sf::IntRect getRect();
 
 private:
 	//PRIVATE CONSTANTS

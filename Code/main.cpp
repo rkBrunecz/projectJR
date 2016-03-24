@@ -66,7 +66,7 @@ void runGame(sf::RenderWindow& window, Camera& camera, Map& map, Player& player)
 		window.setView(camera); //Update the windows view
 
 		//Draw all graphics
-		map.draw(&window, &player);
+		map.draw(&window, &player, true);
 
 		//Check to see if a map transition is needed
 		if (map.transitioning(&player))
@@ -78,7 +78,7 @@ void runGame(sf::RenderWindow& window, Camera& camera, Map& map, Player& player)
 	case Pause:
 	{
 		//Draw all graphics
-		map.drawNoAni(&window, &player);
+		map.draw(&window, &player, false);
 
 		SpecialEffect::screenDim(&window);
 

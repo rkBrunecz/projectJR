@@ -56,3 +56,8 @@ bool Graphic::collisionDetected(sf::IntRect* tmp)
 {
 	return false;
 }
+
+sf::IntRect Graphic::getRect()
+{
+	return sf::IntRect(-1, -1, -1, -1);
+}
