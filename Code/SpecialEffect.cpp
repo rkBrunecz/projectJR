@@ -45,7 +45,7 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Map* map, Player* player)
 		window->clear();
 
 		//Draw all of the graphics
-		map->draw(window, player);
+		map->draw(window, player, true);
 		window->draw(fade);
 
 		//Display everything in the window
@@ -89,7 +89,7 @@ void SpecialEffect::fadeIn(sf::RenderWindow* window, Map* map, Player* player)
 		window->clear();
 
 		//Draw all of the graphics
-		map->draw(window, player);
+		map->draw(window, player, true);
 		window->draw(fade);
 
 		//Display everything in the window
