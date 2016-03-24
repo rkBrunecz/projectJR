@@ -1031,7 +1031,7 @@ void Map::deleteTransitionPoint(int row, int column)
 				numTransitionPoints--;
 			}
 
-			map[row][column].tileType = tileData[map[row][column].row * 10 + map[row][column].column][7];
+			map[row][column].tileType = tileData[map[row][column].row * 10 + map[row][column].column][8];
 
 			tileRemoved = true;
 		}
