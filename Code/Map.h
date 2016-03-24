@@ -23,8 +23,7 @@ public:
 	Map();
 	~Map();
 	
-	void draw(sf::RenderWindow* window, Player* player);
-	void drawNoAni(sf::RenderWindow* window, Player* player);
+	void draw(sf::RenderWindow* window, Player* player, bool drawWaterAnimation);
 	void setColor(int r, int g, int b, int a);
 	void loadMap(std::string mapName, Camera* camera);
 	void moveToMap(Player* player, Camera* camera);
@@ -41,8 +40,8 @@ private:
 	//PRIVATE structures
 	struct Tile //Contains information about a tile such as the row and column it is found in the tileSheet, and special transformation information.
 	{
-		unsigned short row, column, transformation, height = 32, width = 32, bBX = 0, bBY = 0;
-		bool collidable = false, hasTile = false;
+		unsigned short row, column, rotation, height = 32, width = 32, bBX = 0, bBY = 0;
+		bool collidable = false, hasTile = false, mirror = false;
 		char tileType; //Indicates what kind of tile it is, such as water, grass, rock, object, etc.
 		std::string mapName = "";
 		sf::Vector2i transitionCoords;
@@ -69,7 +68,8 @@ private:
 	Tile** ground; //This 2d contains objects like bases trees, rocks, etc.
 	Tile** canopy; //This 2d contains objects like trees, top of rocks, etc.
 	Tile** mask; //This layer contains masks that are layered on top of other tiles to give depth
-	sf::Sprite tiles, mapSprite, canopySprite, groundSprite, maskSprite, waterSprite;
+	sf::Sprite* groundSprites;
+	sf::Sprite tiles, mapSprite, canopySprite, maskSprite, waterSprite;
 	sf::Texture tileSheet;
 	sf::RenderTexture mapTexture, canopyTexture, groundTexture, maskTexture;
 	sf::RenderTexture waterFrames[4];
