@@ -29,7 +29,7 @@ public:
 	void draw(sf::RenderWindow* window, sf::Vector2f mouseCoords);
 	void setColor(int r, int g, int b, int a);
 	void loadMap(std::string mapName, Camera* camera);
-	void createMap(unsigned int rows, unsigned int columns, Camera* camera, std::string mapName);
+	void createMap(unsigned int rows, unsigned int columns, Camera* camera, std::string mapName, std::string sheetFileName);
 	void drawTileSheet(sf::RenderWindow* window, sf::Vector2f mousePos);
 	void setTile(sf::Vector2i mouseCoords);
 	void addTileToPos();

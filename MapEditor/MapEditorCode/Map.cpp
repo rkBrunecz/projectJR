@@ -105,8 +105,11 @@ void Map::loadMap(std::string mapName, Camera* camera)
 	mapLoaded = true;
 }
 
-void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std::string mapName)
+void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std::string mapName, std::string sheetFileName)
 {
+	std::ifstream tileFile;
+	std::string input;
+
 	//Reset all tile manipulations and debug layers
 	allowTileManipulation();
 	renderCollisionLayer = false;
@@ -122,6 +125,35 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 	numColumns = columns;
 
 	nameOfFile = mapName;
+	nameOfSheetFile = sheetFileName;
+
+	sheetFileName.replace(sheetFileName.length() - 3, 3, "png");
+	nameOfTileSheet = sheetFileName.substr(sheetFileName.find_last_of("\\"), sheetFileName.size());
+	nameOfTileSheet = "bin\\Graphics\\" + nameOfTileSheet;
+
+	//Get the tile data so that tiles can be added to the map
+	tileFile.open(nameOfSheetFile);
+	
+	if (!tileFile.is_open())
+		exit(EXIT_FAILURE);
+
+	for (int i = 0; i < NUM_TILES_IN_SHEET; i++)
+	{
+		std::getline(tileFile, input, '_');
+		tileData[i] = input;
+
+		//Get the end of line delimiter
+		if ((i + 1) % 10 == 0)
+			std::getline(tileFile, input);
+	}
+
+	tileFile.close(); //Close the tile file
+
+	//Get the path to the tile map and then open it.
+	if (!tileSheet.loadFromFile(nameOfTileSheet))
+		exit(EXIT_FAILURE); //Exit the application with a failure code if the tile map does not load
+
+	tiles.setTexture(tileSheet);
 
 	//Recreate the mapTexture, canopyTexture and groundTexture ONLY when needed
 	if (mapTexture.getSize().x < numRows * TILE_SIZE && mapTexture.getSize().y < numColumns * TILE_SIZE)
@@ -136,7 +168,10 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 		//TOOLS
 		collisionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		gridTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+		transitionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 	}
+
+	createGrid();
 
 	camera->setBounds((numColumns + 4) * TILE_SIZE, numRows * TILE_SIZE);
 
@@ -153,36 +188,15 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 		mask[i] = new Tile[numColumns];
 	}
 
-	mapTexture.clear(sf::Color(0, 0, 0, 0));
-	canopyTexture.clear(sf::Color(0, 0, 0, 0));
-	groundTexture.clear(sf::Color(0, 0, 0, 0));
-	maskTexture.clear(sf::Color(0, 0, 0, 0));
-	for (int i = 0; i < NUM_WATER_FRAMES; i++)
-		waterFrames[i].clear(sf::Color(0, 0, 0, 0));
-	
-	collisionTexture.clear(sf::Color(0, 0, 0, 0));
+	groundSprites = new sf::Sprite[numRows];
 
-	createGrid();
+	for (int i = 0; i < numRows; i++)
+	{
+		for (int j = 0; j < numColumns; j++)
+			addTileToMap(map, tileData[0], 2, i, j);
+	}
 
-	//Let the textures know that they are done being drawn to
-	mapTexture.display();
-	canopyTexture.display();
-	groundTexture.display();
-	maskTexture.display();
-	for (int i = 0; i < NUM_WATER_FRAMES; i++)
-		waterFrames[i].display();
-
-	//TOOLS
-	collisionTexture.display();
-
-	//Set the render textures to sprites
-	mapSprite.setTexture(mapTexture.getTexture());
-	canopySprite.setTexture(canopyTexture.getTexture());
-	maskSprite.setTexture(maskTexture.getTexture());
-	waterSprite.setTexture(waterFrames[0].getTexture());
-
-	//TOOLS
-	collisionSprite.setTexture(collisionTexture.getTexture());
+	drawMap();
 
 	mapLoaded = true;
 }
@@ -729,7 +743,7 @@ void Map::draw(sf::RenderWindow* window, sf::Vector2f mouseCoords)
 		mousePos.setPosition(sf::Vector2f(floor(mouseCoords.x / TILE_SIZE) * TILE_SIZE,
 			floor(mouseCoords.y / TILE_SIZE) * TILE_SIZE));
 	
-		if (mousePos.getPosition().x <= TILE_SIZE * (numColumns - 1) && mousePos.getPosition().y <= TILE_SIZE * (numRows - 1))
+		if (mousePos.getPosition().x <= TILE_SIZE * (numColumns - 1) && mousePos.getPosition().y <= TILE_SIZE * (numRows - 1) && mousePos.getPosition().x >= 0 && mousePos.getPosition().y >= 0)
 			window->draw(mousePos);
 	}
 }
@@ -747,7 +761,8 @@ void Map::drawTileSheet(sf::RenderWindow* window, sf::Vector2f mousePos)
 	window->draw(rotationTile);
 	window->draw(mirrorTile);
 
-	if (sf::Mouse::getPosition(*window).x <= tileSheetCoords.x && sf::Mouse::getPosition(*window).y >= TILE_SIZE)
+	if (sf::Mouse::getPosition(*window).x <= tileSheetCoords.x && mousePos.x >= 0 && 
+		sf::Mouse::getPosition(*window).y >= TILE_SIZE && mousePos.y <= numRows * TILE_SIZE && mousePos.y >= 0)
 	{
 		currentRowColumn.setString(std::to_string((int)(mousePos.y / TILE_SIZE)) + ", " + std::to_string((int)(mousePos.x / TILE_SIZE)));
 		window->draw(currentRowColumn);
@@ -1155,8 +1170,8 @@ void Map::setTransitionPoint(int row, int column)
 	//If the user closes the transition coordinates window, exit the function
 	if (transitionToCoords == sf::Vector2i(-1, -1))
 		return;
-
-	mapFileName = mapFileName.substr(mapFileName.find_last_of("bin") - 2, mapFileName.size());
+	
+	mapFileName = std::strstr(mapFileName.c_str(), "bin\\Maps\\");
 	mapFileName[3] = '/';
 	mapFileName[8] = '/';
 
