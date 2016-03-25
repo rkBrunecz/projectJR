@@ -23,24 +23,23 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 		exit(EXIT_FAILURE);
 
 	//LOCAL VARIABLES
-	sf::Text Width("Width:", font, 20), Height("Height:", font, 20), FileName("File Name:", font, 20);
+	sf::Text Rows("Rows:", font, 20), Columns("Columns:", font, 20), FileName("File Name:", font, 20);
 	sf::Text enteredW, enteredH, enteredName;
 	sf::RectangleShape textField(sf::Vector2f(window.getSize().x * 0.5, 25)), textField2(sf::Vector2f(window.getSize().x * 0.5, 25)), textField3(sf::Vector2f(window.getSize().x * 0.5, 25));
 	sf::RectangleShape bar(sf::Vector2f(3, 20));
 	sf::Clock barBlink;
-	std::string width, height, fileName;
-	bool valuesEntered = false, enteringWidth = false, enteringHeight = false, enteringFileName = true;
+	std::string rows, columns, fileName;
+	bool valuesEntered = false, enteringRows = false, enteringColumns = false, enteringFileName = true;
 
-	//Set the position for the Width text. Set it to the center of the screen. Additionally, set the color of the text to white.
-	FileName.setPosition((window.getSize().x / 2) - (Width.getLocalBounds().width / 2) - 160, (window.getSize().y / 2) - 75);
+	//Set the position for the Rows text. Set it to the center of the screen. Additionally, set the color of the text to white.
+	FileName.setPosition((window.getSize().x / 2) - (Rows.getLocalBounds().width / 2) - 160, (window.getSize().y / 2) - 75);
 	FileName.setColor(sf::Color::White);
 	
-	Width.setPosition((window.getSize().x / 2) - (Width.getLocalBounds().width / 2) - 124, (window.getSize().y / 2) - 35);
-	Width.setColor(sf::Color::White);
+	Rows.setPosition((window.getSize().x / 2) - (Rows.getLocalBounds().width / 2) - 123, (window.getSize().y / 2) - 35);
+	Rows.setColor(sf::Color::White);
 
-	Height.setPosition((window.getSize().x / 2) - (Height.getLocalBounds().width / 2) - 124, (window.getSize().y / 2));
-	Height.setColor(sf::Color::White);
-
+	Columns.setPosition((window.getSize().x / 2) - (Columns.getLocalBounds().width / 2) - 134, (window.getSize().y / 2));
+	Columns.setColor(sf::Color::White);
 
 	//Set up properties of the enteredName text field
 	enteredName.setFont(font);
@@ -104,15 +103,15 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 			case sf::Event::KeyPressed:
 				if (event.key.code == sf::Keyboard::BackSpace)
 				{
-					if (width.length() > 0 && enteringWidth)
-						width.erase(width.length() - 1);
-					if (height.length() > 0 && enteringHeight)
-						height.erase(height.length() - 1);
+					if (rows.length() > 0 && enteringRows)
+						rows.erase(rows.length() - 1);
+					if (columns.length() > 0 && enteringColumns)
+						columns.erase(columns.length() - 1);
 					if (fileName.length() > 0 && enteringFileName)
 						fileName.erase(fileName.length() - 1, 1);
 
-					enteredW.setString(width);
-					enteredH.setString(height);
+					enteredW.setString(rows);
+					enteredH.setString(columns);
 					enteredName.setString(fileName);
 				}
 				else if (event.key.code == sf::Keyboard::Tab)
@@ -120,20 +119,20 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 					if (enteringFileName)
 					{
 						enteringFileName = false;
-						enteringWidth = true;
+						enteringRows = true;
 					}
-					else if (enteringWidth)
+					else if (enteringRows)
 					{
-						enteringWidth = false;
-						enteringHeight = true;
+						enteringRows = false;
+						enteringColumns = true;
 					}
-					else if (enteringHeight)
+					else if (enteringColumns)
 					{
-						enteringHeight = false;
+						enteringColumns = false;
 						enteringFileName = true;
 					}
 				}
-				else if (event.key.code == sf::Keyboard::Return && atoi(width.c_str()) > 2 && atoi(height.c_str()) > 2 && fileName.length() > 0)
+				else if (event.key.code == sf::Keyboard::Return && atoi(rows.c_str()) > 2 && atoi(columns.c_str()) > 2 && fileName.length() > 0)
 					valuesEntered = true;	
 				else if (event.key.code == sf::Keyboard::Escape)
 				{
@@ -146,16 +145,16 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 			case sf::Event::TextEntered:
 				if (event.text.unicode >= 48 && event.text.unicode <= 57)
 				{
-					if (width.length() < 5 && enteringWidth)
-						width += static_cast<char>(event.text.unicode);
-					if (height.length() < 5 && enteringHeight)
-						height += static_cast<char>(event.text.unicode);
+					if (rows.length() < 5 && enteringRows)
+						rows += static_cast<char>(event.text.unicode);
+					if (columns.length() < 5 && enteringColumns)
+						columns += static_cast<char>(event.text.unicode);
 
-					enteredW.setString(width);
-					enteredH.setString(height);
+					enteredW.setString(rows);
+					enteredH.setString(columns);
 				}
 
-				if (fileName.length() < 15 && enteringFileName && event.text.unicode != 32 && event.text.unicode != 8) //Ensure spaces are not being added to the file name
+				if (fileName.length() < 15 && enteringFileName && event.text.unicode > 40 && event.text.unicode != 127) //Ensure spaces are not being added to the file name
 					fileName += (char)event.text.unicode;
 
 				enteredName.setString(fileName);
@@ -167,21 +166,21 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 				{
 					if (textField.getGlobalBounds().contains(sf::Vector2f(sf::Mouse::getPosition(window))))
 					{
-						enteringWidth = true;
-						enteringHeight = false;
+						enteringRows = true;
+						enteringColumns = false;
 						enteringFileName = false;
 					}
 					else if (textField2.getGlobalBounds().contains(sf::Vector2f(sf::Mouse::getPosition(window))))
 					{
-						enteringHeight = true;
-						enteringWidth = false;
+						enteringColumns = true;
+						enteringRows = false;
 						enteringFileName = false;
 					}
 					else if (textField3.getGlobalBounds().contains(sf::Vector2f(sf::Mouse::getPosition(window))))
 					{
 						enteringFileName = true;
-						enteringWidth = false;
-						enteringHeight = false;
+						enteringRows = false;
+						enteringColumns = false;
 					}
 				}
 
@@ -190,14 +189,14 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 			}
 
 		if (enteringFileName)
-			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (fileName.length() * 10), (window.getSize().y / 2) - 73);
-		else if (enteringWidth)
-			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (width.length() * 10), (window.getSize().y / 2) - 33);
-		else if (enteringHeight)
-			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (height.length() * 10), (window.getSize().y / 2) + 7);
+			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (fileName.length() * 11), (window.getSize().y / 2) - 73);
+		else if (enteringRows)
+			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (rows.length() * 10), (window.getSize().y / 2) - 33);
+		else if (enteringColumns)
+			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (columns.length() * 10), (window.getSize().y / 2) + 7);
 
-		window.draw(Width);
-		window.draw(Height);
+		window.draw(Rows);
+		window.draw(Columns);
 		window.draw(FileName);
 		window.draw(textField);
 		window.draw(textField2);
@@ -213,7 +212,7 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 	window.close();
 
 	*str = fileName;
-	return sf::Vector2i(atoi(width.c_str()) / Map::getTileSize(), atoi(height.c_str()) / Map::getTileSize());
+	return sf::Vector2i(atoi(columns.c_str()), atoi(rows.c_str()));
 }
 
 std::string UI::getMap(std::string filter)
@@ -351,7 +350,7 @@ sf::Vector2i UI::getTransitionCoordinates()
 						enteringRow = true;
 					}
 				}
-				else if (event.key.code == sf::Keyboard::Return && atoi(row.c_str()) > 1 && atoi(column.c_str()))
+				else if (event.key.code == sf::Keyboard::Return && row.size() > 0 && column.size() > 0)
 					valuesEntered = true;
 				else if (event.key.code == sf::Keyboard::Escape)
 				{
