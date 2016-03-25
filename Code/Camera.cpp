@@ -18,8 +18,7 @@ This method stores the bounds for the camera along the x and y axis.
 */
 void Camera::setBounds(int x, int y)
 {
-	cameraBoundX = x;
-	cameraBoundY = y;
+	cameraBounds = sf::Vector2f(x, y);
 }
 
 /*
@@ -38,25 +37,19 @@ void Camera::updatePosition(sf::Vector2i position)
 	//If the x position to be set is at the edge of the game map, set the cameras position to its boundaries 
 	if (position.x < getSize().x * 0.5)
 		cameraX = getSize().x * 0.5;
-	else if (position.x > getCameraBounds().x)
-		cameraX = getCameraBounds().x;
+	else if (position.x > cameraBounds.x - (getSize().x * 0.5))
+		cameraX = cameraBounds.x - (getSize().x * 0.5);
 
 	//If the y position to be set is at the edge of the game map, set the cameras position to its boundaries 
 	if (position.y < getSize().y * 0.5)
 		cameraY = getSize().y * 0.5;
-	else if (position.y > getCameraBounds().y)
-		cameraY = getCameraBounds().y;
+	else if (position.y > cameraBounds.y - (getSize().y * 0.5))
+		cameraY = cameraBounds.y - (getSize().y * 0.5);
+
+	if (cameraBounds.x < getSize().x)
+		cameraX = (cameraBounds.x / 2);
+	if (cameraBounds.y < getSize().y)
+		cameraY = (cameraBounds.y / 2);
 
 	setCenter(cameraX, cameraY);
-}
-
-/*
-setBounds
-return: Returns a 2d vector that contains the x and y camera bounds.
-
-Gets the camera bounds for the map.
-*/
-sf::Vector2f Camera::getCameraBounds()
-{
-	return sf::Vector2f(cameraBoundX - (getSize().x * 0.5), cameraBoundY - (getSize().y * 0.5));
 }

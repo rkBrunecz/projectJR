@@ -17,10 +17,8 @@ public:
 	void setBounds(int x, int y);
 	void updatePosition(sf::Vector2i position);
 
-	sf::Vector2f getCameraBounds();
-
 private:
-	int cameraBoundX, cameraBoundY;
+	sf::Vector2f cameraBounds;
 };
 
 #endif

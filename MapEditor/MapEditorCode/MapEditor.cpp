@@ -122,16 +122,33 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 
 	case New:
 	{
+		state = Build;
+
 		std::string fileName;
-
 		sf::Vector2i v = UI::getNewMapParams(&fileName);
+		std::string sheetFileName = UI::getMap("JRS");
 
-		fileName = "bin/Graphics/" + fileName + ".jrm";
+		if (sheetFileName.compare(".jrs") < 0) // If the user closes the file chooser, exit the function
+			break;
+
+		sheetFileName = std::strstr(sheetFileName.c_str(), "bin\\Maps\\jrs\\");
+		
+		fileName = "bin/Maps/" + fileName + ".jrm";
 
 		if (v != sf::Vector2i(-1, -1))
-			map.createMap(v.x, v.y, &camera, "name");
+			map.createMap(v.y, v.x, &camera, fileName, sheetFileName);
+		else
+			break;
 
-		state = Build;
+		camera.setCenter(window.getSize().x / 2, window.getSize().y / 2);
+
+		sf::Vector2i moveCamera = sf::Vector2i(0, 0);
+		if (v.x * Map::getTileSize() < window.getSize().x)
+			moveCamera.x = (window.getSize().x / 2) - tilePane.getSize().x;
+		if (v.y * Map::getTileSize() < window.getSize().y)
+			moveCamera.y = (window.getSize().y / 2) - ((v.y * Map::getTileSize()) / 2) - menuBar.getSize().y;
+
+		camera.move(-moveCamera.x, -moveCamera.y);
 
 		break;
 	}
