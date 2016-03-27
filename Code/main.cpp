@@ -121,19 +121,28 @@ void populateGraphicsArray(Player* player, Map* map)
 	Collision::intializeGraphicObjects(graphics, GRAPHICS_ARRAY_SIZE);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 	//LOCAL VARIABLES
 	Window_States windowState = Fullscreen; //Set window state to fullscreen
 	Camera camera;
 	Map map;
+	std::string mapName = "bin/Maps/TestMap.jrm";
+	sf::Vector2i startPos = sf::Vector2i(6 * 32, 6 * 32);
+
+	if (argc == 4)
+	{
+		mapName = argv[1];
+		startPos.y = atoi(argv[2]) * 32;
+		startPos.x = atoi(argv[3]) * 32;
+	}
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 
 	Player player(&camera);
-	player.setPlayerPosition(sf::Vector2i( 6 * 32, 6 * 32)); //TESTING START SPOT. WILL CHANGE
+	player.setPlayerPosition(startPos); //TESTING START SPOT. WILL CHANGE
 
 	//Set up camera properties
 	camera.setSize(desktop.width, desktop.height);
@@ -144,7 +153,7 @@ int main()
 	
 	populateGraphicsArray(&player, &map); //Populate the graphics array
 
-	map.loadMap("bin/Maps/TestMap.jrm", &camera); //Load the map
+	map.loadMap(mapName, &camera); //Load the map
 
 	//GAME LOOP
 	while (state != Quit)
