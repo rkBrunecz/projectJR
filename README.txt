@@ -97,6 +97,7 @@ TAB		   : Displays collision boundaries for objects in the game
 G  		   : Displays grid lines to show where tiles start and finish
 U  		   : Forces the editor to update all layers
 T  		   : Displays all the transition points on the map
+R		   : Allows the user to perform a test run from the current map being worked on. 
 
 CAMERA CONTROLS
 Right Mouse Button : When a map is created or loaded, right clicking and holding will allow for the user to drag the camera. The further the user pulls, the faster the camera moves.
