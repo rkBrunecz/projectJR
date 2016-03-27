@@ -41,7 +41,12 @@ public:
 
 	bool isMapLoaded();
 
+	std::string getMapName();
+
 	sf::Vector2f mapSize();
+	
+	int getRows();
+	int getColumns();
 
 	//TOOLS
 	void displayCollsionLayer();

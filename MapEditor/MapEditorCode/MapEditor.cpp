@@ -19,6 +19,7 @@ const enum Editor_States //Dictates the state the game is in
 	New,
 	Load,
 	Save,
+	TestMap,
 	ForceUpdate,
 	Quit
 };
@@ -97,13 +98,22 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 
 		break;
 	case Load:
+	{
 		map.loadMap(UI::getMap("JRM"), &camera);
 		camera.setCenter(window.getSize().x / 2, window.getSize().y / 2);
+
+		sf::Vector2i moveCamera = sf::Vector2i(0, 0);
+		if (map.getColumns() * Map::getTileSize() < window.getSize().x)
+			moveCamera.x = (window.getSize().x / 2) - tilePane.getSize().x;
+		if (map.getRows() * Map::getTileSize() < window.getSize().y)
+			moveCamera.y = (window.getSize().y / 2) - ((map.getColumns() * Map::getTileSize()) / 2) - menuBar.getSize().y;
+
+		camera.move(-moveCamera.x, -moveCamera.y);
 
 		state = Build;
 
 		break;
-
+	}
 	case Save:
 		if (map.isMapLoaded())
 			map.saveMap();
@@ -149,6 +159,27 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 			moveCamera.y = (window.getSize().y / 2) - ((v.y * Map::getTileSize()) / 2) - menuBar.getSize().y;
 
 		camera.move(-moveCamera.x, -moveCamera.y);
+
+		break;
+	}
+	case TestMap:
+	{
+		if (!map.isMapLoaded())
+			return;
+
+		PROCESS_INFORMATION ProcessInfo; //This is what we get as an [out] parameter
+
+		STARTUPINFO StartupInfo; //This is an [in] parameter
+		ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+		StartupInfo.cb = sizeof StartupInfo; //Only compulsory field
+
+		sf::Vector2i getTestPos = UI::getCoordinates("Starting Coordinates");
+		std::string cmd = "ProjectJR.exe " + map.getMapName() + " " + std::to_string(getTestPos.y) + " " + std::to_string(getTestPos.x);
+		LPSTR cmdArgs = const_cast<char *>(cmd.c_str());
+
+		CreateProcess("ProjectJR.exe", cmdArgs, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
+		
+		state = Build;
 
 		break;
 	}
@@ -229,6 +260,8 @@ int main()
 					state = Save;
 				else if (event.key.code == sf::Keyboard::U)
 					state = ForceUpdate;
+				else if (event.key.code == sf::Keyboard::R)
+					state = TestMap;
 				break;
 
 			case sf::Event::MouseButtonPressed: 
