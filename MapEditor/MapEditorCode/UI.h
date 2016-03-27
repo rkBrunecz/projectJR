@@ -22,7 +22,7 @@ public:
 	static void intializeMainWindow(sf::RenderWindow* window);
 	static sf::Vector2i getNewMapParams(std::string* str);
 	static std::string getMap(std::string filter);
-	static sf::Vector2i getTransitionCoordinates();
+	static sf::Vector2i getCoordinates(std::string windowName);
 
 
 private:

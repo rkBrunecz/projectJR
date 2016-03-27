@@ -254,9 +254,9 @@ std::string UI::getMap(std::string filter)
 	return s;
 }
 
-sf::Vector2i UI::getTransitionCoordinates()
+sf::Vector2i UI::getCoordinates(std::string windowName)
 {
-	sf::RenderWindow window(sf::VideoMode(400, 200, 0), "Transition Map Coordinates", sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode(400, 200, 0), windowName, sf::Style::Close);
 	sf::Font font;
 	if (!font.loadFromFile("bin/Font/arial.ttf"))
 		exit(EXIT_FAILURE);
