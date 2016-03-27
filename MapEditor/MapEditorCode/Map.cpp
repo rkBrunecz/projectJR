@@ -1008,6 +1008,7 @@ void Map::deleteTileFromPos(int row, int column)
 
 void Map::deleteTransitionPoint(int row, int column)
 {
+	//printf("%s %s\n", map[row][column].toString().c_str(), map[row][column].mapName.c_str());
 	if (transitionRemovedRecently || map[row][column].mapName.compare("") == 0)
 		return; 
 
@@ -1046,7 +1047,7 @@ void Map::deleteTransitionPoint(int row, int column)
 				numTransitionPoints--;
 			}
 
-			map[row][column].tileType = tileData[map[row][column].row * 10 + map[row][column].column][8];
+			map[row][column].tileType = tileData[map[row][column].row * 10 + map[row][column].column][7];
 
 			tileRemoved = true;
 		}
@@ -1164,7 +1165,7 @@ void Map::setTransitionPoint(int row, int column)
 	if (mapFileName.compare(".jrm") < 0) // If the user closes the file chooser, exit the function
 		return;
 
-	sf::Vector2i transitionToCoords = UI::getTransitionCoordinates();
+	sf::Vector2i transitionToCoords = UI::getCoordinates("Transition Map Coordinates");
 	sf::Vector2i transitionPoint = sf::Vector2i(column, row);
 
 	//If the user closes the transition coordinates window, exit the function
@@ -1177,7 +1178,9 @@ void Map::setTransitionPoint(int row, int column)
 
 	//Set-up tile to be a transition tile
 	map[row][column].tileType = 'E';
-	map[row][column].transitionCoords = transitionPoint;
+	map[row][column].transitionCoords = transitionToCoords;
+	map[row][column].transitionCoords.x = map[row][column].transitionCoords.x * TILE_SIZE;
+	map[row][column].transitionCoords.y = map[row][column].transitionCoords.y * TILE_SIZE;
 	map[row][column].mapName = mapFileName;
 
 	sf::RectangleShape r;
@@ -1290,7 +1293,7 @@ void Map::saveMap()
 	//LOCAL VARIABLES
 	std::ofstream mapFile;
 	bool hasTile = false;
-
+	printf("%s\n", nameOfFile.c_str());
 	mapFile.open(nameOfFile);
 
 	mapFile << nameOfSheetFile << std::endl;
@@ -1375,6 +1378,21 @@ int Map::boolToString(bool b)
 		return 1;
 	else
 		return 0;
+}
+
+int Map::getRows()
+{
+	return numRows;
+}
+
+int Map::getColumns()
+{
+	return numColumns;
+}
+
+std::string Map::getMapName()
+{
+	return nameOfFile;
 }
 
 void Map::forceUpdate()
