@@ -156,7 +156,7 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 	tiles.setTexture(tileSheet);
 
 	//Recreate the mapTexture, canopyTexture and groundTexture ONLY when needed
-	if (mapTexture.getSize().x < numRows * TILE_SIZE && mapTexture.getSize().y < numColumns * TILE_SIZE)
+	if (mapTexture.getSize().x <= numColumns * TILE_SIZE && mapTexture.getSize().y <= numRows * TILE_SIZE)
 	{
 		mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		canopyTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
@@ -293,7 +293,7 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 	numColumns = atoi(mapColumns.c_str());
 
 	//Recreate the mapTexture, canopyTexture and groundTexture ONLY when needed
-	if (mapTexture.getSize().x < numRows * TILE_SIZE && mapTexture.getSize().y < numColumns * TILE_SIZE)
+	if (mapTexture.getSize().x <= numColumns * TILE_SIZE && mapTexture.getSize().y <= numRows * TILE_SIZE)
 	{
 		mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		canopyTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
@@ -601,14 +601,14 @@ void Map::drawMap()
 	transitionTexture.display();
 
 	//Set the render textures to sprites
-	mapSprite.setTexture(mapTexture.getTexture());
-	canopySprite.setTexture(canopyTexture.getTexture());
-	maskSprite.setTexture(maskTexture.getTexture());
-	waterSprite.setTexture(waterFrames[0].getTexture());
+	mapSprite = sf::Sprite(mapTexture.getTexture());
+	canopySprite = sf::Sprite(canopyTexture.getTexture());
+	maskSprite = sf::Sprite(maskTexture.getTexture());
+	waterSprite = sf::Sprite(waterFrames[0].getTexture());
 
 	for (int i = 0; i < numRows; i++)
 	{
-		groundSprites[i].setTexture(groundTexture.getTexture());
+		groundSprites[i] = sf::Sprite(groundTexture.getTexture());
 		groundSprites[i].setTextureRect(sf::IntRect(0,
 			i * TILE_SIZE,
 			numColumns * TILE_SIZE,
@@ -617,8 +617,8 @@ void Map::drawMap()
 	}
 	
 	//TOOLS
-	collisionSprite.setTexture(collisionTexture.getTexture());
-	transitionSprite.setTexture(transitionTexture.getTexture());
+	collisionSprite = sf::Sprite(collisionTexture.getTexture());
+	transitionSprite = sf::Sprite(transitionTexture.getTexture());
 }
 
 /*
@@ -723,7 +723,7 @@ void Map::draw(sf::RenderWindow* window, sf::Vector2f mouseCoords)
 	Animation::updateWaterAnimation(&waterShift, &waterAnimation, &waterSprite, waterFrames, &currentWaterFrame, NUM_WATER_FRAMES);
 
 	window->draw(waterSprite);
-	window->draw(mapSprite);
+	window->draw(sf::Sprite(mapTexture.getTexture()));
 	window->draw(maskSprite);
 	for (int i = 0; i < numRows; i++)
 		window->draw(groundSprites[i]);
@@ -745,6 +745,8 @@ void Map::draw(sf::RenderWindow* window, sf::Vector2f mouseCoords)
 	
 		if (mousePos.getPosition().x <= TILE_SIZE * (numColumns - 1) && mousePos.getPosition().y <= TILE_SIZE * (numRows - 1) && mousePos.getPosition().x >= 0 && mousePos.getPosition().y >= 0)
 			window->draw(mousePos);
+		else
+			window->setMouseCursorVisible(true);
 	}
 }
 
@@ -761,7 +763,7 @@ void Map::drawTileSheet(sf::RenderWindow* window, sf::Vector2f mousePos)
 	window->draw(rotationTile);
 	window->draw(mirrorTile);
 
-	if (sf::Mouse::getPosition(*window).x <= tileSheetCoords.x && mousePos.x >= 0 && 
+	if (mousePos.x <= numColumns * TILE_SIZE && sf::Mouse::getPosition(*window).x <= tileSheetCoords.x && mousePos.x >= 0 && 
 		sf::Mouse::getPosition(*window).y >= TILE_SIZE && mousePos.y <= numRows * TILE_SIZE && mousePos.y >= 0)
 	{
 		currentRowColumn.setString(std::to_string((int)(mousePos.y / TILE_SIZE)) + ", " + std::to_string((int)(mousePos.x / TILE_SIZE)));
@@ -1008,7 +1010,6 @@ void Map::deleteTileFromPos(int row, int column)
 
 void Map::deleteTransitionPoint(int row, int column)
 {
-	//printf("%s %s\n", map[row][column].toString().c_str(), map[row][column].mapName.c_str());
 	if (transitionRemovedRecently || map[row][column].mapName.compare("") == 0)
 		return; 
 
@@ -1115,7 +1116,6 @@ void Map::mirrorTileAtPos(int row, int column)
 		else
 			canopy[row][column].mirror = false;
 
-		printf("%d\n", canopy[row][column].mirror);
 		addTileToMap(canopy, canopy[row][column].toString(), 0, row, column);
 		updateMap(canopyTexture, canopy);
 	}
@@ -1293,7 +1293,7 @@ void Map::saveMap()
 	//LOCAL VARIABLES
 	std::ofstream mapFile;
 	bool hasTile = false;
-	printf("%s\n", nameOfFile.c_str());
+	
 	mapFile.open(nameOfFile);
 
 	mapFile << nameOfSheetFile << std::endl;
