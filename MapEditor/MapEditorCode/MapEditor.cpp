@@ -55,7 +55,7 @@ void moveCamera(Camera& camera, sf::RenderWindow& window, Map& map)
 
 
 /*
-runGame
+runEditor 
 Parameters:
 	window     - The game window where graphics are drawn
 	map        - This object contains information about the map
@@ -99,6 +99,8 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 		break;
 	case Load:
 	{
+		state = Build;
+
 		map.loadMap(UI::getMap("JRM"), &camera);
 		camera.setCenter(window.getSize().x / 2, window.getSize().y / 2);
 
@@ -110,23 +112,21 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 
 		camera.move(-moveCamera.x, -moveCamera.y);
 
-		state = Build;
-
 		break;
 	}
 	case Save:
+		state = Build;
+
 		if (map.isMapLoaded())
 			map.saveMap();
-
-		state = Build;
 
 		break;
 
 	case ForceUpdate:
+		state = Build;
+
 		if (map.isMapLoaded())
 			map.forceUpdate();
-
-		state = Build;
 
 		break;
 
@@ -164,8 +164,23 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 	}
 	case TestMap:
 	{
+		state = Build;
+
 		if (!map.isMapLoaded())
 			return;
+
+		sf::Vector2i getTestPos = UI::getCoordinates("Starting Coordinates");
+		if (getTestPos == sf::Vector2i(-1, -1))
+			return;
+
+		std::string mapName = map.getMapName();
+		mapName = std::strstr(mapName.c_str(), "bin\\Maps\\");
+		mapName[3] = '/';
+		mapName[8] = '/';
+
+		std::string cmd = "ProjectJR.exe " + mapName + " " + std::to_string(getTestPos.y) + " " + std::to_string(getTestPos.x);
+		printf("%s\n", cmd.c_str());
+		LPSTR cmdArgs = const_cast<char *>(cmd.c_str());
 
 		PROCESS_INFORMATION ProcessInfo; //This is what we get as an [out] parameter
 
@@ -173,13 +188,7 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 		ZeroMemory(&StartupInfo, sizeof(StartupInfo));
 		StartupInfo.cb = sizeof StartupInfo; //Only compulsory field
 
-		sf::Vector2i getTestPos = UI::getCoordinates("Starting Coordinates");
-		std::string cmd = "ProjectJR.exe " + map.getMapName() + " " + std::to_string(getTestPos.y) + " " + std::to_string(getTestPos.x);
-		LPSTR cmdArgs = const_cast<char *>(cmd.c_str());
-
 		CreateProcess("ProjectJR.exe", cmdArgs, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
-		
-		state = Build;
 
 		break;
 	}
