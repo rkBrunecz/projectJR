@@ -84,7 +84,7 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 	numColumns = atoi(mapColumns.c_str());
 
 	//Recreate the mapTexture, canopyTexture and groundTexture ONLY when needed
-	if (mapTexture.getSize().x < numRows * TILE_SIZE && mapTexture.getSize().y < numColumns * TILE_SIZE)
+	if (mapTexture.getSize().x < numColumns * TILE_SIZE && mapTexture.getSize().y < numRows * TILE_SIZE)
 	{
 		mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		canopyTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
@@ -395,14 +395,14 @@ void Map::drawMap()
 	transitionTexture.display();
 
 	//Set the render textures to sprites
-	mapSprite.setTexture(mapTexture.getTexture());
-	canopySprite.setTexture(canopyTexture.getTexture());
-	maskSprite.setTexture(maskTexture.getTexture());
-	waterSprite.setTexture(waterFrames[0].getTexture());
+	mapSprite = sf::Sprite(mapTexture.getTexture());
+	canopySprite = sf::Sprite(canopyTexture.getTexture());
+	maskSprite = sf::Sprite(maskTexture.getTexture());
+	waterSprite = sf::Sprite(waterFrames[0].getTexture());
 
 	for (int i = 0; i < numRows; i++)
 	{
-		groundSprites[i].setTexture(groundTexture.getTexture());
+		groundSprites[i] = sf::Sprite(groundTexture.getTexture());
 		groundSprites[i].setTextureRect(sf::IntRect(0,
 			i * TILE_SIZE,
 			numColumns * TILE_SIZE,
@@ -411,9 +411,9 @@ void Map::drawMap()
 	}
 	
 	//TOOLS
-	collisionSprite.setTexture(collisionTexture.getTexture());
-	gridSprite.setTexture(gridTexture.getTexture());
-	transitionSprite.setTexture(transitionTexture.getTexture());
+	collisionSprite = sf::Sprite(collisionTexture.getTexture());
+	gridSprite = sf::Sprite(gridTexture.getTexture());
+	transitionSprite = sf::Sprite(transitionTexture.getTexture());
 }
 
 /*
