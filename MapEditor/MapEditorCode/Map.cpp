@@ -137,7 +137,7 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 
 	sheetFileName.replace(sheetFileName.length() - 3, 3, "png");
 	nameOfTileSheet = sheetFileName.substr(sheetFileName.find_last_of("\\"), sheetFileName.size());
-	nameOfTileSheet = "bin\\Graphics\\" + nameOfTileSheet;
+	nameOfTileSheet = "bin\\Graphics" + nameOfTileSheet;
 
 	//Get the tile data so that tiles can be added to the map
 	tileFile.open(nameOfSheetFile);
