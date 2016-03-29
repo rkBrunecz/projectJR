@@ -177,6 +177,8 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 		collisionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		gridTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		transitionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+
+		gridTexture.setSmooth(true);
 	}
 
 	createGrid();
@@ -314,6 +316,8 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 		collisionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		gridTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		transitionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
+
+		gridTexture.setSmooth(true);
 	}
 	
 	createGrid();

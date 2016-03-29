@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
 
 	//Set up camera properties
 	camera.setSize(desktop.width, desktop.height);
-	camera.zoom(0.6);
+	camera.zoom(0.5);
 
 	window.setVerticalSyncEnabled(true);
 	window.setMouseCursorVisible(false);
