@@ -1,6 +1,6 @@
 -----------------------------------------------------------------
 * Developers:	Randall Brunecz, Joshua Gray			*
-* Last Updated:	03/27/2016		   			*					   
+* Last Updated:	03/28/2016		   			*					   
 -----------------------------------------------------------------
 
 DESCRIPTION
@@ -91,12 +91,12 @@ CONTROLS
 --------------------------------------------
 ESC 		   : Closes the application
 L  	  	   : Allows the user to load in a map
-N  		   : Allows the user to create a new map (feature is still under development and is not fully functional)
+N  		   : Allows the user to create a new map 
 S  		   : Allows the user to save a map
 TAB		   : Displays collision boundaries for objects in the game
 G  		   : Displays grid lines to show where tiles start and finish
-U  		   : Forces the editor to update all layers
 T  		   : Displays all the transition points on the map
+U  		   : Forces the editor to update all layers
 R		   : Allows the user to perform a test run from the current map being worked on. 
 
 CAMERA CONTROLS
