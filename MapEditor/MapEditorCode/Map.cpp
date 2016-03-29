@@ -94,6 +94,9 @@ void Map::loadMap(std::string mapName, Camera* camera)
 	//Open the mapFile file
 	mapFile.open(mapName);
 	nameOfFile = mapName;
+	nameOfFile = std::strstr(mapName.c_str(), "bin\\Maps\\");
+	nameOfFile[3] = '/';
+	nameOfFile[8] = '/';
 
 	if (mapFile.is_open())
 		initialize(mapFile, camera); //Dynamically create an array to hold the map	
@@ -110,11 +113,16 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 	std::ifstream tileFile;
 	std::string input;
 
+	//Clear out the transitions if they existed in a previously loaded map.
+	if (numTransitionPoints != 0)
+		transitions.empty();
+
 	//Reset all tile manipulations and debug layers
 	allowTileManipulation();
 	renderCollisionLayer = false;
 	renderGridLayer = false;
 	renderTransitionLayer = false;
+	numTransitionPoints = 0;
 
 	//If the rows and columns of the map have been set, it is safe to clear out the map file.
 	if (numRows != 0 && numColumns != 0)
@@ -349,6 +357,9 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 	std::string input;
 	int numCoords;
 	sf::Vector2i coords;
+
+	if (numTransitionPoints != 0)
+		transitions.empty();
 
 	//Get the number connected maps
 	std::getline(mapFile, input);
