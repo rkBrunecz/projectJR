@@ -437,7 +437,7 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 		TILE_SIZE,
 		TILE_SIZE));
 
-	if (layer[row][column].rotation == 0)
+	if (layer[row][column].rotation == 0 && !layer[row][column].mirror)
 	{
 		tiles.setPosition(column * TILE_SIZE, row * TILE_SIZE); //Set the position of the tile to be drawn 
 
@@ -455,12 +455,14 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 		//The tiles are 32x32, so the origin is 16, 16
 		tmp.setOrigin(16, 16);
 		tmp.rotate(layer[row][column].rotation * 90);
+		if (layer[row][column].mirror)
+			tmp.scale(-1.f, 1.f); //Mirror the tile
 
 		tmp.setPosition(column * TILE_SIZE + 16, row * TILE_SIZE + 16); //Set the position of the tile to be drawn (The tile will be offset by 16 when rotated, so move it over and down by 16)
 
 		texture.draw(tmp); //Draw the tile
 	}
-	else if (layer[row][column].rotation == 4) //Mirro tile
+	else if (layer[row][column].mirror) //Mirror tile
 	{
 		//Create a temporary texture to hold the tile
 		sf::Texture temp;
