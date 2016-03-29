@@ -174,12 +174,8 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 			return;
 
 		std::string mapName = map.getMapName();
-		mapName = std::strstr(mapName.c_str(), "bin\\Maps\\");
-		mapName[3] = '/';
-		mapName[8] = '/';
 
 		std::string cmd = "ProjectJR.exe " + mapName + " " + std::to_string(getTestPos.y) + " " + std::to_string(getTestPos.x);
-		printf("%s\n", cmd.c_str());
 		LPSTR cmdArgs = const_cast<char *>(cmd.c_str());
 
 		PROCESS_INFORMATION ProcessInfo; //This is what we get as an [out] parameter
