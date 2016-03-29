@@ -115,7 +115,8 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 
 	//Clear out the transitions if they existed in a previously loaded map.
 	if (numTransitionPoints != 0)
-		transitions.empty();
+		transitions.clear();
+
 
 	//Reset all tile manipulations and debug layers
 	allowTileManipulation();
@@ -363,7 +364,7 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 	sf::Vector2i coords;
 
 	if (numTransitionPoints != 0)
-		transitions.empty();
+		transitions.clear();
 
 	//Get the number connected maps
 	std::getline(mapFile, input);
@@ -1218,6 +1219,7 @@ void Map::setTransitionPoint(int row, int column)
 	}
 
 	numTransitionPoints++;
+	printf("%d\n", numTransitionPoints);
 
 	TransitionPoint tp;
 	tp.transitionMapName = mapFileName;
@@ -1381,7 +1383,7 @@ std::string Map::tileToString(Tile**& layer, int row, int column)
 	
 	s = s + std::to_string(boolToString(layer[row][column].collidable)) + layer[row][column].tileType;
 	
-	if (layer[row][column].tileType != 'W' && layer[row][column].collidable)
+	if ((layer[row][column].bBX != 0 || layer[row][column].bBY != 0) && layer[row][column].collidable)
 		s = s + ":" + layer[row][column].boundingBox;
 
 	return s;
