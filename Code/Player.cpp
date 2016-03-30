@@ -66,11 +66,13 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	//LOCAL VARIABLES
 	bool positionUpdated = true;
 	float offSetX = 0, offSetY = 0;
+	float offSetYDir = 0; //This variables allows for offsetting the player by a certain amount based on which direction the player is facing in the y direction
 
 	//Move up
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
 		offSetY = -VELOCITY;
+		offSetYDir = 5;
 
 		currentDirection = Animation::Up; //Set the character direction state for animation purposes
 	}
@@ -99,7 +101,7 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 		positionUpdated = false; //If the position was not updated, positionUpdated = false
 
 	//Create a bounding box to check for collision
-	sf::IntRect	bb = sf::IntRect(x - (WIDTH * 0.5) + offSetX, y + offSetY, WIDTH, HEIGHT);
+	sf::IntRect	bb = sf::IntRect(x - (WIDTH * 0.5) + offSetX, y - offSetYDir + offSetY, WIDTH, HEIGHT);
 
 	//May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
 	if (positionUpdated && Collision::collisionDetected(&bb))
@@ -115,6 +117,7 @@ void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
 	//Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
 	character.setPosition(x, y);
 	camera->updatePosition(sf::Vector2i(x, y));
+
 
 	Animation::updateAnimation(positionUpdated, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
 }
