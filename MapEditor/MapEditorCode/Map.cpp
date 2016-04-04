@@ -475,6 +475,11 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 	layer[row][column].collidable = input[pos + 4] - '0'; //0 = false, 1 = true
 	layer[row][column].tileType = input[pos + 5];
 	layer[row][column].hasTile = true;
+	layer[row][column].bBX = 0; 
+	layer[row][column].bBY = 0;
+	layer[row][column].height = 32;
+	layer[row][column].width = 32;
+	layer[row][column].boundingBox = "none";
 
 	//If collidable, add a bounding box
 	if (layer[row][column].collidable && input[pos + 6] == ':')
@@ -1219,7 +1224,6 @@ void Map::setTransitionPoint(int row, int column)
 	}
 
 	numTransitionPoints++;
-	printf("%d\n", numTransitionPoints);
 
 	TransitionPoint tp;
 	tp.transitionMapName = mapFileName;
@@ -1383,7 +1387,7 @@ std::string Map::tileToString(Tile**& layer, int row, int column)
 	
 	s = s + std::to_string(boolToString(layer[row][column].collidable)) + layer[row][column].tileType;
 	
-	if ((layer[row][column].bBX != 0 || layer[row][column].bBY != 0) && layer[row][column].collidable)
+	if (layer[row][column].boundingBox.compare("none") != 0 && layer[row][column].collidable)
 		s = s + ":" + layer[row][column].boundingBox;
 
 	return s;

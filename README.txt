@@ -1,6 +1,6 @@
 -----------------------------------------------------------------
 * Developers:	Randall Brunecz, Joshua Gray			*
-* Last Updated:	03/28/2016		   			*					   
+* Last Updated:	04/03/2016		   			*					   
 -----------------------------------------------------------------
 
 DESCRIPTION
@@ -38,7 +38,7 @@ GETTING THE CODE TO COMPILE AND RUN
 
 4. Under "Configuration Properties", click on "C/C++" and click "General". Make sure "All Configurations" is selected in the drop down called "Configuration" at the top left.
 
-5: At the top where it says "Additional Include Directories", copy your path to SFML's "include" folder and paste it here.
+5. At the top where it says "Additional Include Directories", copy your path to SFML's "include" folder and paste it here.
 
 6. Click on "Preprocessor" which is under "C/C++" and copy: "SFML_STATIC" into the box that is called "Preprocessor Definitions"
 
@@ -64,7 +64,7 @@ vorbisfile.lib
 vorbis.lib
 ogg.lib
 
-9. Finally, switch "Configuration" to "Release". Click on "Additional Dependencies" and copy these to the text box:
+10. Finally, switch "Configuration" to "Release". Click on "Additional Dependencies" and copy these to the text box:
 
 sfml-graphics-s.lib
 freetype.lib

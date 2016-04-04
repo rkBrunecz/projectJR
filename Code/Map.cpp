@@ -410,6 +410,7 @@ void Map::drawMap()
 			numColumns * TILE_SIZE,
 			TILE_SIZE));
 		groundSprites[i].setPosition(0, i * TILE_SIZE);
+
 	}
 	
 	//TOOLS
@@ -507,7 +508,7 @@ void Map::draw(sf::RenderWindow* window, Player* player, bool drawWaterAnimation
 	std::vector<std::vector<Graphic*>> drawAtPos;
 	bool playerDrawn = false;
 
-	drawAtPos.resize(numRows);
+	drawAtPos.resize(numRows + 1);
 
 	//If requested, animate water tiles. Otherwise, do not.
 	if (drawWaterAnimation)
@@ -518,29 +519,35 @@ void Map::draw(sf::RenderWindow* window, Player* player, bool drawWaterAnimation
 	window->draw(maskSprite);
 
 	//Get the column and row the graphic object is in
-	int column = (player->getRect().left + (player->getRect().width * 0.5)) / TILE_SIZE;
+	//int column = (player->getRect().left + (player->getRect().width * 0.5)) / TILE_SIZE;
 	int row = (player->getRect().top + player->getRect().height) / TILE_SIZE;
+	int columnL = player->getRect().left / TILE_SIZE;
+	int columnR = (player->getRect().left + player->getRect().width) / TILE_SIZE;
 	
 	//Determine the order that graphic objects are drawn based on their immediate surroundings.
-	if (ground[row][column].hasTile &&
-		(row * TILE_SIZE) + ground[row][column].bBY < player->getRect().top)
+	if (ground[row][columnL].hasTile ||	ground[row][columnR].hasTile) 
+	{
 		row++;
-	else if (column - 1 >= 0 && ground[row][column - 1].hasTile &&
-		(row * TILE_SIZE) + ground[row][column - 1].bBY < player->getRect().top)
-		row++;
-	else if (column + 1 < numRows && ground[row][column + 1].hasTile &&
-		(row * TILE_SIZE) + ground[row][column + 1].bBY < player->getRect().top)
-		row++;
+		if ((row * TILE_SIZE) + ground[row][columnL].bBY > player->getRect().top ||
+			(row * TILE_SIZE) + ground[row][columnR].bBY > player->getRect().top)
+			row--;		
+	}
 
 	drawAtPos[row].push_back(player);
 
 	//Check each row for collision with the player or with npc's
 	for (int i = 0; i < numRows; i++)
 	{
-		if (drawAtPos[i].size() != 0)
-			drawAtPos[i][0]->draw(window);
+		for (int j = 0; j < drawAtPos[i].size(); j++)
+			drawAtPos[i][j]->draw(window);
 
 		window->draw(groundSprites[i]);
+	}
+
+	if (drawAtPos[drawAtPos.size() - 1].size() != 0)
+	{
+		for (int i = 0; i < drawAtPos[drawAtPos.size() - 1].size(); i++)
+			drawAtPos[drawAtPos.size() - 1][i]->draw(window);
 	}
 
 	window->draw(canopySprite); //Draw the canopy
@@ -588,6 +595,8 @@ void Map::moveToMap(Player* player, Camera* camera)
 	int row = player->getRect().top / TILE_SIZE;
 	int column = player->getRect().left / TILE_SIZE;
 	sf::Vector2i startPosition = map[row][column].transitionCoords;
+	startPosition.x += (TILE_SIZE / 2);
+	startPosition.y += (TILE_SIZE / 2);
 
 	loadMap(map[row][column].mapName, camera); //Load the next map
 

@@ -133,8 +133,8 @@ int main(int argc, char* argv[])
 	if (argc == 4)
 	{
 		mapName = argv[1];
-		startPos.y = atoi(argv[2]) * 32;
-		startPos.x = atoi(argv[3]) * 32;
+		startPos.y = atoi(argv[2]) * 32 + 16;
+		startPos.x = atoi(argv[3]) * 32 + 16;
 	}
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
