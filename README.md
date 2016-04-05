@@ -44,39 +44,39 @@ V-Sync has been enabled for the game. If you notice your CPU usage is 20%+, and 
 
 9. Now, switch "Configuration" to "Debug". Click on "Additional Dependencies" and copy these to the text box:
 
--sfml-graphics-s-d.lib
--freetype.lib
--jpeg.lib
--sfml-window-s-d.lib
--opengl32.lib
--winmm.lib
--gdi32.lib
--sfml-system-s-d.lib
--sfml-audio-s-d.lib
--openal32.lib
--flac.lib
--vorbisenc.lib
--vorbisfile.lib
--vorbis.lib
--ogg.lib
+- sfml-graphics-s-d.lib
+- freetype.lib
+- jpeg.lib
+- sfml-window-s-d.lib
+- opengl32.lib
+- winmm.lib
+- gdi32.lib
+- sfml-system-s-d.lib
+- sfml-audio-s-d.lib
+- openal32.lib
+- flac.lib
+- vorbisenc.lib
+- vorbisfile.lib
+- vorbis.lib
+- ogg.lib
 
 10. Finally, switch "Configuration" to "Release". Click on "Additional Dependencies" and copy these to the text box:
 
--sfml-graphics-s.lib
--freetype.lib
--jpeg.lib
--sfml-window-s.lib
--opengl32.lib
--winmm.lib
--gdi32.lib
--sfml-system-s.lib
--sfml-audio-s.lib
--openal32.lib
--flac.lib
--vorbisenc.lib
--vorbisfile.lib
--vorbis.lib
--ogg.lib
+- sfml-graphics-s.lib
+- freetype.lib
+- jpeg.lib
+- sfml-window-s.lib
+- opengl32.lib
+- winmm.lib
+- gdi32.lib
+- sfml-system-s.lib
+- sfml-audio-s.lib
+- openal32.lib
+- flac.lib
+- vorbisenc.lib
+- vorbisfile.lib
+- vorbis.lib
+- ogg.lib
 
 #MAP EDITOR
 
