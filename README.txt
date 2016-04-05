@@ -9,6 +9,8 @@ Game description will be updated when the game developes more. Currently, the pr
 
 CONTROLS
 --------------------------------------------
+
+GAME CONTROLS
 Esc             : Quits the game (Will change when the game develops more)
 F11             : Resizes the window to windowed mode or fullscreen mode depending on which mode it was in previously. (Game will not run well in windowed mode)
 W / Up Arrow    : Moves sprite up
@@ -89,6 +91,8 @@ Map editor will allow for quick content creation and the implementation of inter
 
 CONTROLS
 --------------------------------------------
+
+MAP EDITOR CONTROLS
 ESC 		   : Closes the application
 L  	  	   : Allows the user to load in a map
 N  		   : Allows the user to create a new map 
