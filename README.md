@@ -7,20 +7,20 @@ Game description will be updated when the game developes more. Currently, the pr
 ##CONTROLS
 
 ####GAME CONTROLS
-**Esc**.............: Quits the game (Will change when the game develops more)  
-**F11**.............: Resizes the window to windowed mode or fullscreen mode depending on which mode it was in previously. (Game will not run well in windowed mode)  
-**W / Up Arrow**....: Moves sprite up  
-**S / Down Arrow**..: Moves sprite down  
-**D / Right Arrow**.: Moves sprite right  
-**A / Left Arrow**..: Moves sprite left  
-**Space**...........: Pauses the game  
+**Esc** : Quits the game (Will change when the game develops more)  
+**F11** : Resizes the window to windowed mode or fullscreen mode depending on which mode it was in previously. (Game will not run well in windowed mode)  
+**W / Up Arrow**    : Moves sprite up  
+**S / Down Arrow**  : Moves sprite down  
+**D / Right Arrow** : Moves sprite right  
+**A / Left Arrow**  : Moves sprite left  
+**Space** : Pauses the game  
 
 ####DEBUG CONTROLS
-**1**...........: Perform a fade in transition  
-**2**...........: Perform a fade out transition  
-**TAB**.........: Displays collision boundaries for objects in the game  
-**G**...........: Displays grid lines to show where tiles start and finish  
-**T**...........: Displays all the transition points on the map  
+**1** : Perform a fade in transition  
+**2** : Perform a fade out transition  
+**TAB** : Displays collision boundaries for objects in the game  
+**G** : Displays grid lines to show where tiles start and finish  
+**T** : Displays all the transition points on the map  
 
 ##PERFORMANCE
 V-Sync has been enabled for the game. If you notice your CPU usage is 20%+, and you use an Nvidia card, go into the Nvidia control panel and turn off "Threaded Optimization".
@@ -85,21 +85,19 @@ Map editor will allow for quick content creation and the implementation of inter
 ##CONTROLS
 
 ####MAP EDITOR CONTROLS
-**ESC**............: Closes the application  
-**L**..............: Allows the user to load in a map  
-**N**..............: Allows the user to create a new map  
-**S**..............: Allows the user to save a map  
-**TAB**............: Displays collision boundaries for objects in the game  
-**G**..............: Displays grid lines to show where tiles start and finish  
-**T**..............: Displays all the transition points on the map  
-**U**..............: Forces the editor to update all layers  
-**R**..............: Allows the user to perform a test run from the current map being worked on.  
+**ESC** : Closes the application  
+**L** : Allows the user to load in a map  
+**N** : Allows the user to create a new map  
+**S** : Allows the user to save a map  
+**TAB** : Displays collision boundaries for objects in the game  
+**G** : Displays grid lines to show where tiles start and finish  
+**T** : Displays all the transition points on the map  
+**U** : Forces the editor to update all layers  
+**R** : Allows the user to perform a test run from the current map being worked on.  
 
 ####CAMERA CONTROLS
-**Right Mouse Button**.: When a map is created or loaded, right clicking and holding will allow for the user to drag the camera. 
-.........................The further the user pulls, the faster the camera moves.  
-**Left Mouse Button**..: Click a tile in the tile pane (right side of the window) to select a tile. A transparent yellow box will 
-.........................highlight a tile if it is valid. Left click anywhere in the map to place the tile.  
+**Right Mouse Button** : When a map is created or loaded, right clicking and holding will allow for the user to drag the camera. The further the user pulls, the faster the camera moves.  
+**Left Mouse Button**  : Click a tile in the tile pane (right side of the window) to select a tile. A transparent yellow box will highlight a tile if it is valid. Left click anywhere in the map to place the tile.  
 
 #RESOURCES:
 - http://www.sfml-dev.org/ ~ Please checkout SFML! It truly is an amazing library! 
