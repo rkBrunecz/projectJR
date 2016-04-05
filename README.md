@@ -7,13 +7,13 @@ Game description will be updated when the game developes more. Currently, the pr
 ##CONTROLS
 
 ###GAME CONTROLS
-Esc             : Quits the game (Will change when the game develops more)
-F11             : Resizes the window to windowed mode or fullscreen mode depending on which mode it was in previously. (Game will not run well in windowed mode)
-W / Up Arrow    : Moves sprite up
-S / Down Arrow  : Moves sprite down
-D / Right Arrow : Moves sprite right
-A / Left Arrow  : Moves sprite left
-Space           : Pauses the game
+Esc             : Quits the game (Will change when the game develops more)  
+F11             : Resizes the window to windowed mode or fullscreen mode depending on which mode it was in previously. (Game will not run well in windowed mode)  
+W / Up Arrow    : Moves sprite up  
+S / Down Arrow  : Moves sprite down  
+D / Right Arrow : Moves sprite right  
+A / Left Arrow  : Moves sprite left  
+Space           : Pauses the game  
 
 ###DEBUG CONTROLS
 1  		: Perform a fade in transition
