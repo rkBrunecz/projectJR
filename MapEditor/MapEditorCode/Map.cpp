@@ -27,7 +27,7 @@ Map::Map()
 	selectedTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
 	selectedTile.setFillColor(sf::Color(200, 200, 0, 125));
 
-	if (!deleteTex.loadFromFile("bin/Graphics/Delete.png") || !transitionTex.loadFromFile("bin/Graphics/Transition.png") || !rotateTex.loadFromFile("bin/Graphics/Rotate.png") || !deleteTransTex.loadFromFile("bin/Graphics/DeleteTrans.png") || !mirrorTex.loadFromFile("bin/Graphics/Mirror.png") || !font.loadFromFile("bin/Font/arial.ttf"))
+	if (!deleteTex.loadFromFile("res/Graphics/Delete.png") || !transitionTex.loadFromFile("res/Graphics/Transition.png") || !rotateTex.loadFromFile("res/Graphics/Rotate.png") || !deleteTransTex.loadFromFile("res/Graphics/DeleteTrans.png") || !mirrorTex.loadFromFile("res/Graphics/Mirror.png") || !font.loadFromFile("res/Font/arial.ttf"))
 		exit(EXIT_FAILURE);
 
 	currentRowColumn.setFont(font);
@@ -94,7 +94,7 @@ void Map::loadMap(std::string mapName, Camera* camera)
 	//Open the mapFile file
 	mapFile.open(mapName);
 	nameOfFile = mapName;
-	nameOfFile = std::strstr(mapName.c_str(), "bin\\Maps\\");
+	nameOfFile = std::strstr(mapName.c_str(), "res\\Maps\\");
 	nameOfFile[3] = '/';
 	nameOfFile[8] = '/';
 
@@ -138,7 +138,7 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 
 	sheetFileName.replace(sheetFileName.length() - 3, 3, "png");
 	nameOfTileSheet = sheetFileName.substr(sheetFileName.find_last_of("\\"), sheetFileName.size());
-	nameOfTileSheet = "bin\\Graphics" + nameOfTileSheet;
+	nameOfTileSheet = "res\\Graphics" + nameOfTileSheet;
 
 	//Get the tile data so that tiles can be added to the map
 	tileFile.open(nameOfSheetFile);
@@ -1193,7 +1193,7 @@ void Map::setTransitionPoint(int row, int column)
 	if (transitionToCoords == sf::Vector2i(-1, -1))
 		return;
 	
-	mapFileName = std::strstr(mapFileName.c_str(), "bin\\Maps\\");
+	mapFileName = std::strstr(mapFileName.c_str(), "res\\Maps\\");
 	mapFileName[3] = '/';
 	mapFileName[8] = '/';
 
