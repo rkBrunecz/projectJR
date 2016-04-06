@@ -2,7 +2,9 @@
 *Developers:	Randall Brunecz, Joshua Gray*			
 *Last Updated:	04/03/2016*		   								   
 
-Game description will be updated when the game developes more. Currently, the project is focused on building the tools and the engine to run the game. The engine is being build from scratch utilizing the SFML library. The scope of the project is difficult to measure since the features and additions are decided on a regular basis. Initially, the game was going to be very simple with a simplistic engine. As time goes on, the complexity increases and I realize I want to do more with the game.
+Game description will be updated when the game developes more. Currently, the project is focused on building the tools and the engine to run the game. The engine is being build from scratch utilizing the SFML library. The scope of the project is difficult to measure since the features and additions are decided on a regular basis. Initially, the game was going to be very simple with a simplistic engine. As time goes on, the complexity increases and I realize I want to do more with the game.  
+
+You can obtain the resources needed to run the game and mapeditor [here](http://www.mediafire.com/download/bczagecsp643hul/res.zip).
 
 ##CONTROLS
 
