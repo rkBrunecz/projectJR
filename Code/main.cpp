@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 	Window_States windowState = Fullscreen; //Set window state to fullscreen
 	Camera camera;
 	Map map;
-	std::string mapName = "bin/Maps/TestMap.jrm";
+	std::string mapName = "res/Maps/TestMap.jrm";
 	sf::Vector2i startPos = sf::Vector2i(6 * 32, 6 * 32);
 
 	if (argc == 4)

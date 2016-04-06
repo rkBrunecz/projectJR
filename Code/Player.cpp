@@ -23,7 +23,7 @@ Creates the main characters sprite and sets other important information.
 Player::Player(Camera* camera)
 {
 	//Load sprite map
-	if (!spriteMap.loadFromFile("bin/Graphics/test.png"))
+	if (!spriteMap.loadFromFile("res/Graphics/test.png"))
 		exit(EXIT_FAILURE);
 
 	//Set up the sprites properties
