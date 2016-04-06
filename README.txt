@@ -114,7 +114,9 @@ Left Mouse Button  : Click a tile in the tile pane (right side of the window) to
 
 REFERENCES
 --------------------------------------------
-http://www.sfml-dev.org/ ~ Please checkout SFML! It truly is an amazing library! 
+
+LIBRARIES
+- http://www.sfml-dev.org/ ~ Please checkout SFML! It truly is an amazing library! 
 
 GRAPHICS
 - Character Sprites - http://www.talking-time.net/showthread.php?t=11609
