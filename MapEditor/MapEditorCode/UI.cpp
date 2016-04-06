@@ -19,7 +19,7 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 {
 	sf::RenderWindow window(sf::VideoMode(400, 225, 0), "New Map", sf::Style::Close);
 	sf::Font font;
-	if (!font.loadFromFile("bin/Font/arial.ttf"))
+	if (!font.loadFromFile("res/Font/arial.ttf"))
 		exit(EXIT_FAILURE);
 
 	//LOCAL VARIABLES
@@ -258,7 +258,7 @@ sf::Vector2i UI::getCoordinates(std::string windowName)
 {
 	sf::RenderWindow window(sf::VideoMode(400, 200, 0), windowName, sf::Style::Close);
 	sf::Font font;
-	if (!font.loadFromFile("bin/Font/arial.ttf"))
+	if (!font.loadFromFile("res/Font/arial.ttf"))
 		exit(EXIT_FAILURE);
 
 	//LOCAL VARIABLES

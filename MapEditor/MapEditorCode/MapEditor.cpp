@@ -141,9 +141,9 @@ void runEditor(sf::RenderWindow& window, Camera& camera, Map& map, sf::Rectangle
 		if (sheetFileName.compare(".jrs") < 0) // If the user closes the file chooser, exit the function
 			break;
 
-		sheetFileName = std::strstr(sheetFileName.c_str(), "bin\\Maps\\jrs\\");
+		sheetFileName = std::strstr(sheetFileName.c_str(), "res\\Maps\\jrs\\");
 		
-		fileName = "bin/Maps/" + fileName + ".jrm";
+		fileName = "res/Maps/" + fileName + ".jrm";
 
 		if (v != sf::Vector2i(-1, -1))
 			map.createMap(v.y, v.x, &camera, fileName, sheetFileName);
