@@ -11,7 +11,6 @@ void Battle_Engine::initialize(Battle_Object** player, int numPlayers, float dis
 	this->numPlayers = numPlayers;
 	this->displayWidth = displayWidth;
 	this->displayHeight = displayHeight;
-	numEnemies = 3;
 
 	// Intialize possible monster positions
 	for (unsigned int i = 0; i < monsters.size(); i++)
@@ -49,12 +48,7 @@ void Battle_Engine::initialize(Battle_Object** player, int numPlayers, float dis
 
 void Battle_Engine::determineMonsterParty()
 {
-	monsters[0].occupySpace(new Ogre(), false);
-	monsters[1].occupySpace(new Ogre(), false);
-	monsters[2].occupySpace(new Ogre(), false);
-	monsters[3].occupySpace(new Ogre(), false);
 	monsters[4].occupySpace(new Ogre(), false);
-	monsters[5].occupySpace(new Ogre(), false);
 }
 
 void Battle_Engine::startTurn(sf::Event lastKeyPressed, float elapsedTime)
@@ -66,7 +60,7 @@ void Battle_Engine::startTurn(sf::Event lastKeyPressed, float elapsedTime)
 		if (playerTurn && sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
 		{
 			engineState = Moving;
-			positionSelected = 5;
+			positionSelected = 4;
 			actorPosition = 0;
 
 			float x = defender->at(positionSelected).x;
@@ -250,7 +244,7 @@ void Battle_Engine::resetEngineValues()
 	engineState = Deciding;
 }
 
-void Battle_Engine::updateDrawList()
+void Battle_Engine::updateDrawList(bool animate)
 {
 	std::vector<Battle_Object*> drawAtPos;
 
@@ -268,6 +262,6 @@ void Battle_Engine::updateDrawList()
 	
 	Graphic::addToDrawList(&backdropSprite, false);
 	for (unsigned int i = 0; i < drawAtPos.size(); i++)
-		drawAtPos[i]->drawSprite();
+		drawAtPos[i]->drawSprite(animate);
 
 }

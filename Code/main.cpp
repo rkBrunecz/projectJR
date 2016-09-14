@@ -81,7 +81,6 @@ void runGame(sf::RenderWindow& window, float elapsedTime, Map& map, Battle_Engin
 		if (map.transitioning(&player))
 			state = Transition;
 
-
 		break;
 
 	}
@@ -92,7 +91,7 @@ void runGame(sf::RenderWindow& window, float elapsedTime, Map& map, Battle_Engin
 		Camera::animateCamera();
 		window.setView(Camera::getCamera());
 
-		battle.updateDrawList();
+		battle.updateDrawList(true);
 
 		lastKeyPressed.key.code = sf::Keyboard::Unknown;
 
@@ -104,16 +103,12 @@ void runGame(sf::RenderWindow& window, float elapsedTime, Map& map, Battle_Engin
 		if (returnState == Play)
 			map.updateDrawList(&player, false);
 		else
-			battle.updateDrawList();
-
-		Graphic::dimScreen(&window);
+			battle.updateDrawList(false);
 
 		break;
 	}
 	case Transition:
 	{
-		map.updateDrawList(&player, true);
-
 		while (Graphic::fadingOut(&window))
 			map.updateDrawList(&player, true);
 			
@@ -131,8 +126,9 @@ void runGame(sf::RenderWindow& window, float elapsedTime, Map& map, Battle_Engin
 	}
 	case InitiateBattle:
 	{
-		while (Graphic::fadingOut(&window))
+		do {
 			map.updateDrawList(&player, true);
+		} while (Graphic::fadingOut(&window));
 
 		// Clear graphics and audio out and replace with game data
 		Graphic::clearTextureList();
@@ -149,8 +145,11 @@ void runGame(sf::RenderWindow& window, float elapsedTime, Map& map, Battle_Engin
 
 		battle.initialize(players, 1, Camera::getCamera().getSize().x, Camera::getCamera().getSize().y);
 		
-		while (Graphic::fadingIn(&window))
-			battle.updateDrawList();
+		do {
+			battle.updateDrawList(true);
+		} while (Graphic::fadingIn(&window));
+
+		Graphic::enableDayShift(false);
 
 		state = Battle;
 		returnState = Battle;
@@ -159,8 +158,9 @@ void runGame(sf::RenderWindow& window, float elapsedTime, Map& map, Battle_Engin
 	}
 	case InitiateOverworld:
 	{
-		while (Graphic::fadingOut(&window))
-			battle.updateDrawList();
+		do {
+			battle.updateDrawList(true);
+		} while (Graphic::fadingOut(&window));
 
 		Graphic::clearTextureList();
 		Audio_Engine::clearSoundList();
@@ -174,8 +174,11 @@ void runGame(sf::RenderWindow& window, float elapsedTime, Map& map, Battle_Engin
 
 		window.setView(Camera::getCamera());
 
-		while (Graphic::fadingIn(&window))
+		do {
 			map.updateDrawList(&player, true);
+		} while ((Graphic::fadingIn(&window)));
+
+		Graphic::enableDayShift(true);
 
 		state = Play;
 		returnState = Play;
@@ -189,6 +192,8 @@ void runGame(sf::RenderWindow& window, float elapsedTime, Map& map, Battle_Engin
 	}
 
 	Graphic::draw(&window);
+	if (state == Pause)
+		Graphic::dimScreen(&window);
 
 	//Redisplay everything in the window
 	window.display();
@@ -231,7 +236,6 @@ void game(int argc, char* argv[])
 	window.setVerticalSyncEnabled(verticalSyncEnabled);
 	window.setMouseCursorVisible(false);
 	window.setKeyRepeatEnabled(false);
-	//window.setFramerateLimit(1);
 
 	sf::Vector2f startPos(6 * 32, 6 * 32);
 
@@ -271,9 +275,17 @@ void game(int argc, char* argv[])
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) //Pause the game if the spacebar is pressed
 			{
 				if (state == Play || state == Battle)
+				{
 					state = Pause;
+					Graphic::enableDayShift(false);
+				}
 				else
+				{
 					state = returnState;
+
+					if (returnState != Battle)
+						Graphic::enableDayShift(true);
+				}
 			}
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Tab)
 				map.displayCollsionLayer();

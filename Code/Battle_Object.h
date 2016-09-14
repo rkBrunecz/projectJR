@@ -35,7 +35,7 @@ class Battle_Object
 		sf::Sprite getBattleSprite() { return battleSprite; };
 
 		// Overridable battle functions
-		virtual void drawSprite() { };
+		virtual void drawSprite(bool animate) { };
 		virtual void initialize() { };
 		virtual short performBattleAction(sf::Event lastKeyPressed, short numAttacksPerformed) { return 0;  }; // Player version of battle action
 		virtual short performBattleAction(short numAttacksPerformed) { return 0; };
@@ -50,10 +50,10 @@ class Battle_Object
 	protected:
 		// CONSTANT VARIABLES
 		const short LAUNCH_VELOCITY = -4000, SMASH_VELOCITY = 4000, FALL_VELOCITY = 2000;
-		const float JUMP_VELOCITY = 1500.0f, JUMP_VELOCITY_INCREMENT = 1400.0f;
+		const float JUMP_VELOCITY = 1200.0f, JUMP_VELOCITY_INCREMENT = 2000.0f;
 		
 		// VARIABLES
-		float jumpVelocity = 0, movementVelocity = 0;
+		float jumpVelocity = 0, jumpVelocityDec = 0, movementVelocity = 0;
 		sf::Vector2f battleVelocity = sf::Vector2f(0, 0);
 		sf::Sprite battleSprite;
 		sf::Clock battleAniClock;

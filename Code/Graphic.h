@@ -22,13 +22,14 @@ public:
 	static void clearTextureList();
 	static void toggleFrameRate();
 	static void dimScreen(sf::RenderWindow* window);
+	static void enableDayShift(bool enable) { updateTime = enable; };
 	static bool fadingIn(sf::RenderWindow *window);
 	static bool fadingOut(sf::RenderWindow *window);
 
 
 	// OVERRIDABLE PUBLIC FUNCTIONS
 	virtual ~Graphic() { };
-	virtual void updateDrawList();
+	virtual void updateDrawList(bool animate);
 	virtual void updatePosition();
 	virtual void setColor(int r, int g, int b, int a);
 	virtual void initialize() { };

@@ -295,7 +295,7 @@ Parameters:
 This method is shell. Every child of graphic will have it's own defined
 draw method that will be specific to that object.
 */
-void Graphic::updateDrawList()
+void Graphic::updateDrawList(bool animate)
 {
 	
 }

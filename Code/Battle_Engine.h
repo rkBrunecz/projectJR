@@ -13,7 +13,7 @@ public:
 
 	void initialize(Battle_Object** player, int numPlayers, float displayWidth, float displayHeight);
 	void startTurn(sf::Event lastKeyPressed, float elapsedTime);
-	void updateDrawList();
+	void updateDrawList(bool animate);
 
 private:
 	void changeTurns();
@@ -33,7 +33,7 @@ private:
 		Return
 	} engineState = Deciding;
 
-	int numEnemies, numPlayers;
+	int numPlayers;
 	float displayWidth, displayHeight;
 	short positionSelected, 
 		attacksPerformed = 0,

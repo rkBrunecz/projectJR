@@ -548,7 +548,7 @@ void Map::updateDrawList(Player* player, bool drawWaterAnimation)
 	for (int i = 0; i < numRows; i++)
 	{
 		for (unsigned int j = 0; j < drawAtPos[i].size(); j++)
-			drawAtPos[i][j]->updateDrawList();
+			drawAtPos[i][j]->updateDrawList(true);
 
 		Graphic::addToDrawList(&groundSprites[i], false);
 	}
@@ -556,7 +556,7 @@ void Map::updateDrawList(Player* player, bool drawWaterAnimation)
 	if (drawAtPos[drawAtPos.size() - 1].size() != 0)
 	{
 		for (unsigned int i = 0; i < drawAtPos[drawAtPos.size() - 1].size(); i++)
-			drawAtPos[drawAtPos.size() - 1][i]->updateDrawList();
+			drawAtPos[drawAtPos.size() - 1][i]->updateDrawList(true);
 	}
 
 	//window->draw(canopySprite); //Draw the canopy

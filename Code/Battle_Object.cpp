@@ -176,13 +176,16 @@ bool Battle_Object::jumping(float y, float elapsedTime)
 	{
 		animator.changeBattleAnimation(&moving);
 		jumpVelocity = -JUMP_VELOCITY;
+		jumpVelocityDec = JUMP_VELOCITY / 20;
 	}
 
-	if (battleSprite.getPosition().y - y < 20 && battleSprite.getPosition().y - y > 2)
-		jumpVelocity = (((y * y) - (battleSprite.getPosition().y * battleSprite.getPosition().y)) / 20);
+	if ((battleSprite.getPosition().y - y) / (JUMP_VELOCITY * elapsedTime) < 10 && battleSprite.getPosition().y > y)
+		jumpVelocity += jumpVelocityDec;
+
+	printf("%f\n", jumpVelocity * elapsedTime);
 
 	// If the next update will overshoot the objects target destination, reduce the next velocity update to place the object at the appropriate position
-	if (battleSprite.getPosition().y + (jumpVelocity * elapsedTime) < y)
+	if (jumpVelocity >= 0)
 		jumpVelocity = (y - battleSprite.getPosition().y) / elapsedTime;
 
 	// if the object has reached the frame of animation where it is considered moving, and the position is greater than the position it is trying to reach, update the camera and object position

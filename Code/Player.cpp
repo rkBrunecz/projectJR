@@ -93,7 +93,7 @@ Parameters:
 
 This method draws the character model on to the games window
 */
-void Player::updateDrawList()
+void Player::updateDrawList(bool animate)
 {
 	switch (state)
 	{
@@ -104,7 +104,8 @@ void Player::updateDrawList()
 			break;
 
 		case Battle:
-			animator.animate(&battleSprite, &battleAniClock, isAttacking);
+			if (animate)
+				animator.animate(&battleSprite, &battleAniClock, isAttacking);
 
 			Graphic::addToDrawList(&battleSprite, false);
 			
@@ -112,9 +113,9 @@ void Player::updateDrawList()
 	}
 }
 
-void Player::drawSprite()
+void Player::drawSprite(bool animate)
 {
-	updateDrawList();
+	updateDrawList(animate);
 }
 
 short Player::performBattleAction(sf::Event lastKeyPressed, short numAttacksPerformed)

@@ -11,11 +11,11 @@ public:
 	~Ogre() { };
 
 	// Graphics functions
-	void updateDrawList();
+	void updateDrawList(bool animate);
 	void setColor(int r, int g, int b, int a);
 
 	// Battle functions
-	void drawSprite();
+	void drawSprite(bool animate);
 	void initialize();
 	short performBattleAction(short numAttacksPerformed);
 

@@ -22,7 +22,7 @@ public:
 	void changePlayerState();
 
 	// Graphics functions
-	void updateDrawList();
+	void updateDrawList(bool animate);
 	void setColor(int r, int g, int b, int a);
 
 	// Overworld functions
@@ -31,7 +31,7 @@ public:
 	sf::IntRect getRect();
 
 	// Battle functions
-	void drawSprite();
+	void drawSprite(bool animate);
 	void initialize();
 	short performBattleAction(sf::Event lastKeyPressed, short numAttacksPerformed);
 

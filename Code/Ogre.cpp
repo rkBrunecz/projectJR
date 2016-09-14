@@ -38,9 +38,10 @@ window: The game window
 
 This method draws the character model on to the games window
 */
-void Ogre::updateDrawList()
+void Ogre::updateDrawList(bool animate)
 {
-	animator.animate(&battleSprite, &battleAniClock, isAttacking);
+	if (animate)
+		animator.animate(&battleSprite, &battleAniClock, isAttacking);
 
 	Graphic::addToDrawList(&battleSprite, false);
 
@@ -51,9 +52,9 @@ void Ogre::updateDrawList()
 	}
 }
 
-void Ogre::drawSprite()
+void Ogre::drawSprite(bool animate)
 {
-	updateDrawList();
+	updateDrawList(animate);
 }
 
 short Ogre::performBattleAction(short numAttacksPerformed)
