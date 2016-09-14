@@ -1,0 +1,13 @@
+*.exe
+*.opensdf
+*.sdf
+*.sln
+*.suo
+*.vcxproj
+*.filters
+
+Debug/
+Release/
+Battle/
+res/
+Resources/
