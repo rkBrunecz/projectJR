@@ -138,7 +138,7 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 
 	sheetFileName.replace(sheetFileName.length() - 3, 3, "png");
 	nameOfTileSheet = sheetFileName.substr(sheetFileName.find_last_of("\\"), sheetFileName.size());
-	nameOfTileSheet = "res\\Graphics" + nameOfTileSheet;
+	nameOfTileSheet = nameOfTileSheet;
 
 	//Get the tile data so that tiles can be added to the map
 	tileFile.open(nameOfSheetFile);
@@ -159,7 +159,7 @@ void Map::createMap(unsigned int rows, unsigned int columns, Camera* camera, std
 	tileFile.close(); //Close the tile file
 
 	//Get the path to the tile map and then open it.
-	if (!tileSheet.loadFromFile(nameOfTileSheet))
+	if (!tileSheet.loadFromFile("res/Graphics/" + nameOfTileSheet))
 		exit(EXIT_FAILURE); //Exit the application with a failure code if the tile map does not load
 
 	tiles.setTexture(tileSheet);
@@ -290,7 +290,7 @@ void Map::initialize(std::ifstream& mapFile, Camera* camera)
 
 	//Get the path to the tile map and then open it.
 	std::getline(mapFile, nameOfTileSheet);
-	if (!tileSheet.loadFromFile(nameOfTileSheet))
+	if (!tileSheet.loadFromFile("res/Graphics/" + nameOfTileSheet))
 		exit(EXIT_FAILURE); //Exit the application with a failure code if the tile map does not load
 
 	tiles.setTexture(tileSheet);
@@ -986,10 +986,10 @@ void Map::addTileToPos()
 	else if (currentTile[0] == '1' /*&& !isSameTile(map, row, column)*/)
 	{
 		addTileToMap(mask, currentTile, 2, row, column);
-		
-		if (currentTile[5] == '1' && map[row][column].collidable)
-			map[row][column].collidable = false;
 
+		if (currentTile[6] == '1' && map[row][column].collidable)
+			map[row][column].collidable = false;
+	
 		updateMap(maskTexture, mask);
 	}
 	else if (currentTile[0] == '2' && !isSameTile(map, row, column))
@@ -1314,7 +1314,7 @@ void Map::saveMap()
 	//LOCAL VARIABLES
 	std::ofstream mapFile;
 	bool hasTile = false;
-	
+
 	mapFile.open(nameOfFile);
 
 	mapFile << nameOfSheetFile << std::endl;
