@@ -20,13 +20,16 @@ This method performs a fade out effect.
 */
 void SpecialEffect::fadeOut(sf::RenderWindow* window, Map* map, Player* player)
 {
+	if (map == NULL)
+		return;
+
 	//LOCAL VARIABLES
 	sf::Clock clock;
 	int alpha = 0;
 	sf::RectangleShape fade;
 
-	fade.setSize(sf::Vector2f(window->getSize().x, window->getSize().y));
-	fade.setPosition(window->getView().getCenter().x - (window->getSize().x * 0.5), window->getView().getCenter().y - (window->getSize().y * 0.5));
+	fade.setSize(sf::Vector2f((float)window->getSize().x, (float)window->getSize().y));
+	fade.setPosition(window->getView().getCenter().x - (window->getSize().x * 0.5f), window->getView().getCenter().y - (window->getSize().y * 0.5f));
 	fade.setFillColor(sf::Color(0, 0, 0, alpha));
 
 	//Perform a fade out over a half second
@@ -45,7 +48,7 @@ void SpecialEffect::fadeOut(sf::RenderWindow* window, Map* map, Player* player)
 		window->clear();
 
 		//Draw all of the graphics
-		map->draw(window, player, true);
+		map->updateDrawList(player, true);
 		window->draw(fade);
 
 		//Display everything in the window
@@ -64,13 +67,16 @@ This method performs a fade in effect.
 */
 void SpecialEffect::fadeIn(sf::RenderWindow* window, Map* map, Player* player)
 {
+	if (map == NULL)
+		return;
+
 	//LOCAL VARIABLES
 	sf::Clock clock;
 	int alpha = 255;
 	sf::RectangleShape fade;
 
 	fade.setSize(sf::Vector2f(window->getSize().x, window->getSize().y));
-	fade.setPosition(window->getView().getCenter().x - (window->getSize().x * 0.5), window->getView().getCenter().y - (window->getSize().y * 0.5));
+	fade.setPosition(window->getView().getCenter().x - (window->getSize().x * 0.5f), window->getView().getCenter().y - (window->getSize().y * 0.5f));
 	fade.setFillColor(sf::Color(0, 0, 0, alpha));
 
 	//Perform a fade in over a half second
@@ -89,7 +95,7 @@ void SpecialEffect::fadeIn(sf::RenderWindow* window, Map* map, Player* player)
 		window->clear();
 
 		//Draw all of the graphics
-		map->draw(window, player, true);
+		map->updateDrawList(player, true);
 		window->draw(fade);
 
 		//Display everything in the window

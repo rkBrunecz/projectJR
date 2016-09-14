@@ -7,7 +7,12 @@ in.
 
 @author Randall Brunecz
 @version 1.0 8/31/2015
+
+@version 2.0 9/9/2016
+	- Added battle system to gmae
 */
+
+//#include <vld.h> // Check for memory leaks
 
 #include <SFML\Graphics.hpp>
 #include "Player.h"
@@ -15,6 +20,8 @@ in.
 #include "Map.h"
 #include "Camera.h"
 #include "Collision.h"
+#include "Battle_Engine.h"
+#include "Player.h"
 #include <iostream>
 
 //CONSTANTS
@@ -28,6 +35,8 @@ const enum Game_States //Dictates the state the game is in
 	MainMenu,
 	GameMenu,
 	Transition,
+	InitiateBattle,
+	InitiateOverworld,
 	Quit
 };
 const enum Window_States //Determines the state the window is in
@@ -38,7 +47,7 @@ const enum Window_States //Determines the state the window is in
 
 //GLOBAL VARIABLES
 Graphic* graphics[GRAPHICS_ARRAY_SIZE];
-Game_States state = Play;
+Game_States state = Play, returnState = Play;
 
 /*
 runGame
@@ -50,7 +59,7 @@ Parameters:
 
 This method is where all game related work is done.
 */
-void runGame(sf::RenderWindow& window, Camera& camera, Map& map, Player& player)
+void runGame(sf::RenderWindow& window, float elapsedTime, Map& map, Battle_Engine& battle, Player& player, sf::Event& lastKeyPressed)
 {
 	//Clear the window
 	window.clear();
@@ -61,46 +70,125 @@ void runGame(sf::RenderWindow& window, Camera& camera, Map& map, Player& player)
 	case Play:
 	{
 		//Update positions
-		player.updatePosition(&window, &camera);
+		player.updatePosition(elapsedTime);
 
-		window.setView(camera); //Update the windows view
+		window.setView(Camera::getCamera()); //Update the windows view
 
 		//Draw all graphics
-		map.draw(&window, &player, true);
+		map.updateDrawList(&player, true);
 
 		//Check to see if a map transition is needed
 		if (map.transitioning(&player))
 			state = Transition;
 
+
 		break;
 
+	}
+	case Battle:
+	{
+		battle.startTurn(lastKeyPressed, elapsedTime);
+
+		Camera::animateCamera();
+		window.setView(Camera::getCamera());
+
+		battle.updateDrawList();
+
+		lastKeyPressed.key.code = sf::Keyboard::Unknown;
+
+		break;
 	}
 	case Pause:
 	{
 		//Draw all graphics
-		map.draw(&window, &player, false);
+		if (returnState == Play)
+			map.updateDrawList(&player, false);
+		else
+			battle.updateDrawList();
 
-		SpecialEffect::screenDim(&window);
+		Graphic::dimScreen(&window);
 
 		break;
 	}
 	case Transition:
 	{
-		SpecialEffect::fadeOut(&window, &map, &player);
+		map.updateDrawList(&player, true);
 
-		map.moveToMap(&player, &camera); //Transition to the next map
+		while (Graphic::fadingOut(&window))
+			map.updateDrawList(&player, true);
+			
+		map.moveToMap(&player); //Transition to the next map
 
-		window.setView(camera); //Update the window view
+		window.setView(Camera::getCamera()); //Update the window view
 
-		SpecialEffect::fadeIn(&window, &map, &player);
+		while (Graphic::fadingIn(&window))
+			map.updateDrawList(&player, true);
 
 		state = Play; //Continue playing the game
+		returnState = Play;
+
+		break;
+	}
+	case InitiateBattle:
+	{
+		while (Graphic::fadingOut(&window))
+			map.updateDrawList(&player, true);
+
+		// Clear graphics and audio out and replace with game data
+		Graphic::clearTextureList();
+		Audio_Engine::clearSoundList();
+
+		Camera::setCameraState(Camera::Battle);
+		Camera::initialize(window.getSize().x, window.getSize().y);
+		window.setView(Camera::getCamera());
+
+		player.changePlayerState();
+
+		Battle_Object* players[1];
+		players[0] = &player;
+
+		battle.initialize(players, 1, Camera::getCamera().getSize().x, Camera::getCamera().getSize().y);
+		
+		while (Graphic::fadingIn(&window))
+			battle.updateDrawList();
+
+		state = Battle;
+		returnState = Battle;
+
+		break;
+	}
+	case InitiateOverworld:
+	{
+		while (Graphic::fadingOut(&window))
+			battle.updateDrawList();
+
+		Graphic::clearTextureList();
+		Audio_Engine::clearSoundList();
+
+		Camera::setCameraState(Camera::Overworld);
+
+		map.loadMap(); //Load the map
+
+		player.changePlayerState();
+		player.initialize();
+
+		window.setView(Camera::getCamera());
+
+		while (Graphic::fadingIn(&window))
+			map.updateDrawList(&player, true);
+
+		state = Play;
+		returnState = Play;
+
+		break;
 	}
 	case Quit:
 		return; //If the game state is set to Quit, return to the game loop and close down the game.
 		
 		break;
 	}
+
+	Graphic::draw(&window);
 
 	//Redisplay everything in the window
 	window.display();
@@ -121,58 +209,71 @@ void populateGraphicsArray(Player* player, Map* map)
 	Collision::intializeGraphicObjects(graphics, GRAPHICS_ARRAY_SIZE);
 }
 
-int main(int argc, char* argv[])
+void game(int argc, char* argv[])
 {
 	//LOCAL VARIABLES
 	Window_States windowState = Fullscreen; //Set window state to fullscreen
-	Camera camera;
-	Map map;
-	std::string mapName = "res/Maps/TestMap.jrm";
-	sf::Vector2i startPos = sf::Vector2i(6 * 32, 6 * 32);
+	sf::Clock clock; // Used to obtain the time between frame updates. This ensures updates to the game is consistent across different hardware.
+	float elapsedTime; // In seconds
+	bool verticalSyncEnabled = true;
 
-	if (argc == 4)
-	{
-		mapName = argv[1];
-		startPos.y = atoi(argv[2]) * 32 + 16;
-		startPos.x = atoi(argv[3]) * 32 + 16;
-	}
+	Map map;
+	Battle_Engine battle;
+	Player player;
+	sf::Event lastKeyPressed;
+	std::string mapName = "res/Maps/TestMap.jrm";
 
 	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 
-	Player player(&camera);
+	// Set up properties of the window
+	window.setVerticalSyncEnabled(verticalSyncEnabled);
+	window.setMouseCursorVisible(false);
+	window.setKeyRepeatEnabled(false);
+	//window.setFramerateLimit(1);
+
+	sf::Vector2f startPos(6 * 32, 6 * 32);
+
+	if (argc == 4)
+	{
+		mapName = argv[1];
+		startPos.y = (float)atoi(argv[2]) * 32 + 16;
+		startPos.x = (float)atoi(argv[3]) * 32 + 16;
+	}
+
 	player.setPlayerPosition(startPos); //TESTING START SPOT. WILL CHANGE
 
-	//Set up camera properties
-	camera.setSize(desktop.width, desktop.height);
-	camera.zoom(0.5);
+	lastKeyPressed.key.code = sf::Keyboard::Unknown;
 
-	window.setVerticalSyncEnabled(true);
-	window.setMouseCursorVisible(false);
-	
+	//Set up camera properties
+	Camera::setSize((float)desktop.width, (float)desktop.height);
+	Camera::zoom(0.5);
+
 	populateGraphicsArray(&player, &map); //Populate the graphics array
 
-	map.loadMap(mapName, &camera); //Load the map
+	player.initialize();
 
-	//GAME LOOP
+	map.loadMap(mapName);
+	
+	// GAME LOOP
 	while (state != Quit)
 	{
+		// Get elapsed time since last update
+		elapsedTime = clock.restart().asSeconds();;
+
+		// Handle events
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
 			if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
 				state = Quit;
-			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num1) //DEBUG TEST FADE IN
-				SpecialEffect::fadeIn(&window, &map, &player);
-			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num2) //DEBUG TEST FADE OUT
-				SpecialEffect::fadeOut(&window, &map, &player);
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) //Pause the game if the spacebar is pressed
 			{
-				if (state == Play)
+				if (state == Play || state == Battle)
 					state = Pause;
 				else
-					state = Play;
+					state = returnState;
 			}
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Tab)
 				map.displayCollsionLayer();
@@ -196,21 +297,47 @@ int main(int argc, char* argv[])
 					window.create(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR", sf::Style::Fullscreen);
 					windowState = Fullscreen;
 				}
-				
+
 				window.setVerticalSyncEnabled(true);
+			}
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::B)
+			{
+				if (state == Play)
+					state = InitiateBattle;
+				else
+					state = InitiateOverworld;
+			}
+			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::V)
+			{
+				verticalSyncEnabled = !verticalSyncEnabled;
+
+				window.setVerticalSyncEnabled(verticalSyncEnabled);
 			}
 			//If the window loses focus, pause the game
 			else if (event.type == sf::Event::LostFocus)
-				state = Pause;			
+				state = Pause;
 			//When the window regains focus, resume the game
 			else if (event.type == sf::Event::GainedFocus)
-				state = Play;
+				state = returnState;
+
+			//Store the last key pressed if in the battle state
+			if (state == Battle && event.type == sf::Event::KeyPressed)
+				lastKeyPressed = event;
 		}
 
-		runGame(window, camera, map, player); //Run the game based on the current game state
+		runGame(window, elapsedTime, map, battle, player, lastKeyPressed); //Run the game based on the current game state
 	}
 
 	window.close(); //Close the game window
+}
+
+int main(int argc, char* argv[])
+{
+	game(argc, argv);
+
+	// CLEAN UP MEMORY
+	Audio_Engine::clearSoundList();
+	Graphic::clearTextureList();
 
 	return 0; //Close the game
 }

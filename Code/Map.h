@@ -1,6 +1,6 @@
 /*
 Map.h
-This class handles createing and drawing a map. It also performs other map related useful functions.
+This class handles creating and drawing a map. It also performs other map related useful functions.
 
 @author Randall Brunecz
 @version 2.0 3/23/2016
@@ -14,6 +14,7 @@ This class handles createing and drawing a map. It also performs other map relat
 
 #include "Graphic.h"
 #include "Player.h"
+#include "System.h"
 #include <SFML\Graphics.hpp>
 
 class Map : public Graphic
@@ -23,10 +24,11 @@ public:
 	Map();
 	~Map();
 	
-	void draw(sf::RenderWindow* window, Player* player, bool drawWaterAnimation);
+	void updateDrawList(Player* player, bool drawWaterAnimation);
 	void setColor(int r, int g, int b, int a);
-	void loadMap(std::string mapName, Camera* camera);
-	void moveToMap(Player* player, Camera* camera);
+	void loadMap(std::string mapName);
+	void loadMap();
+	void moveToMap(Player* player);
 	
 	static bool tileCollision();
 	bool transitioning(Player* player);
@@ -44,11 +46,11 @@ private:
 		bool collidable = false, hasTile = false, mirror = false;
 		char tileType; //Indicates what kind of tile it is, such as water, grass, rock, object, etc.
 		std::string mapName = "";
-		sf::Vector2i transitionCoords;
+		sf::Vector2f transitionCoords;
 	};
 
 	//PRIAVTE FUNCTIONS
-	void initialize(std::ifstream& mapFile, Camera* camera);
+	void initialize(std::ifstream& mapFile);
 	void initializeTransitionPoints(std::ifstream& mapFile);
 	void populateMap(std::ifstream& mapFile);
 	void drawMap();
@@ -64,13 +66,13 @@ private:
 	const unsigned short TILE_SIZE = 32; //This is the width and height of each of the tiles
 	const unsigned short NUM_WATER_FRAMES = 4;
 
+	std::string currentMapFile;
 	Tile** map; //This 2d array contains the all of the tile information needed for the map
 	Tile** ground; //This 2d contains objects like bases trees, rocks, etc.
 	Tile** canopy; //This 2d contains objects like trees, top of rocks, etc.
 	Tile** mask; //This layer contains masks that are layered on top of other tiles to give depth
 	sf::Sprite* groundSprites;
 	sf::Sprite tiles, mapSprite, canopySprite, maskSprite, waterSprite;
-	sf::Texture tileSheet;
 	sf::RenderTexture mapTexture, canopyTexture, groundTexture, maskTexture;
 	sf::RenderTexture waterFrames[4];
 	sf::Clock waterAnimation;

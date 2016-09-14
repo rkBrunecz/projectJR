@@ -10,42 +10,61 @@ characteristics.
 #ifndef Player_H
 #define Player_H
 
-#include <SFML\Graphics.hpp>
-#include "Graphic.h"
+#include "Battle_Object.h"
 #include "Animation.h"
+#include "Collision.h"
 
-class Player : public Graphic
+class Player : public Graphic, public Battle_Object
 {
 public:
 	//PUBLIC FUNCTIONS
-	Player(Camera* camera);
+	Player();
+	void changePlayerState();
 
-	void draw(sf::RenderWindow* window);
-	void updatePosition(sf::RenderWindow* window, Camera* camera);
+	// Graphics functions
+	void updateDrawList();
 	void setColor(int r, int g, int b, int a);
-	void setPlayerPosition(sf::Vector2i coords);
 
+	// Overworld functions
+	void updatePosition(float elapsedTime);
+	void setPlayerPosition(sf::Vector2f coords);
 	sf::IntRect getRect();
+
+	// Battle functions
+	void drawSprite();
+	void initialize();
+	short performBattleAction(sf::Event lastKeyPressed, short numAttacksPerformed);
 
 private:
 	//PRIVATE CONSTANTS
-	float VELOCITY = 3;
-	short WIDTH = 20, HEIGHT = 3;
+	const float VELOCITY = 180;
+	const short WIDTH = 20, HEIGHT = 3;
+	const short MOVEMENT_UPDATES = 15;
+	const enum States
+	{
+		World,
+		Battle
+	};
 
 	//PRIVATE VARIABLES
 	Animation::WalkingDirection currentDirection = Animation::Down;
-	sf::Texture spriteMap;
 	sf::Clock characterAniClock;
-	int x, y;
+	float x, y;
+
+	States state = World;
+
+	//Battle variables
+	Attack chop, uppercut, arielSlash;
 
 	struct Character{
-		sf::Sprite sprite;
-		sf::CircleShape shadow;
+		sf::Sprite sprite, shadow;
+		sf::CircleShape shadowShape;
+		sf::RenderTexture tex;
 
 		void setPosition(float x, float y)
 		{
 			sprite.setPosition(x, y);
-			shadow.setPosition(x, y - 11);
+			shadow.setPosition(x - 8, y - 8);
 		}
 	} character;
 };

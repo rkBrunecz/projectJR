@@ -7,11 +7,7 @@ characteristics.
 @version 1.0 9/3/2015
 */
 
-#include <SFML\Graphics.hpp>
 #include "Player.h"
-#include "Animation.h"
-#include "Collision.h"
-#include "Map.h"
 
 /*
 constructor
@@ -20,24 +16,74 @@ Parameters:
 
 Creates the main characters sprite and sets other important information.
 */
-Player::Player(Camera* camera)
+Player::Player()
 {
-	//Load sprite map
-	if (!spriteMap.loadFromFile("res/Graphics/test.png"))
-		exit(EXIT_FAILURE);
+	// Initialize the height and width of the battle sprite
+	battleHeight = 96;
+	battleWidth = 96;
+}
 
-	//Set up the sprites properties
-	character.sprite.setTexture(spriteMap);
-	character.sprite.setTextureRect(sf::IntRect(32, 0, 32, 32));
-	character.sprite.setOrigin(16, 27);
+void Player::changePlayerState()
+{
+	if (state == World)
+		state = Battle;
+	else
+		state = World;
+}
 
-	//Set up the sprites shadow properties
-	character.shadow.setRadius(8);
-	character.shadow.setFillColor(sf::Color(0, 0, 0, 75));
-	character.shadow.setOrigin(8, -4);
+void Player::initialize()
+{
+	switch (state)
+	{
+	case World:
+		// Load sprite maps
+		character.sprite.setTexture(*Graphic::addTexture("test.png"));
 
-	character.setPosition(x, y);
-	camera->setCenter(x, y);
+		// Set up the sprites properties
+		character.sprite.setTextureRect(sf::IntRect(32, 0, 32, 32));
+		character.sprite.setOrigin(16, 27);
+
+		// Set up the sprites shadow properties
+		character.shadowShape.setRadius(8);
+		character.shadowShape.setFillColor(sf::Color(0, 0, 0, 75));
+
+		character.tex.create(32, 32);
+		character.tex.clear(sf::Color(0, 0, 0, 0));
+		character.tex.draw(character.shadowShape);
+		character.tex.display();
+
+		character.shadow = sf::Sprite(character.tex.getTexture());
+
+		character.setPosition(x, y);
+		Camera::updatePosition(sf::Vector2f(x, y));
+
+		break;
+
+	case Battle:
+		battleSprite.setTexture(*Graphic::addTexture("trans_battle_test.png"));
+		movementVelocity = 2000;
+
+		// Set up the battle sprite defualt sprite
+		battleSprite.setTextureRect(sf::IntRect(0, 0, 96, 96));
+		battleSprite.setOrigin(48, 48);
+		battleSprite.setPosition(960, 540);
+
+		// Set up attack data
+		uppercut.initalizeAttackData(6, 50, 100, 2, 300, 700, 10, battleHeight, battleWidth, battleHeight * 2, 0, true, false, "uppercut.wav");
+		chop.initalizeAttackData(5, 50, 100, 3, 300, 0, 10, battleHeight, battleWidth, battleHeight, 0, false, true, "chop.wav");
+		arielSlash.initalizeAttackData(5, 50, 100, 2, 300, 0, 10, battleHeight, battleWidth, battleHeight * 5, 0, false, false, "chop.wav");
+
+		// Set up additional battle data
+		moving.intializeAnimationData(3, 20, 70, 100, 3, 3, battleHeight, battleWidth, battleHeight * 3, 0, true);
+		returning.intializeAnimationData(3, 20, 70, 100, 3, 3, battleHeight, battleWidth, battleHeight * 4, 0, true);
+		standing.intializeAnimationData(1, 20, 20, 20, 1, 1, battleHeight, battleWidth, 0, 0, false);
+		attackStance.intializeAnimationData(1, 20, 20, 20, 1, 1, battleHeight, battleWidth, 0, battleWidth, false);
+		arielStance.intializeAnimationData(1, 20, 20, 20, 1, 1, battleHeight, battleWidth, 0, battleWidth * 2, false);
+
+		animator.changeBattleAnimation(&standing);
+
+		break;
+	}
 }
 
 /*
@@ -47,79 +93,121 @@ Parameters:
 
 This method draws the character model on to the games window
 */
-void Player::draw(sf::RenderWindow* window)
+void Player::updateDrawList()
 {
-	window->draw(character.shadow);
-	window->draw(character.sprite);
+	switch (state)
+	{
+		case World:
+			Graphic::addToDrawList(&character.shadow, true);
+			Graphic::addToDrawList(&character.sprite, false);
+			
+			break;
+
+		case Battle:
+			animator.animate(&battleSprite, &battleAniClock, isAttacking);
+
+			Graphic::addToDrawList(&battleSprite, false);
+			
+			break;
+	}
+}
+
+void Player::drawSprite()
+{
+	updateDrawList();
+}
+
+short Player::performBattleAction(sf::Event lastKeyPressed, short numAttacksPerformed)
+{
+	if (!isAttacking)
+	{
+		if (lastKeyPressed.key.code == sf::Keyboard::W)
+		{
+			animator.changeAttackAnimation(&chop);
+			isAttacking = true;
+		}
+		else if (lastKeyPressed.key.code == sf::Keyboard::S)
+		{
+			animator.changeAttackAnimation(&uppercut);
+			isAttacking = true;
+		}
+		else if (isAirBound && lastKeyPressed.key.code == sf::Keyboard::A)
+		{
+			animator.changeAttackAnimation(&arielSlash);
+			isAttacking = true;
+		}
+
+		if (isAttacking)
+			return ++numAttacksPerformed;
+	}
+
+	return numAttacksPerformed;
 }
 
 /*
 updatePosition
-Parameters:
-	window: The game window 
 
 This method takes player input (if there is any) and moves the player character
 in a direction that the player chooses.
 */
-void Player::updatePosition(sf::RenderWindow* window, Camera* camera)
+void Player::updatePosition(float elapsedTime)
 {
-	//LOCAL VARIABLES
+	// LOCAL VARIABLES
 	bool positionUpdated = true;
 	float offSetX = 0, offSetY = 0;
-	float offSetYDir = 0; //This variables allows for offsetting the player by a certain amount based on which direction the player is facing in the y direction
+	float offSetYDir = 0; // This variables allows for offsetting the player by a certain amount based on which direction the player is facing in the y direction
 
-	//Move up
+	// Move up
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
-		offSetY = -VELOCITY;
+		offSetY = -VELOCITY * elapsedTime;
 		offSetYDir = 5;
 
-		currentDirection = Animation::Up; //Set the character direction state for animation purposes
+		currentDirection = Animation::Up; // Set the character direction state for animation purposes
 	}
-	//Move down
+	// Move down
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
-		offSetY = VELOCITY;
-			
-		currentDirection = Animation::Down; //Set the character direction state for animation purposes
+		offSetY = VELOCITY * elapsedTime;
+
+		currentDirection = Animation::Down; // Set the character direction state for animation purposes
 	}	
-	//Move right
+	// Move right
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 	{
-		offSetX = VELOCITY;
+		offSetX = VELOCITY * elapsedTime;
 
-		currentDirection = Animation::Right; //Set the character direction state for animation purposes
+		currentDirection = Animation::Right; // Set the character direction state for animation purposes
 	}
-	//Move left
+	// Move left
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 	{
-		offSetX = -VELOCITY;
+		offSetX = -VELOCITY * elapsedTime;
 
-		currentDirection = Animation::Left; //Set the character direction state for animation purposes
+		currentDirection = Animation::Left; // Set the character direction state for animation purposes
 	}
 	else
-		positionUpdated = false; //If the position was not updated, positionUpdated = false
+		positionUpdated = false; // If the position was not updated, positionUpdated = false
 
-	//Create a bounding box to check for collision
-	sf::IntRect	bb = sf::IntRect(x - (WIDTH * 0.5) + offSetX, y - offSetYDir + offSetY, WIDTH, HEIGHT);
+	// Create a bounding box to check for collision
+	sf::IntRect bb((int)(x - (WIDTH * 0.5f) + offSetX), (int)(y - offSetYDir + offSetY), WIDTH, HEIGHT);
 
-	//May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
+	// May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
 	if (positionUpdated && Collision::collisionDetected(&bb))
 	{
-		Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
+		Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); // Update the characters movement animation
 		return;
 	}
 
-	//Update positions
+	// Update positions
 	x += offSetX;
 	y += offSetY;
 
-	//Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
+	// Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
 	character.setPosition(x, y);
-	camera->updatePosition(sf::Vector2i(x, y));
+	Camera::updatePosition(sf::Vector2f(x, y));
 
-
-	Animation::updateAnimation(positionUpdated, currentDirection, &characterAniClock, &character.sprite); //Update the characters movement animation
+	Animation::updateAnimation(positionUpdated, currentDirection, &characterAniClock, &character.sprite); // Update the characters movement animation
 }
 
 /*
@@ -144,14 +232,14 @@ Parameters:
 
 This updates the players position in the game world.
 */
-void Player::setPlayerPosition(sf::Vector2i coords)
+void Player::setPlayerPosition(sf::Vector2f coords)
 {
 	x = coords.x;
 	y = coords.y;
 
 	character.setPosition(x, y);
 
-	Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); //Update the characters animation
+	Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); // Update the characters animation
 }
 
 /*
@@ -163,5 +251,5 @@ This method returns the players bounding box so that the calling method has info
 */
 sf::IntRect Player::getRect()
 {
-	return sf::IntRect(x - (WIDTH * 0.5), y, WIDTH, HEIGHT);
+	return sf::IntRect((int)(x - (WIDTH * 0.5f)), (int)y, WIDTH, HEIGHT);
 }
