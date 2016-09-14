@@ -1,6 +1,6 @@
 #ProjectJR
 *Developers:	Randall Brunecz, Joshua Gray*			
-*Last Updated:	04/24/2016*		   								   
+*Last Updated:	09/14/2016*		   								   
 
 Game description will be updated when the game developes more. Currently, the project is focused on building the tools and the engine to run the game. The engine is being built from scratch utilizing the SFML library. The scope of the project is difficult to measure since the features and additions are decided on a regular basis. Initially, the game was going to be very simple with a simplistic engine. However, as time goes on, the complextity of the game increases. 
 
@@ -9,13 +9,16 @@ Many of the graphics on display in the game have been made by one of the two dev
 You can obtain the resources needed to run the game and mapeditor [here](http://www.mediafire.com/download/bczagecsp643hul/res.zip).  
 
 ####Trailers:
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=xaQtEXAxa7A
-" target="_blank"><img src="http://img.youtube.com/vi/xaQtEXAxa7A/0.jpg" 
-alt="Trailer 1" width="240" height="180" border="10" /></a>   
 
+#The Dream Continues ~ 3/30/2016
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=Mw5NEUaLmuQ
 " target="_blank"><img src="http://img.youtube.com/vi/Mw5NEUaLmuQ/0.jpg" 
 alt="Trailer 2" width="240" height="180" border="10" /></a>
+
+#The Dream ~ 9/13/2015
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=xaQtEXAxa7A
+" target="_blank"><img src="http://img.youtube.com/vi/xaQtEXAxa7A/0.jpg" 
+alt="Trailer 1" width="240" height="180" border="10" /></a>   
 
 ##CONTROLS
 
@@ -29,11 +32,11 @@ alt="Trailer 2" width="240" height="180" border="10" /></a>
 **Space** : Pauses the game  
 
 ####DEBUG CONTROLS
-**1** : Perform a fade in transition  
-**2** : Perform a fade out transition  
 **TAB** : Displays collision boundaries for objects in the game  
 **G** : Displays grid lines to show where tiles start and finish  
 **T** : Displays all the transition points on the map  
+**B** : Initiates battle mode
+**V** : Disables/Enables V-Sync
 
 ##PERFORMANCE
 V-Sync has been enabled for the game. If you notice your CPU usage is 20%+, and you use an Nvidia card, go into the Nvidia control panel and turn off "Threaded Optimization".
