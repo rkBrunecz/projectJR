@@ -8,14 +8,14 @@ Many of the graphics on display in the game have been made by one of the two dev
 
 You can obtain the resources needed to run the game and mapeditor [here](http://www.mediafire.com/download/bczagecsp643hul/res.zip).  
 
-####Trailers:
+###Trailers:
 
-#The Dream Continues ~ 3/30/2016
+####The Dream Continues ~ 3/30/2016
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=Mw5NEUaLmuQ
 " target="_blank"><img src="http://img.youtube.com/vi/Mw5NEUaLmuQ/0.jpg" 
 alt="Trailer 2" width="240" height="180" border="10" /></a>
 
-#The Dream ~ 9/13/2015
+####The Dream ~ 9/13/2015
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=xaQtEXAxa7A
 " target="_blank"><img src="http://img.youtube.com/vi/xaQtEXAxa7A/0.jpg" 
 alt="Trailer 1" width="240" height="180" border="10" /></a>   
