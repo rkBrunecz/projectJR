@@ -1,6 +1,6 @@
 #include "Attack.h"
 
-void Attack::initalizeAttackData(short numFrames, short frameDelay, short finalFrameDelay, short activeFrame, short hitStun, short specialHitStun, int damage, int height, int width, int top, int left, bool isLauncher, bool meteorSmash, std::string fileName)
+void Attack::initializeAttackData(short numFrames, short frameDelay, short finalFrameDelay, short activeFrame, short hitStun, short specialHitStun, int damage, int height, int width, int top, int left, bool isLauncher, bool meteorSmash, Audio *sound)
 {
 	this->numFrames = numFrames - 1;
 	this->frameDelay = frameDelay;
@@ -19,7 +19,14 @@ void Attack::initalizeAttackData(short numFrames, short frameDelay, short finalF
 	this->left = defaultLeft;
 	this->activeFrameDelay = hitStun;
 
-	soundId = Audio_Engine::addSound(fileName, 60);
+	soundId = Audio_Engine::addSound(sound);
+}
+
+void Attack::initializeAttackData(short numFrames, short frameDelay, short finalFrameDelay, short activeFrame, short hitStun, short specialHitStun, int damage, int height, int width, int top, int left, bool isLauncher, bool meteorSmash, Audio *sound, Audio *specialSound)
+{
+	initializeAttackData(numFrames, frameDelay, finalFrameDelay, activeFrame, hitStun, specialHitStun, damage, height, width, top, left, isLauncher, meteorSmash, sound);
+	
+	specialSoundId = Audio_Engine::addSound(specialSound);
 }
 
 /*
@@ -119,17 +126,21 @@ int Attack::getDamage(bool enemyInCrushState)
 
 short Attack::getHitStun(sf::Clock* clock, sf::Sprite* sprite, bool enemyInCrushState)
 {
-	Audio_Engine::playSound(soundId);
-
 	if (isLauncher && enemyInCrushState)
 	{
 		activeFrameDelay = specialHitStun;
 		Camera::emphasisZoomIn(sprite->getPosition().x, sprite->getPosition().y, 0.25);
 
+		if (specialSoundId != -1)
+			Audio_Engine::playSound(specialSoundId);
+		else
+			Audio_Engine::playSound(soundId);
+
 		return specialHitStun - clock->getElapsedTime().asMilliseconds();
 	}
 	else 
 	{
+		Audio_Engine::playSound(soundId);
 		activeFrameDelay = hitStun;
 		return hitStun - clock->getElapsedTime().asMilliseconds();
 	}
