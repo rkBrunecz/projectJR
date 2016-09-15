@@ -82,6 +82,7 @@ bool Battle_Object::launchSprite(float y, float elapsedTime)
 		battleSprite.setPosition(battleSprite.getPosition().x, battleSprite.getPosition().y + (battleVelocity.y * elapsedTime));
 	else
 	{
+		animator.changeBattleAnimation(&constantTakingDamage);
 		isAirBound = true;
 		return true;
 	}
@@ -176,17 +177,19 @@ bool Battle_Object::jumping(float y, float elapsedTime)
 	{
 		animator.changeBattleAnimation(&moving);
 		jumpVelocity = -JUMP_VELOCITY;
-		jumpVelocityDec = JUMP_VELOCITY / 20;
+		gravity = JUMP_VELOCITY;
 	}
 
-	if ((battleSprite.getPosition().y - y) / (JUMP_VELOCITY * elapsedTime) < 10 && battleSprite.getPosition().y > y)
-		jumpVelocity += jumpVelocityDec;
-
-	printf("%f\n", jumpVelocity * elapsedTime);
-
-	// If the next update will overshoot the objects target destination, reduce the next velocity update to place the object at the appropriate position
-	if (jumpVelocity >= 0)
-		jumpVelocity = (y - battleSprite.getPosition().y) / elapsedTime;
+	/*	
+		Determine if the velocity should be decreased. Check to see if the number of updates needed to get to the position y (multiplied by 2 to account for the gravity application when finally applied) is equal to the amount
+		of steps gravity will need to reduce the jump velocity to 0.
+	*/
+	if (((battleSprite.getPosition().y - y) / (abs(jumpVelocity) * elapsedTime)) * 2 <= abs(jumpVelocity) / (gravity * elapsedTime))
+		decreaseVelocity = true;
+		
+	// Ensure the velocity does not drop below -1.0
+	if (decreaseVelocity && (jumpVelocity + (gravity * elapsedTime)) * elapsedTime < -1.0f)
+		jumpVelocity += (gravity * elapsedTime);
 
 	// if the object has reached the frame of animation where it is considered moving, and the position is greater than the position it is trying to reach, update the camera and object position
 	if (battleSprite.getPosition().y > y && animator.getCurrentAnimation()->onLoopFrame(&battleSprite))
@@ -201,11 +204,16 @@ bool Battle_Object::jumping(float y, float elapsedTime)
 		isAirBound = true;
 		jumpVelocity = 0;
 		animator.changeBattleAnimation(&arielStance);
+		decreaseVelocity = false;
 
 		return false;
 	} // If the object has reached its destination, reverse the animation
 	else if (battleSprite.getPosition().y <= y && !animator.getCurrentAnimation()->isReversing())
-		animator.getCurrentAnimation()->reverseAnimation();
+	{
+		// Set the sprites position to exactly to the y it was moving to.
+		battleSprite.setPosition(battleSprite.getPosition().x, y);
+		animator.getCurrentAnimation()->reverseAnimation(); // Reverse the animation
+	}
 
 	return true;
 }

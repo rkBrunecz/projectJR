@@ -50,10 +50,10 @@ class Battle_Object
 	protected:
 		// CONSTANT VARIABLES
 		const short LAUNCH_VELOCITY = -4000, SMASH_VELOCITY = 4000, FALL_VELOCITY = 2000;
-		const float JUMP_VELOCITY = 1200.0f, JUMP_VELOCITY_INCREMENT = 2000.0f;
+		const float JUMP_VELOCITY = 1200.0f;
 		
 		// VARIABLES
-		float jumpVelocity = 0, jumpVelocityDec = 0, movementVelocity = 0;
+		float jumpVelocity = 0, gravity = 0, movementVelocity = 0;
 		sf::Vector2f battleVelocity = sf::Vector2f(0, 0);
 		sf::Sprite battleSprite;
 		sf::Clock battleAniClock;
@@ -62,7 +62,8 @@ class Battle_Object
 		bool isTakingDamage = false;
 		bool isCrushable = false;
 		bool isAirBound = false;
-		Battle_Animation moving, standing, attackStance, arielStance, returning, takingDamage;
+		bool decreaseVelocity = false;
+		Battle_Animation moving, standing, attackStance, arielStance, returning, takingDamage, constantTakingDamage;
 		
 		// This structure atempts to facilaitate the process of animating sprite. 
 		struct Animator
