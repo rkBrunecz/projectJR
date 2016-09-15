@@ -1,13 +1,10 @@
-*.exe
-*.opensdf
-*.sdf
-*.sln
-*.suo
-*.vcxproj
-*.filters
+# Ignore all files types
+*
 
-Debug/
-Release/
-Battle/
-res/
-Resources/
+# Do NOT ignore these
+!.gitignore
+!.cpp
+!.h
+!.txt
+!.md
+!*/
