@@ -15,7 +15,7 @@ The collision class provides methods for detecting collision.
 class Collision 
 {
 public:
-	static void intializeGraphicObjects(Graphic** graphics, int graphicsSize);
+	static void initializeGraphicObjects(Graphic** graphics, int graphicsSize);
 	static bool collisionDetected(sf::IntRect* rect);
 
 private:

@@ -1,6 +1,6 @@
 #include "Battle_Animation.h"
 
-void Battle_Animation::intializeAnimationData(short numFrames, short frameDelay, short finalFrameDelay, short initialFrameDelay, short startLoopFrame, short finalLoopFrame,
+void Battle_Animation::initializeAnimationData(short numFrames, short frameDelay, short finalFrameDelay, short initialFrameDelay, short startLoopFrame, short finalLoopFrame,
 	int height, int width, int top, int defaultLeft, bool loopOnce)
 {
 	this->numFrames = numFrames - 1;

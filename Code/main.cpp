@@ -210,7 +210,7 @@ void populateGraphicsArray(Player* player, Map* map)
 	graphics[0] = map;
 	graphics[1] = player;
 
-	Collision::intializeGraphicObjects(graphics, GRAPHICS_ARRAY_SIZE);
+	Collision::initializeGraphicObjects(graphics, GRAPHICS_ARRAY_SIZE);
 }
 
 void game(int argc, char* argv[])

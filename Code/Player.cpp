@@ -74,11 +74,11 @@ void Player::initialize()
 		arielSlash.initializeAttackData(5, 50, 100, 2, 300, 0, 10, battleHeight, battleWidth, battleHeight * 5, 0, false, false, new Audio("chop.wav", 60));
 
 		// Set up additional battle data
-		moving.intializeAnimationData(3, 20, 70, 100, 3, 3, battleHeight, battleWidth, battleHeight * 3, 0, true);
-		returning.intializeAnimationData(3, 20, 70, 100, 3, 3, battleHeight, battleWidth, battleHeight * 4, 0, true);
-		standing.intializeAnimationData(1, 20, 20, 20, 1, 1, battleHeight, battleWidth, 0, 0, false);
-		attackStance.intializeAnimationData(1, 20, 20, 20, 1, 1, battleHeight, battleWidth, 0, battleWidth, false);
-		arielStance.intializeAnimationData(1, 20, 20, 20, 1, 1, battleHeight, battleWidth, 0, battleWidth * 2, false);
+		moving.initializeAnimationData(3, 20, 70, 100, 3, 3, battleHeight, battleWidth, battleHeight * 3, 0, true);
+		returning.initializeAnimationData(3, 20, 70, 100, 3, 3, battleHeight, battleWidth, battleHeight * 4, 0, true);
+		standing.initializeAnimationData(1, 20, 20, 20, 1, 1, battleHeight, battleWidth, 0, 0, false);
+		attackStance.initializeAnimationData(1, 20, 20, 20, 1, 1, battleHeight, battleWidth, 0, battleWidth, false);
+		arielStance.initializeAnimationData(1, 20, 20, 20, 1, 1, battleHeight, battleWidth, 0, battleWidth * 2, false);
 
 		animator.changeBattleAnimation(&standing);
 

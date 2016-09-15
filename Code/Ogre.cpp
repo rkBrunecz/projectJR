@@ -25,9 +25,9 @@ void Ogre::initialize()
 	battleSprite.setTextureRect(sf::IntRect(0, 0, 96, 96));
 	battleSprite.setOrigin(48, 48);
 
-	takingDamage.intializeAnimationData(3, 70, 70, 70, 1, 3, battleHeight, battleWidth, battleHeight, 0, true);
-	constantTakingDamage.intializeAnimationData(3, 100, 100, 100, 1, 3, battleHeight, battleWidth, battleHeight, 0, false);
-	standing.intializeAnimationData(3, 100, 300, 300, 1, 3, battleHeight, battleWidth, 0, 0, false);
+	takingDamage.initializeAnimationData(3, 70, 70, 70, 1, 3, battleHeight, battleWidth, battleHeight, 0, true);
+	constantTakingDamage.initializeAnimationData(3, 100, 100, 100, 1, 3, battleHeight, battleWidth, battleHeight, 0, false);
+	standing.initializeAnimationData(3, 100, 300, 300, 1, 3, battleHeight, battleWidth, 0, 0, false);
 
 	animator.changeBattleAnimation(&standing);
 }

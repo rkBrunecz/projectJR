@@ -20,7 +20,7 @@ Parameters:
 
 This method gets a list of all graphic objects that need to be checked for collision
 */
-void Collision::intializeGraphicObjects(Graphic** graphics, int graphicsSize)
+void Collision::initializeGraphicObjects(Graphic** graphics, int graphicsSize)
 {
 	elements = graphics;
 	eleSize = graphicsSize;

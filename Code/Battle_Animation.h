@@ -13,7 +13,7 @@ class Battle_Animation
 {
 public:
 	//PUBLIC FUNCTIONS
-	void intializeAnimationData(short numFrames, short frameDelay, short finalFrameDelay, short initialFrameDelay, short startLoopFrame, short finalLoopFrame, 
+	void initializeAnimationData(short numFrames, short frameDelay, short finalFrameDelay, short initialFrameDelay, short startLoopFrame, short finalLoopFrame, 
 		int height, int width, int top, int defaultLeft, bool loopOnce);
 	void animate(sf::Sprite* sprite, sf::Clock* clock, bool reset);
 	void reverseAnimation();
