@@ -44,7 +44,7 @@ void Camera::initialize(int windowWidth, int windowHeight)
 	displacements[8] = sf::Vector2f(3, 3);
 	displacements[9] = sf::Vector2f(2, 0);
 
-	shakeSoundId = Audio_Engine::addSound("screenshake.wav", 100);
+	shakeSoundId = Audio_Engine::addSound(new Audio("screenshake.wav", 100));
 }
 
 void Camera::setSize(float x, float y)
