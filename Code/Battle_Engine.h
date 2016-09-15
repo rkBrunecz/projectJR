@@ -20,7 +20,7 @@ private:
 	void resetEngineValues();
 	void determineMonsterParty();
 
-	const int LAUNCH_HEIGHT = 320;
+	const int LAUNCH_HEIGHT = 300;
 	const short NUM_ENEMY_POS = 6, NUM_PLAYER_POS = 3, MAX_NUMBER_ATTACKS = 3;
 	
 	enum States
