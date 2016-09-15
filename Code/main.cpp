@@ -16,7 +16,6 @@ in.
 
 #include <SFML\Graphics.hpp>
 #include "Player.h"
-#include "SpecialEffect.h"
 #include "Map.h"
 #include "Camera.h"
 #include "Collision.h"
