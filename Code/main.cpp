@@ -9,7 +9,7 @@ in.
 @version 1.0 8/31/2015
 
 @version 2.0 9/9/2016
-	- Added battle system to gmae
+	- Added battle system to game
 */
 
 //#include <vld.h> // Check for memory leaks
