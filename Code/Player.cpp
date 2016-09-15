@@ -69,9 +69,9 @@ void Player::initialize()
 		battleSprite.setPosition(960, 540);
 
 		// Set up attack data
-		uppercut.initalizeAttackData(6, 50, 100, 2, 300, 700, 10, battleHeight, battleWidth, battleHeight * 2, 0, true, false, "uppercut.wav");
-		chop.initalizeAttackData(5, 50, 100, 3, 300, 0, 10, battleHeight, battleWidth, battleHeight, 0, false, true, "chop.wav");
-		arielSlash.initalizeAttackData(5, 50, 100, 2, 300, 0, 10, battleHeight, battleWidth, battleHeight * 5, 0, false, false, "chop.wav");
+		uppercut.initializeAttackData(6, 50, 100, 2, 300, 700, 10, battleHeight, battleWidth, battleHeight * 2, 0, true, false, new Audio("uppercut.wav", 60), new Audio("break.wav", 100));
+		chop.initializeAttackData(5, 50, 100, 3, 300, 0, 10, battleHeight, battleWidth, battleHeight, 0, false, true, new Audio("chop.wav", 60));
+		arielSlash.initializeAttackData(5, 50, 100, 2, 300, 0, 10, battleHeight, battleWidth, battleHeight * 5, 0, false, false, new Audio("chop.wav", 60));
 
 		// Set up additional battle data
 		moving.intializeAnimationData(3, 20, 70, 100, 3, 3, battleHeight, battleWidth, battleHeight * 3, 0, true);
