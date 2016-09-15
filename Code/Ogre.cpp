@@ -26,6 +26,7 @@ void Ogre::initialize()
 	battleSprite.setOrigin(48, 48);
 
 	takingDamage.intializeAnimationData(3, 70, 70, 70, 1, 3, battleHeight, battleWidth, battleHeight, 0, true);
+	constantTakingDamage.intializeAnimationData(3, 100, 100, 100, 1, 3, battleHeight, battleWidth, battleHeight, 0, false);
 	standing.intializeAnimationData(3, 100, 300, 300, 1, 3, battleHeight, battleWidth, 0, 0, false);
 
 	animator.changeBattleAnimation(&standing);
@@ -48,7 +49,11 @@ void Ogre::updateDrawList(bool animate)
 	if (isTakingDamage && !animator.getCurrentAnimation()->isAnimating(&battleSprite))
 	{
 		isTakingDamage = false;
-		animator.changeBattleAnimation(&standing);
+
+		if (isAirBound)
+			animator.changeBattleAnimation(&constantTakingDamage);
+		else
+			animator.changeBattleAnimation(&standing);
 	}
 }
 
