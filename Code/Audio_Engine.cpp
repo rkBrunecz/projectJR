@@ -1,21 +1,23 @@
 #include "Audio_Engine.h"
 
-std::vector<Audio_Engine::Audio *> Audio_Engine::soundList;
+std::vector<Audio *> Audio_Engine::soundList;
 
-short Audio_Engine::addSound(std::string fileName, short volume)
+short Audio_Engine::addSound(Audio* a)
 {
 	if (!soundList.empty())
 	{
 		for (unsigned int i = 0; i < soundList.size(); i++)
 		{
-			if (soundList[i]->isSameFile(fileName))
+			if (*soundList[i] == *a)
+			{
+				delete a; // Delete a if it already exists in the soundlist
 				return i;
+			}
 		}
 
 	}
 
-	
-	soundList.push_back(new Audio(fileName, volume));
+	soundList.push_back(a);
 
 	return soundList.size() - 1;
 }
