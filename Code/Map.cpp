@@ -550,17 +550,17 @@ void Map::updateDrawList(Player* player, bool drawWaterAnimation)
 		for (unsigned int j = 0; j < drawAtPos[i].size(); j++)
 			drawAtPos[i][j]->updateDrawList(true);
 
-		Graphic::addToDrawList(&groundSprites[i], false);
+		Graphic::addToDrawList(&groundSprites[i], true);
 	}
 
+	// Check the last position in the vector
 	if (drawAtPos[drawAtPos.size() - 1].size() != 0)
 	{
 		for (unsigned int i = 0; i < drawAtPos[drawAtPos.size() - 1].size(); i++)
 			drawAtPos[drawAtPos.size() - 1][i]->updateDrawList(true);
 	}
 
-	//window->draw(canopySprite); //Draw the canopy
-	Graphic::addToDrawList(&canopySprite, false);
+	Graphic::addToDrawList(&canopySprite, true);
 
 	//TOOLS
 	if (renderCollisionLayer)

@@ -17,6 +17,8 @@ class Graphic
 public:
 	// PUBLIC FUNCTIONS
 	static sf::Texture * addTexture(std::string fileName);
+	static void initializeData();
+	static void freeMemory();
 	static void addToDrawList(sf::Sprite *s, bool isShadow);
 	static void draw(sf::RenderWindow *window);
 	static void clearTextureList();
@@ -40,6 +42,7 @@ public:
 private:
 	// CONSTANTS
 	static const sf::Color MORNING, DAWN, AFTERNOON, EVENING;
+	static const short SHADOW_ALPHA_MAX = 100;
 
 	// PRIVATE STATIC METHODS
 	static void updateDayTime();
@@ -100,6 +103,8 @@ private:
 	static float dayUpdateInterval;
 	static short shadowAlpha;
 	static bool updateTime;
+	static sf::Shader* alpha;
+	static sf::RenderTexture *tex;
 };
 
 #endif

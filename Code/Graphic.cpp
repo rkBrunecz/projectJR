@@ -18,11 +18,13 @@ sf::Clock Graphic::clock;
 sf::Color Graphic::dayShift(255, 255, 255, 255), Graphic::colorIncrement(1, 1, 1, 0);
 sf::RectangleShape *Graphic::fade = NULL;
 Graphic::TimeOfDay Graphic::shiftTo = Afternoon; 
-float Graphic::dayUpdateInterval = 10;
-short Graphic::shadowAlpha = 255;
+float Graphic::dayUpdateInterval = 7;
+short Graphic::shadowAlpha = SHADOW_ALPHA_MAX;
 bool Graphic::updateTime = true;
+sf::Shader *Graphic::alpha;
+sf::RenderTexture *Graphic::tex;
 
-sf::Texture * Graphic::addTexture(std::string fileName)
+sf::Texture *Graphic::addTexture(std::string fileName)
 {
 	if (!textures.empty())
 	{
@@ -41,6 +43,22 @@ sf::Texture * Graphic::addTexture(std::string fileName)
 	return textures.back()->getTexture();
 }
 
+void Graphic::initializeData()
+{
+	tex = new sf::RenderTexture();
+
+	alpha = new sf::Shader();
+	if (!alpha->loadFromFile("res/Shaders/alpha.frag", sf::Shader::Fragment))
+		exit(EXIT_FAILURE);
+}
+
+void Graphic::freeMemory()
+{
+	delete alpha;
+	delete tex;
+	clearTextureList();
+}
+
 void Graphic::clearTextureList()
 {
 	for (unsigned int i = 0; i < textures.size(); i++)
@@ -56,6 +74,13 @@ void Graphic::addToDrawList(sf::Sprite *s, bool isShadow)
 
 void Graphic::draw(sf::RenderWindow* window)
 {
+	if (drawList.size() != 0 && 
+		tex->getSize().x < drawList[0]->sprite->getTexture()->getSize().x && 
+		tex->getSize().y < drawList[0]->sprite->getTexture()->getSize().y)
+		tex->create(drawList[0]->sprite->getTexture()->getSize().x, drawList[0]->sprite->getTexture()->getSize().y);
+
+	tex->clear();
+
 	if (updateTime && clock.getElapsedTime().asSeconds() > dayUpdateInterval)
 	{
 		updateDayTime();
@@ -65,17 +90,25 @@ void Graphic::draw(sf::RenderWindow* window)
 
 	for (unsigned int i = 0; i < drawList.size(); i++)
 	{
-		if (!drawList[i]->isShadow)
-			drawList[i]->sprite->setColor(dayShift);
-		else
-			drawList[i]->sprite->setColor(sf::Color(dayShift.r, dayShift.g, dayShift.b, (sf::Uint8)shadowAlpha));
-	}
+		if (drawList[i]->isShadow)
+		{
+			alpha->setParameter("texture", sf::Shader::CurrentTexture);
+			alpha->setParameter("alpha", shadowAlpha / 255.0f);
 
-	for (unsigned int i = 0; i < drawList.size(); i++)
-	{
-		window->draw(*drawList[i]->sprite);
+			tex->draw(*drawList[i]->sprite, alpha);
+		}
+		else
+			tex->draw(*drawList[i]->sprite);
+
 		delete drawList[i];
 	}
+
+	tex->display();
+
+	sf::Sprite s(tex->getTexture());
+	s.setColor(dayShift);
+
+	window->draw(s);
 
 	drawList.clear();
 }
@@ -90,17 +123,17 @@ void Graphic::updateDayTime()
 
 		dayShift += colorIncrement;
 
-		if (shadowAlpha + std::ceil(255 / 30) < 255)
-			shadowAlpha += (short)std::ceil(255 / 30);
+		if (shadowAlpha + std::ceil(SHADOW_ALPHA_MAX / 30) < SHADOW_ALPHA_MAX)
+			shadowAlpha += (short)std::ceil(SHADOW_ALPHA_MAX / 30);
 		else
-			shadowAlpha = 255;
+			shadowAlpha = SHADOW_ALPHA_MAX;
 
 		if (dayShift == MORNING)
 		{
 			shiftTo = Afternoon;
 			colorIncrement = sf::Color(1, 2, 2, 0);
 
-			dayUpdateInterval = 45;
+			dayUpdateInterval = 7;
 		}
 
 		break;
@@ -121,7 +154,7 @@ void Graphic::updateDayTime()
 			shiftTo = Evening;
 			colorIncrement = sf::Color(4, 2, 1, 0);
 
-			dayUpdateInterval = 45;
+			dayUpdateInterval = 7;
 		}
 
 		break;
@@ -137,8 +170,8 @@ void Graphic::updateDayTime()
 		if (dayShift.b - colorIncrement.b < EVENING.b)
 			colorIncrement.b = dayShift.b - EVENING.b;
 
-		if (shadowAlpha - std::ceil(255 / 30) > 0)
-			shadowAlpha -= (short)std::ceil(255 / 30);
+		if (shadowAlpha - std::ceil(SHADOW_ALPHA_MAX / 30) > 0)
+			shadowAlpha -= (short)std::ceil(SHADOW_ALPHA_MAX / 30);
 		else 
 			shadowAlpha = 0;
 
@@ -147,7 +180,7 @@ void Graphic::updateDayTime()
 			shiftTo = Dawn;
 			colorIncrement = sf::Color(2, 2, 1, 0);
 
-			dayUpdateInterval = 45;
+			dayUpdateInterval = 7;
 		}
 
 		break;
@@ -163,17 +196,17 @@ void Graphic::updateDayTime()
 		if (dayShift.b + colorIncrement.b > DAWN.b)
 			colorIncrement.b = abs(dayShift.b - DAWN.b);
 
-		if (shadowAlpha + std::ceil(255 / 30) < 150)
-			shadowAlpha += (short)std::ceil(255 / 30);
+		if (shadowAlpha + std::ceil(SHADOW_ALPHA_MAX / 30) < SHADOW_ALPHA_MAX - 75)
+			shadowAlpha += (short)std::ceil(SHADOW_ALPHA_MAX / 30);
 		else
-			shadowAlpha = 150;
+			shadowAlpha = SHADOW_ALPHA_MAX - 75;
 
 		if (dayShift == DAWN)
 		{
 			shiftTo = Morning;
 			colorIncrement = sf::Color(1, 1, 1, 0);
 
-			dayUpdateInterval = 20;
+			dayUpdateInterval = 7;
 		}
 
 		break;

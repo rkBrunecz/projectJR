@@ -221,6 +221,8 @@ void game(int argc, char* argv[])
 	float elapsedTime; // In seconds
 	bool verticalSyncEnabled = true;
 
+	Graphic::initializeData();
+
 	Map map;
 	Battle_Engine battle;
 	Player player;
@@ -348,7 +350,7 @@ int main(int argc, char* argv[])
 
 	// CLEAN UP MEMORY
 	Audio_Engine::clearSoundList();
-	Graphic::clearTextureList();
+	Graphic::freeMemory();
 
 	return 0; //Close the game
 }
