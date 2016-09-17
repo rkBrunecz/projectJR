@@ -5,6 +5,7 @@
 !.gitignore
 !.cpp
 !.h
+!.frag
 !.txt
 !.md
 !*/
