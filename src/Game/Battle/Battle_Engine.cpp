@@ -302,6 +302,6 @@ void Battle_Engine::updateDrawList(bool animate)
 	
 	Game::graphicManager->addToDrawList(&backdropSprite, false);
 	for (unsigned int i = 0; i < drawAtPos.size(); i++)
-		drawAtPos[i]->drawSprite();
+		drawAtPos[i]->drawSprite(animate);
 
 }

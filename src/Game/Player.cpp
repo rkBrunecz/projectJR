@@ -33,14 +33,8 @@ Player::Player()
 	character.sprite.setOrigin(16, 27);
 
 	// Set up the sprites shadow properties
-	character.shadowShape.setRadius(8);
-	character.shadowShape.setFillColor(sf::Color(0, 0, 0, 75));
-
-	character.tex.create(32, 32);
-	character.tex.clear(sf::Color(0, 0, 0, 0));
-	character.tex.draw(character.shadowShape);
-	character.tex.display();
-	character.shadow = sf::Sprite(character.tex.getTexture());
+	character.shadow.setRadius(8);
+	character.shadow.setFillColor(sf::Color(0, 0, 0, 110));
 
 	character.setPosition(x, y);
 
@@ -140,15 +134,8 @@ void Player::changePlayerState(const States state)
 		character.sprite.setOrigin(16, 27);
 
 		// Set up the sprites shadow properties
-		character.shadowShape.setRadius(8);
-		character.shadowShape.setFillColor(sf::Color(0, 0, 0, 75));
-
-		character.tex.create(32, 32);
-		character.tex.clear(sf::Color(0, 0, 0, 0));
-		character.tex.draw(character.shadowShape);
-		character.tex.display();
-
-		character.shadow = sf::Sprite(character.tex.getTexture());
+		character.shadow.setRadius(8);
+		character.shadow.setFillColor(sf::Color(0, 0, 0, 110));
 
 		character.setPosition(x, y);
 		Game::camera->updatePosition(sf::Vector2f(x, y));
@@ -200,16 +187,17 @@ void Player::updateDrawList()
 			break;
 
 		case Battle:
-			animator.animate(&battleSprite, &battleAniClock, isAttacking);
-
 			Game::graphicManager->addToDrawList(&battleSprite, false);
 			
 			break;
 	}
 }
 
-void Player::drawSprite()
+void Player::drawSprite(bool animate)
 {
+	if (animate)
+		animator.animate(&battleSprite, &battleAniClock, isAttacking);
+	
 	updateDrawList();
 }
 

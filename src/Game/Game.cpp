@@ -93,6 +93,10 @@ void Game::processEvents()
 					graphicManager->enableDayShift(true);
 			}
 		}
+		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num4) // DEBUG fade in
+			graphicManager->fadeIn(sf::Color::Black, 0.020f);
+		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Num3) // DEBUG fade out
+			graphicManager->fadeOut(sf::Color::Black, 0.020f);
 		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Tab)
 			map->displayCollsionLayer();
 		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::G)
@@ -120,6 +124,8 @@ void Game::processEvents()
 		}
 		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::B)
 		{
+			graphicManager->fadeOut(sf::Color::Black, 0.020f);
+
 			if (state == Play)
 				state = InitiateBattle;
 			else
@@ -151,6 +157,13 @@ void Game::update()
 	{
 	case Play:
 	{
+		// Wait for the fade out to finish
+		if (!graphicManager->effectFinished())
+		{
+			map->updateDrawList(player, false);
+			break;
+		}
+
 		//Update positions
 		player->updatePosition(elapsedTime);
 		gameClock->updateClock();
@@ -160,13 +173,23 @@ void Game::update()
 
 		//Check to see if a map transition is needed
 		if (map->transitioning(player))
+		{
+			graphicManager->fadeOut(sf::Color::Black, 0.020f); // Start a fade out
 			state = Transition;
+		}
 
 		break;
 
 	}
 	case Battle:
 	{
+		// Wait for the fade out to finish
+		if (!graphicManager->effectFinished())
+		{
+			battle->updateDrawList(false);
+			break;
+		}
+
 		battle->startTurn(lastKeyPressed, elapsedTime);
 
 		battle->updateDrawList(true);
@@ -183,28 +206,39 @@ void Game::update()
 		else
 			battle->updateDrawList(false);
 
+		// Pause the day shift and dim the screen
+		graphicManager->enableDayShift(false);
+		graphicManager->dimScreen(sf::Color::Black, 130);
+
 		break;
 	}
 	case Transition:
 	{
-		while (graphicManager->fadingOut(window))
-			map->updateDrawList(player, true);
+		// Wait for the fade out finish
+		if (!graphicManager->effectFinished())
+		{
+			map->updateDrawList(player, false);
+			break;
+		}
 
 		currentMap = map->moveToMap(player); //Transition to the next map
 
-		while (graphicManager->fadingIn(window))
-			map->updateDrawList(player, true);
-
 		state = Play; //Continue playing the game
 		returnState = Play;
+
+		graphicManager->fadeIn(sf::Color::Black, false); // Fade back in after the transition finished
 
 		break;
 	}
 	case InitiateBattle:
 	{
-		do {
-			map->updateDrawList(player, true);
-		} while (graphicManager->fadingOut(window));
+		// Wait for the fade out finish
+		graphicManager->enableDayShift(false);
+		if (!graphicManager->effectFinished())
+		{
+			map->updateDrawList(player, false);
+			break;
+		}
 
 		// Clear graphics and audio out and replace with game data
 		graphicManager->clearTextureList();
@@ -214,31 +248,34 @@ void Game::update()
 		delete camera;
 		camera = new pb::Camera(window->getSize().x, window->getSize().y, 0.5f, "screenshake.wav");
 
-		player->changePlayerState(Player::Battle);
+		player->changePlayerState(Player::Battle); // change player state
 
 		// Intialize a list of players to send to the battle engine
 		Battle_Object* players[1];
 		players[0] = player;
 
+		// Instantiate a battle object
 		battle = new Battle_Engine(players, 1, camera->getCamera().getSize().x, camera->getCamera().getSize().y);
 
-		do {
-			battle->updateDrawList(true);
-		} while (graphicManager->fadingIn(window));
-
-		graphicManager->enableDayShift(false);
-
+		// Change game state
 		state = Battle;
 		returnState = Battle;
+
+		graphicManager->fadeIn(sf::Color::Black, 0.020f); // Fade in
 
 		break;
 	}
 	case InitiateOverworld:
 	{
-		do {
+		// Wait for the fade in to finish
+		graphicManager->enableDayShift(false);
+		if (!graphicManager->effectFinished())
+		{
 			battle->updateDrawList(true);
-		} while (graphicManager->fadingOut(window));
+			break;
+		}
 
+		// Clear textures and audio
 		graphicManager->clearTextureList();
 		audioManager->clearSoundList();
 
@@ -252,16 +289,15 @@ void Game::update()
 
 		map->loadMap(currentMap); //Load the map
 
-		player->changePlayerState(Player::World);
+		player->changePlayerState(Player::World); // change player state
 
-		do {
-			map->updateDrawList(player, true);
-		} while (graphicManager->fadingIn(window));
+		graphicManager->enableDayShift(true); // re-enable day shift
 
-		graphicManager->enableDayShift(true);
-
+		// Change states
 		state = Play;
 		returnState = Play;
+
+		graphicManager->fadeIn(sf::Color::Black, 0.020f); // Fade in
 
 		break;
 	}
@@ -273,12 +309,10 @@ void Game::render()
 	//Clear the window
 	window->clear();
 
-	camera->animateCamera();
+	camera->animateCamera(); // Apply any camera animations
 	window->setView(camera->getCamera()); //Update the windows view
 	
 	graphicManager->draw(window, gameClock->getTime()); // Use day/night version of graphic manager draw
-	if (state == Pause)
-		graphicManager->dimScreen(window);
 
 	//Redisplay everything in the window
 	window->display();

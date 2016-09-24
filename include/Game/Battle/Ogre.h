@@ -11,7 +11,7 @@ public:
 	~Ogre() { };
 
 	// Battle functions
-	void drawSprite();
+	void drawSprite(bool animate);
 	short performBattleAction(short numAttacksPerformed);
 
 	// Movement functions

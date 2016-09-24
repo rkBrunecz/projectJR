@@ -11,7 +11,7 @@ characteristics.
 #define Player_H
 
 // HEADERS
-#include "PBE\Graphic\Graphic_Entity.h"
+#include "PBE\Graphics\Graphic_Entity.h"
 #include "PBE\System\Collision.h"
 #include "Game\Battle\Battle_Object.h"
 #include "Game\Animation.h"
@@ -51,7 +51,7 @@ public:
 	bool collisionDetected(const sf::IntRect& rect);
 
 	// Battle functions
-	void drawSprite();
+	void drawSprite(bool animate);
 	short performBattleAction(sf::Event lastKeyPressed, short numAttacksPerformed);
 
 private:
@@ -71,9 +71,8 @@ private:
 	Attack *chop = NULL, *uppercut = NULL, *arielSlash = NULL;
 
 	struct Character{
-		sf::Sprite sprite, shadow;
-		sf::CircleShape shadowShape;
-		sf::RenderTexture tex;
+		sf::Sprite sprite;
+		sf::CircleShape shadow;
 
 		void setPosition(float x, float y)
 		{

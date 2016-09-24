@@ -43,7 +43,7 @@ class Battle_Object
 		sf::Sprite getBattleSprite() { return battleSprite; };
 
 		// Overridable battle functions
-		virtual void drawSprite() = 0;
+		virtual void drawSprite(bool animate) = 0;
 		virtual short performBattleAction(sf::Event lastKeyPressed, short numAttacksPerformed) { return 0; }; // Player version of battle action
 		virtual short performBattleAction(short numAttacksPerformed) { return 0; }; // AI version of battle action
 

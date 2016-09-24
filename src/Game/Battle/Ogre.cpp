@@ -28,9 +28,10 @@ Ogre::Ogre()
 	animator.changeBattleAnimation(standing);
 }
 
-void Ogre::drawSprite()
+void Ogre::drawSprite(bool animate)
 {
-	animator.animate(&battleSprite, &battleAniClock, isAttacking);
+	if (animate)
+		animator.animate(&battleSprite, &battleAniClock, isAttacking);
 
 	Game::graphicManager->addToDrawList(&battleSprite, false);
 

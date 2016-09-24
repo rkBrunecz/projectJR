@@ -4,7 +4,7 @@
 #include <SFML\Graphics\RenderWindow.hpp>
 #include <SFML\Window\Event.hpp>
 #include "PBE\System\Camera.h"
-#include "PBE\Graphic\Graphic_Manager.h"
+#include "PBE\Graphics\Graphic_Manager.h"
 #include "PBE\Audio\Audio_Manager.h"
 #include "PBE\System\In_Game_Clock.h"
 #include "Game\Battle\Battle_Engine.h"
@@ -48,7 +48,9 @@ private:
 		GameMenu,
 		Transition,
 		InitiateBattle,
-		InitiateOverworld
+		InitiateOverworld,
+		FadeIn,
+		FadeOut
 	};
 	const enum Window_States //Determines the state the window is in
 	{
