@@ -80,13 +80,16 @@ void Map::initialize(std::ifstream& mapFile)
 	numRows = atoi(mapRows.c_str());
 	numColumns = atoi(mapColumns.c_str());
 
+	waterAnimator = new Water(4, 0, 3, TILE_SIZE, TILE_SIZE, 0.3f); // Instantiate a new water animator
+
 	//Recreate the mapTexture, canopyTexture and groundTexture ONLY when needed
 	if ((int)mapTexture.getSize().x < numColumns * TILE_SIZE && (int)mapTexture.getSize().y < numRows * TILE_SIZE)
 	{
 		mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		canopyTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		groundTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
-		maskTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);		
+		maskTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);	
+
 		for (int i = 0; i < NUM_WATER_FRAMES; i++)
 			waterFrames[i].create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 
@@ -309,6 +312,9 @@ void Map::emptyMap()
 	delete[] ground;
 	delete[] mask;
 	delete[] groundSprites;
+
+	delete waterAnimator;
+	waterAnimator = 0;
 }
 
 /*
@@ -503,7 +509,7 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 	}
 }
 
-void Map::updateDrawList(Player* player, bool drawWaterAnimation)
+void Map::updateDrawList(Player* player, bool animate)
 {
 	//LOCAL VARIABLES
 	std::vector<std::vector<pb::Graphic_Entity*>> drawAtPos;
@@ -512,15 +518,16 @@ void Map::updateDrawList(Player* player, bool drawWaterAnimation)
 	drawAtPos.resize(numRows + 1);
 
 	//If requested, animate water tiles. Otherwise, do not.
-	if (drawWaterAnimation)
-		Animation::updateWaterAnimation(&waterShift, &waterAnimation, &waterSprite, waterFrames, &currentWaterFrame, NUM_WATER_FRAMES);
+	if (animate)
+		waterAnimator->updateWaterCycle(&waterAniClock);
+
+	waterAnimator->updateAnimation(&waterSprite, waterFrames); // Update the water sprite
 
 	Game::graphicManager->addToDrawList(&waterSprite, false);
 	Game::graphicManager->addToDrawList(&mapSprite, false);
 	Game::graphicManager->addToDrawList(&maskSprite, false);
 
 	//Get the column and row the graphic object is in
-	//int column = (player->getRect().left + (player->getRect().width * 0.5)) / TILE_SIZE;
 	int row = (int)(player->getRect().top + player->getRect().height) / TILE_SIZE;
 	int columnL = (int)player->getRect().left / TILE_SIZE;
 	int columnR = (int)(player->getRect().left + player->getRect().width) / TILE_SIZE;
@@ -588,6 +595,11 @@ const std::string Map::moveToMap(Player* player)
 	Game::camera->updatePosition(sf::Vector2f((float)startPosition.x, (float)startPosition.y));
 
 	return mapToLoad;
+}
+
+const sf::Vector2i Map::getMapSize()
+{
+	return sf::Vector2i(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 }
 
 /*
@@ -717,4 +729,6 @@ Map::~Map()
 	delete[] ground;
 	delete[] mask;
 	delete[] groundSprites;
+
+	delete waterAnimator;
 }

@@ -30,6 +30,7 @@ namespace pb
 
 		const sf::Texture *addTexture(std::string fileName);
 		void addToDrawList(sf::Drawable *d, bool isShadow);
+		void updateBufferSize(sf::Vector2i size);
 
 		// Basic draw method
 		void draw(sf::RenderWindow *window);
@@ -38,10 +39,9 @@ namespace pb
 		void draw(sf::RenderWindow *window, Time& t);
 
 		void clearTextureList();
-		void toggleFrameRate();
 		void enableDayShift(bool enable);
 
-		// Non shader post effects
+		// Non shader post effect methods
 		void dimScreen(sf::Color dimColor, unsigned short alpha);
 		void fadeIn(sf::Color fadeColor, float updateInterval);
 		void fadeOut(sf::Color fadeColor, float updateInterval);
@@ -90,7 +90,7 @@ namespace pb
 
 		std::vector<Texture *> textures;
 		std::vector<Graphic_Obj *> drawList;
-		sf::RenderTexture *tex; // Used to apply shaders
+		sf::RenderTexture *buffer = 0; // Used to apply shaders
 		pb::Shader *alpha = 0;
 		pb::Effect *effect = 0; // Used for simple effects, like screen diming and fading
 		pb::Day_Shift_Animation *dayShift = 0;

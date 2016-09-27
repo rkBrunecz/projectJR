@@ -13,7 +13,7 @@ The main.cpp file is the entry point for the game.
 */
 
 // Headers
-//#include <vld.h> // Check for memory leaks
+//#include <vld.h> // Check for memory leaks. Comment out if not being used
 #include "Game\Game.h"
 
 int main(int argc, char* argv[])
