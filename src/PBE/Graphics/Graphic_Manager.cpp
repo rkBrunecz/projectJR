@@ -12,7 +12,7 @@ namespace pb
 {
 	Graphic_Manager::Graphic_Manager()
 	{
-		tex = new sf::RenderTexture();
+		buffer = new sf::RenderTexture();
 
 		alpha = new pb::Alpha(sf::Color::Black);
 		alpha->load();
@@ -26,7 +26,7 @@ namespace pb
 	Graphic_Manager::~Graphic_Manager()
 	{
 		delete alpha;
-		delete tex;
+		delete buffer;
 		delete dayShift;
 		delete effect;
 
@@ -71,6 +71,12 @@ namespace pb
 		drawList.push_back(new Graphic_Obj(d, hasShadow));
 	}
 
+	void Graphic_Manager::updateBufferSize(sf::Vector2i size)
+	{
+		if (buffer != 0)
+			buffer->create(size.x, size.y);
+	}
+
 	void Graphic_Manager::draw(sf::RenderWindow* window)
 	{
 		for (unsigned int i = 0; i < drawList.size(); i++)
@@ -98,14 +104,8 @@ namespace pb
 	{
 		// Local variables
 		sf::Color dayColor = dayShift->updateDayTime(t);
-
-		// Create a larger render texture if needed
-		if (drawList.size() != 0 &&
-			tex->getSize().x < 3000 &&
-			tex->getSize().y < 3000)
-			tex->create(3000, 3000);
 		
-		tex->clear(); // clear render texture for drawing
+		buffer->clear(); // clear render texture for drawing
 
 		for (unsigned int i = 0; i < drawList.size(); i++)
 		{
@@ -113,19 +113,19 @@ namespace pb
 			{
 				alpha->update(dayShift->getShadowAlpha());
 
-				tex->draw(*drawList[i]->drawable, alpha->getShader());
+				buffer->draw(*drawList[i]->drawable, alpha->getShader());
 			}
 			else
-				tex->draw(*drawList[i]->drawable);
+				buffer->draw(*drawList[i]->drawable);
 
 			delete drawList[i];
 		}
 
 		// Finished drawing to render texture
-		tex->display();
+		buffer->display();
 
 		// Apply day and night shift
-		sf::Sprite s(tex->getTexture());
+		sf::Sprite s(buffer->getTexture());
 		s.setColor(dayColor);
 
 		// Draw to window

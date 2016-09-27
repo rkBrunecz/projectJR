@@ -14,7 +14,7 @@ characteristics.
 #include "PBE\Graphics\Graphic_Entity.h"
 #include "PBE\System\Collision.h"
 #include "Game\Battle\Battle_Object.h"
-#include "Game\Animation.h"
+#include "Game\World_Animations.h"
 
 class Player : public pb::Graphic_Entity, public pb::Collidable, public Battle_Object
 {
@@ -61,14 +61,14 @@ private:
 	const short MOVEMENT_UPDATES = 15;
 
 	// PRIVATE VARIABLES
-	Animation::WalkingDirection currentDirection = Animation::Down;
 	sf::Clock characterAniClock;
 	float x, y;
 
 	States state = World;
 
 	// Battle variables
-	Attack *chop = NULL, *uppercut = NULL, *arielSlash = NULL;
+	Attack *chop = 0, *uppercut = 0, *arielSlash = 0;
+	Walk *walk = 0;
 
 	struct Character{
 		sf::Sprite sprite;

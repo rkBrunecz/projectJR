@@ -16,7 +16,7 @@ This class handles creating and drawing a map. It also performs other map relate
 #include <fstream>
 #include <sstream>
 #include "PBE\System\Collision.h"
-#include "Game\Animation.h"
+#include "Game\World_Animations.h"
 #include "Game\Player.h"
 
 class Map : public pb::Collidable
@@ -35,11 +35,13 @@ public:
 	~Map();
 
 	//PUBLIC FUNCTIONS
-	void updateDrawList(Player* player, bool drawWaterAnimation);
+	void updateDrawList(Player* player, bool animate);
 	void loadMap(std::string mapName);
 	
 	const std::string moveToMap(Player* player);
 	
+	const sf::Vector2i getMapSize();
+
 	bool transitioning(Player* player);
 
 	//DEBUG
@@ -84,8 +86,8 @@ private:
 	sf::Sprite tiles, mapSprite, canopySprite, maskSprite, waterSprite;
 	sf::RenderTexture mapTexture, canopyTexture, groundTexture, maskTexture;
 	sf::RenderTexture waterFrames[4];
-	sf::Clock waterAnimation;
-	Animation::WaterDirection waterShift = Animation::ShiftRight;
+	sf::Clock waterAniClock;
+	Water *waterAnimator = 0;
 
 	unsigned short currentWaterFrame = 0;
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array

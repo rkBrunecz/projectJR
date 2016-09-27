@@ -6,7 +6,7 @@ Game description will be updated when the game developes more. Currently, the pr
 
 Many of the graphics on display in the game have been made by one of the two developers. However, there are also a number of graphics that are being used from various artists from around the web. All of these will be replaced one day, but the artists deserve credit for their incredible work. You can find links to these resources in the [RESOURCES](#resources) section.  
 
-You can obtain the resources needed to run the game and mapeditor [here](http://www.mediafire.com/download/bczagecsp643hul/res.zip).  
+You can obtain the resources needed to run the game and mapeditor [here](http://www.mediafire.com/download/xtl01kdtk13l4qo/res.zip).  
 
 ###Trailers:
 

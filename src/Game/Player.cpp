@@ -36,6 +36,8 @@ Player::Player()
 	character.shadow.setRadius(8);
 	character.shadow.setFillColor(sf::Color(0, 0, 0, 110));
 
+	walk = new Walk(3, 1, 2, 32, 32, 0.2f, 3 * 32, 0, 2 * 32, 32);
+
 	character.setPosition(x, y);
 
 	Game::camera->updatePosition(sf::Vector2f(x, y));
@@ -44,7 +46,6 @@ Player::Player()
 Player::Player(const Player& p) : Battle_Object(p)
 {
 	state = p.state;
-	currentDirection = p.currentDirection;
 	characterAniClock = p.characterAniClock;
 	x = p.x;
 	y = p.y;
@@ -54,9 +55,9 @@ Player::Player(const Player& p) : Battle_Object(p)
 	arielSlash = new Attack();
 	chop = new Attack();
 
-	if(p.uppercut != NULL) *uppercut = *p.uppercut;
-	if (p.arielSlash != NULL) *arielSlash = *p.arielSlash;
-	if (p.chop != NULL) *chop = *p.chop;
+	if(p.uppercut != 0) *uppercut = *p.uppercut;
+	if (p.arielSlash != 0) *arielSlash = *p.arielSlash;
+	if (p.chop != 0) *chop = *p.chop;
 }
 
 const Player &Player::operator=(const Player& p)
@@ -66,7 +67,6 @@ const Player &Player::operator=(const Player& p)
 		return *this;
 
 	state = p.state;
-	currentDirection = p.currentDirection;
 	characterAniClock = p.characterAniClock;
 	x = p.x;
 	y = p.y;
@@ -83,9 +83,9 @@ const Player &Player::operator=(const Player& p)
 	arielSlash = new Attack();
 	chop = new Attack();
 
-	if (p.uppercut != NULL) *uppercut = *p.uppercut;
-	if (p.arielSlash != NULL) *arielSlash = *p.arielSlash;
-	if (p.chop != NULL) *chop = *p.chop;
+	if (p.uppercut != 0) *uppercut = *p.uppercut;
+	if (p.arielSlash != 0) *arielSlash = *p.arielSlash;
+	if (p.chop != 0) *chop = *p.chop;
 
 	return *this;
 }
@@ -95,6 +95,8 @@ Player::~Player()
 	delete uppercut;
 	delete chop;
 	delete arielSlash;
+	
+	delete walk;
 }
 
 void Player::changePlayerState(const States state)
@@ -113,15 +115,15 @@ void Player::changePlayerState(const States state)
 	delete arielStance;
 
 	// Set the pointers to NULL to avoid a potential double delete
-	uppercut = NULL;
-	chop = NULL;
-	arielSlash = NULL;
+	uppercut = 0;
+	chop = 0;
+	arielSlash = 0;
 
-	moving = NULL;
-	returning = NULL;
-	standing = NULL;
-	attackStance = NULL;
-	arielStance = NULL;
+	moving = 0;
+	returning = 0;
+	standing = 0;
+	attackStance = 0;
+	arielStance = 0;
 
 	switch (this->state)
 	{
@@ -137,7 +139,7 @@ void Player::changePlayerState(const States state)
 		character.shadow.setRadius(8);
 		character.shadow.setFillColor(sf::Color(0, 0, 0, 110));
 
-		character.setPosition(x, y);
+		walk->updateWalkCycle(Walk::None, &characterAniClock);
 		Game::camera->updatePosition(sf::Vector2f(x, y));
 
 		break;
@@ -181,6 +183,8 @@ void Player::updateDrawList()
 	switch (state)
 	{
 		case World:
+			walk->updateAnimation(&character.sprite);
+
 			Game::graphicManager->addToDrawList(&character.shadow, true);
 			Game::graphicManager->addToDrawList(&character.sprite, false);
 			
@@ -238,6 +242,7 @@ void Player::updatePosition(const float elapsedTime)
 {
 	// LOCAL VARIABLES
 	bool positionUpdated = true;
+	Walk::WalkingDirection dir = Walk::None;
 	float offSetX = 0, offSetY = 0;
 	float offSetYDir = 0; // This variables allows for offsetting the player by a certain amount based on which direction the player is facing in the y direction
 
@@ -247,31 +252,31 @@ void Player::updatePosition(const float elapsedTime)
 		offSetY = -VELOCITY * elapsedTime;
 		offSetYDir = 5;
 
-		currentDirection = Animation::Up; // Set the character direction state for animation purposes
+		dir = Walk::Up;
 	}
 	// Move down
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
 		offSetY = VELOCITY * elapsedTime;
 
-		currentDirection = Animation::Down; // Set the character direction state for animation purposes
+		dir = Walk::Down;
 	}	
 	// Move right
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 	{
 		offSetX = VELOCITY * elapsedTime;
 
-		currentDirection = Animation::Right; // Set the character direction state for animation purposes
+		dir = Walk::Right;
 	}
 	// Move left
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 	{
 		offSetX = -VELOCITY * elapsedTime;
 
-		currentDirection = Animation::Left; // Set the character direction state for animation purposes
+		dir = Walk::Left;
 	}
-	else
-		positionUpdated = false; // If the position was not updated, positionUpdated = false
+
+	walk->updateWalkCycle(dir, &characterAniClock);
 
 	// Create a bounding box to check for collision
 	sf::IntRect bb((int)(x - (WIDTH * 0.5f) + offSetX), (int)(y - offSetYDir + offSetY), WIDTH, HEIGHT);
@@ -279,7 +284,7 @@ void Player::updatePosition(const float elapsedTime)
 	// May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
 	if (positionUpdated && pb::collisionDetected(bb))
 	{
-		Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); // Update the characters movement animation
+		walk->updateWalkCycle(Walk::None, &characterAniClock);
 		return;
 	}
 
@@ -290,8 +295,6 @@ void Player::updatePosition(const float elapsedTime)
 	// Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
 	character.setPosition(x, y);
 	Game::camera->updatePosition(sf::Vector2f(x, y));
-
-	Animation::updateAnimation(positionUpdated, currentDirection, &characterAniClock, &character.sprite); // Update the characters movement animation
 }
 
 /*
@@ -307,8 +310,8 @@ void Player::setPosition(const sf::Vector2f coords)
 	y = coords.y;
 
 	character.setPosition(x, y);
-
-	Animation::updateAnimation(false, currentDirection, &characterAniClock, &character.sprite); // Update the characters animation
+	
+	walk->updateWalkCycle(Walk::None, &characterAniClock);
 }
 
 /*

@@ -49,8 +49,7 @@ private:
 		Transition,
 		InitiateBattle,
 		InitiateOverworld,
-		FadeIn,
-		FadeOut
+		Fading
 	};
 	const enum Window_States //Determines the state the window is in
 	{
