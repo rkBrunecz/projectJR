@@ -59,6 +59,8 @@ namespace pb
 		{
 			rect.setPosition(target.getView().getCenter().x - (target.getSize().x * 0.5f), target.getView().getCenter().y - (target.getSize().y * 0.5f));
 			rect.setSize(sf::Vector2f((float)target.getSize().x, (float)target.getSize().y));
+
+			return;
 		}
 
 		bool isFinished()
@@ -82,7 +84,7 @@ namespace pb
 			Finished
 		};
 
-		Fade(States state, sf::Color fadeColor, float updateInterval) : Effect("Fade"), UPDATE_INTERVAL(updateInterval)
+		Fade(States state, const sf::Color& fadeColor, float updateInterval, int increment) : Effect("Fade"), UPDATE_INTERVAL(updateInterval), INCREMENT(increment)
 		{
 				// Set up properties of the fade rectangle
 				this->fadeColor = fadeColor;		
@@ -131,35 +133,37 @@ namespace pb
 
 		void fadeIn()
 		{
-			if (fadeColor.a == 0 && aniClock.getElapsedTime().asSeconds() > UPDATE_INTERVAL)
+			sf::Time t = aniClock.getElapsedTime();
+
+			if (fadeColor.a == 0 && t.asSeconds() > UPDATE_INTERVAL)
 				state = Finished;
 
-			if (fadeColor.a > 0)
+			//Set the transparency
+			if (t.asSeconds() > UPDATE_INTERVAL)
 			{
-				//Set the transparency
-				if (aniClock.getElapsedTime().asSeconds() > UPDATE_INTERVAL)
-				{
-					fadeColor.a -= 15;
-					rect.setFillColor(fadeColor);
-					aniClock.restart();
-				}
+				int colorOffset = INCREMENT * int(t.asSeconds() / UPDATE_INTERVAL);
+
+				fadeColor.a = (fadeColor.a - colorOffset >= 0 ? fadeColor.a - colorOffset : 0);
+				rect.setFillColor(fadeColor);
+				aniClock.restart();
 			}
 		}
 		
 		void fadeOut()
 		{
-			if (fadeColor.a == ALPHA_MAX && aniClock.getElapsedTime().asSeconds() > UPDATE_INTERVAL)
+			sf::Time t = aniClock.getElapsedTime();
+
+			if (fadeColor.a == ALPHA_MAX && t.asSeconds() > UPDATE_INTERVAL)
 				state = Finished;
 
-			if (fadeColor.a < ALPHA_MAX)
+			//Set the transparency
+			if (t.asSeconds() > UPDATE_INTERVAL)
 			{
-				//Set the transparency
-				if (aniClock.getElapsedTime().asSeconds() > UPDATE_INTERVAL)
-				{
-					fadeColor.a += 15;
-					rect.setFillColor(fadeColor);
-					aniClock.restart();
-				}
+				int colorOffset = INCREMENT * int(t.asSeconds() / UPDATE_INTERVAL);
+
+				fadeColor.a = (fadeColor.a + colorOffset <= 255 ? fadeColor.a + colorOffset : 255);
+				rect.setFillColor(fadeColor);
+				aniClock.restart();
 			}
 		}
 
@@ -171,6 +175,7 @@ namespace pb
 		// Private constants
 		const sf::Uint8 ALPHA_MAX = 255;
 		const float UPDATE_INTERVAL; // In seconds
+		const int INCREMENT;
 
 		// Private variables
 		sf::Clock aniClock;

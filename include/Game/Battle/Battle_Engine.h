@@ -12,7 +12,7 @@ public:
 
 	void initialize(Battle_Object** player, int numPlayers, float displayWidth, float displayHeight);
 	void startTurn(sf::Event lastKeyPressed, float elapsedTime);
-	void updateDrawList(bool animate);
+	void updateDrawList(bool animate, double alpha);
 
 private:
 	void changeTurns();

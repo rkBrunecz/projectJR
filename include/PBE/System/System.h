@@ -7,9 +7,15 @@
 
 namespace pb
 {
-	void load(sf::Texture* tex, std::string fileName);
-	void load(sf::SoundBuffer* buffer, std::string fileName);
-	void load(std::ifstream* stream, std::string fileName);
+	class System
+	{
+	public:
+		static void load(sf::Texture *tex, std::string fileName);
+		static void load(sf::SoundBuffer *buffer, std::string fileName);
+		static void load(sf::Font *font, std::string fileName);
+		static void load(sf::Shader *shader, std::string fileName, sf::Shader::Type type);
+		static void load(std::ifstream *stream, std::string fileName);
+	};
 }
 
 #endif

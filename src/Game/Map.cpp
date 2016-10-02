@@ -85,11 +85,13 @@ void Map::initialize(std::ifstream& mapFile)
 	//Recreate the mapTexture, canopyTexture and groundTexture ONLY when needed
 	if ((int)mapTexture.getSize().x < numColumns * TILE_SIZE && (int)mapTexture.getSize().y < numRows * TILE_SIZE)
 	{
+		clearRenderTextures(sf::Color::Black);
+
 		mapTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		canopyTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		groundTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		maskTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);	
-
+	
 		for (int i = 0; i < NUM_WATER_FRAMES; i++)
 			waterFrames[i].create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 
@@ -97,7 +99,7 @@ void Map::initialize(std::ifstream& mapFile)
 		collisionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		gridTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
 		transitionTexture.create(numColumns * TILE_SIZE, numRows * TILE_SIZE);
-
+		
 		gridTexture.setSmooth(true);
 	}
 
@@ -180,7 +182,7 @@ void Map::initializeTransitionPoints(std::ifstream& mapFile)
 }
 
 /*
-populateArray
+populateMap
 Parameters:
 	mapFile: This variable contains the file that will be read to initailize the array.
 
@@ -242,15 +244,19 @@ unsigned short Map::addTileToMap(Tile** layer, std::string input, unsigned int p
 		layer[row][column].mirror = true; //0 = false, 1 = true
 	if (input[pos + 4] - '0' == 1)
 		layer[row][column].collidable = true; //0 = false, 1 = true
-	
+	else
+		layer[row][column].collidable = false;
+
 	layer[row][column].tileType = input[pos + 5];
 	layer[row][column].hasTile = true;
+	layer[row][column].boundingBox = "none";
 
 	//If collidable, add a bounding box
 	if (layer[row][column].collidable && input[pos + 6] == ':')
 	{
 		short t = layer[row][column].rotation;
 		std::string width = input.substr(pos + 7, 2), height = input.substr(pos + 10, 2), sBBX = input.substr(pos + 13, 2), sBBY = input.substr(pos + 16, 2);
+		layer[row][column].boundingBox = width + "x" + height + "x" + sBBX + "x" + sBBY;
 
 		//This reverses the tiles height and width if the tile is flipped 90 degrees (1) or 270 degrees (3)
 		if (t == 0 || t == 2)
@@ -324,18 +330,7 @@ This method draws the map statically to a series of render textures.
 */
 void Map::drawMap()
 {
-	//Give the textures transparent backgrounds
-	mapTexture.clear(sf::Color(0,0,0,0));
-	canopyTexture.clear(sf::Color(0,0,0,0)); 
-	groundTexture.clear(sf::Color(0,0,0,0));
-	maskTexture.clear(sf::Color(0,0,0,0));
-	for (int i = 0; i < NUM_WATER_FRAMES; i++)
-		waterFrames[i].clear(sf::Color(0,0,0,0));
-
-	//TOOLS
-	collisionTexture.clear(sf::Color(0, 0, 0, 0));
-	gridTexture.clear(sf::Color(0, 0, 0, 0));
-	transitionTexture.clear(sf::Color(0, 0, 0, 0));
+	clearRenderTextures(sf::Color(0, 0, 0, 0));
 
 	//Used to draw grids lines 
 	sf::RectangleShape r;
@@ -505,8 +500,25 @@ void Map::drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int 
 		r.setPosition((float)(column * TILE_SIZE), (float)(row * TILE_SIZE));
 		r.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
 		r.setFillColor(sf::Color(0, 255, 0, 255));
+
 		transitionTexture.draw(r);
 	}
+}
+
+void Map::clearRenderTextures(sf::Color color)
+{
+	//Give the textures transparent backgrounds
+	mapTexture.clear(color);
+	canopyTexture.clear(color);
+	groundTexture.clear(color);
+	maskTexture.clear(color);
+	for (int i = 0; i < NUM_WATER_FRAMES; i++)
+		waterFrames[i].clear(color);
+
+	//TOOLS
+	collisionTexture.clear(color);
+	gridTexture.clear(color);
+	transitionTexture.clear(color);
 }
 
 void Map::updateDrawList(Player* player, bool animate)
@@ -532,6 +544,11 @@ void Map::updateDrawList(Player* player, bool animate)
 	int columnL = (int)player->getRect().left / TILE_SIZE;
 	int columnR = (int)(player->getRect().left + player->getRect().width) / TILE_SIZE;
 	
+	// Make sure the row and column calculated are not going out of bounds
+	row = (row == numRows ? numRows - 1 : row);
+	columnL = (columnL < 0 ? 0 : columnL);
+	columnR = (columnR == numColumns ? numColumns - 1 : columnR);
+
 	//Determine the order that graphic objects are drawn based on their immediate surroundings.
 	if (ground[row][columnL].hasTile ||	ground[row][columnR].hasTile) 
 	{
@@ -617,10 +634,15 @@ bool Map::collisionDetected(const sf::IntRect& rect)
 		return true;
 
 	//If the entity is at the maps edge along the y-axis, return true
-	if ((rect.top + rect.height + 2) - TILE_SIZE < 0 || rect.top + rect.height > numRows * TILE_SIZE)
+	if ((rect.top + rect.height + 2) - TILE_SIZE < 0 || (rect.top + rect.height + 2) > numRows * TILE_SIZE)
 		return true;
 	
 	unsigned int row = (unsigned int)((rect.top + rect.height) / TILE_SIZE), column = (unsigned int)(rect.left / TILE_SIZE);
+	
+	// Make sure the row and column calculated have not gone out of bounds
+	row = (row == numRows ? numRows - 1 : row);
+	column = (column == numColumns ? numColumns - 1 : column);
+	
 	bool collision = false;
 
 	//Check collision of the player on the left side of player

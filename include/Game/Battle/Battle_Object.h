@@ -2,7 +2,6 @@
 #define Battle_Object_H
 
 #include <SFML\Graphics.hpp>
-#include "Battle_Methods.h"
 #include "Attack.h"
 #include "Battle_Animation.h"
 
@@ -27,6 +26,7 @@ class Battle_Object
 		void setVelocity(float x, float y, bool isPlayer); // The x and y is the position the object is moving towards
 		void takeDamage(int damage, short hitStun);
 		void setSpritePosition(float x, float y);
+		void renderBattlePosition(double alpha);
 		bool inActiveFrame();
 		bool attackInProgress();
 		bool inCrushState();
@@ -55,13 +55,21 @@ class Battle_Object
 		virtual void toggleCrushState() { };
 
 	protected:
+		// Used in determing if the camera needs to move
+		const enum BattleStates
+		{
+			Jumping,
+			LaunchingDown,
+			Other
+		};
+
 		// CONSTANT VARIABLES
 		const short LAUNCH_VELOCITY = -4000, SMASH_VELOCITY = 4000, FALL_VELOCITY = 2000;
-		const float JUMP_VELOCITY = 1200.0f;
+		const float JUMP_VELOCITY = 2000.0f;
 		
 		// VARIABLES
 		float jumpVelocity = 0, gravity = 0, movementVelocity = 0;
-		sf::Vector2f battleVelocity = sf::Vector2f(0, 0);
+		sf::Vector2f battleVelocity = sf::Vector2f(0, 0), battlePos, lastBattlePos;
 		sf::Sprite battleSprite;
 		sf::Clock battleAniClock;
 		short battleHeight, battleWidth;
@@ -72,6 +80,8 @@ class Battle_Object
 		bool decreaseVelocity = false;
 		Battle_Animation *moving = NULL, *standing = NULL, *attackStance = NULL, *arielStance = NULL, *returning = NULL, *takingDamage = NULL, *constantTakingDamage = NULL;
 		
+		BattleStates battleState = Other;
+
 		// This structure atempts to facilaitate the process of animating sprite. 
 		struct Animator
 		{
@@ -118,6 +128,10 @@ class Battle_Object
 			Battle_Animation* currentBattleAnimation = NULL; // Will point to an alreadly allocated battle animation, will not contain a pointer to newly allocated memory.
 			bool animationChanged = false, attackChanged = false;
 		} animator;
+
+	private:
+		bool move(float x, float y, float elapsedTime);
+
 };
 
 #endif

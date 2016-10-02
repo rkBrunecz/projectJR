@@ -13,14 +13,14 @@ namespace pb
 	Graphic_Manager::Graphic_Manager()
 	{
 		buffer = new sf::RenderTexture();
-
-		alpha = new pb::Alpha(sf::Color::Black);
-		alpha->load();
 	}
 
 	Graphic_Manager::Graphic_Manager(In_Game_Clock& clock) : Graphic_Manager()
 	{
 		dayShift = new Day_Shift_Animation(110, clock);
+
+		alpha = new pb::Alpha(sf::Color::Black);
+		alpha->load();
 	}
 
 	Graphic_Manager::~Graphic_Manager()
@@ -54,6 +54,9 @@ namespace pb
 
 	void Graphic_Manager::enableDayShift(bool enable)
 	{
+		if (alpha == 0)
+			return;
+
 		updateTime = enable;
 	}
 
@@ -154,22 +157,28 @@ namespace pb
 		effect = new pb::Dim(sf::Color::Black, alpha);
 	}
 
-	void Graphic_Manager::fadeIn(sf::Color fadeColor, float updateInterval)
+	void Graphic_Manager::fadeIn(sf::Color fadeColor, float updateInterval, int increment)
 	{
 		// Free memory if needed
 		delete effect;
 		effect = 0;
 
-		effect = new pb::Fade(pb::Fade::FadeIn, fadeColor, updateInterval);
+		effect = new pb::Fade(pb::Fade::FadeIn, fadeColor, updateInterval, increment);
 	}
 
-	void Graphic_Manager::fadeOut(sf::Color fadeColor, float updateInterval)
+	void Graphic_Manager::fadeOut(sf::Color fadeColor, float updateInterval, int increment)
 	{
 		// Free memory if needed
 		delete effect;
 		effect = 0;
 
-		effect = new pb::Fade(pb::Fade::FadeOut, fadeColor, updateInterval);
+		effect = new pb::Fade(pb::Fade::FadeOut, fadeColor, updateInterval, increment);
+	}
+
+	void Graphic_Manager::updateEffect(sf::RenderTarget& target)
+	{
+		if (effect != 0)
+			effect->update(target);
 	}
 
 	bool Graphic_Manager::effectFinished()

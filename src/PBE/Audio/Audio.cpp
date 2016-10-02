@@ -7,7 +7,7 @@ namespace pb
 	{
 		this->fileName = fileName;
 
-		pb::load(&buff, fileName);
+		pb::System::load(&buff, fileName);
 		sound.setBuffer(buff);
 		sound.setVolume(volume);
 	}

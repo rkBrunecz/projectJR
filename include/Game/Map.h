@@ -23,6 +23,7 @@ class Map : public pb::Collidable
 {
 public:
 	// Constructor
+	Map() { };
 	Map(std::string mapName);
 	
 	// Copy constructor
@@ -35,8 +36,8 @@ public:
 	~Map();
 
 	//PUBLIC FUNCTIONS
-	void updateDrawList(Player* player, bool animate);
-	void loadMap(std::string mapName);
+	virtual void updateDrawList(Player* player, bool animate);
+	virtual void loadMap(std::string mapName);
 	
 	const std::string moveToMap(Player* player);
 	
@@ -49,7 +50,7 @@ public:
 	void displayGridLayer();
 	void displayTransitionLayer();
 
-private:
+protected:
 	//PRIVATE structures
 	struct Tile //Contains information about a tile such as the row and column it is found in the tileSheet, and special transformation information.
 	{
@@ -58,30 +59,38 @@ private:
 		char tileType; //Indicates what kind of tile it is, such as water, grass, rock, object, etc.
 		std::string mapName = "";
 		sf::Vector2f transitionCoords;
+		std::string boundingBox = "none";
+
+		std::string toString()
+		{
+			std::string s = std::to_string(row) + std::to_string(column) + std::to_string(rotation) + std::to_string(mirror) + std::to_string(collidable) +tileType;
+
+			if (boundingBox.compare("none") != 0)
+				return  s + ":" + boundingBox;
+			else
+				return s;
+		}
 	};
 
 	//PRIAVTE FUNCTIONS
-	void initialize(std::ifstream& mapFile);
-	void initializeTransitionPoints(std::ifstream& mapFile);
+	virtual void initialize(std::ifstream& mapFile);
+	virtual void initializeTransitionPoints(std::ifstream& mapFile);
 	void populateMap(std::ifstream& mapFile);
 	void drawMap();
 	void drawToTexture(sf::RenderTexture& texture, Tile**& layer, int row, int column);
+	void clearRenderTextures(sf::Color color);
 	void emptyMap();
 
 	unsigned short addTileToMap(Tile** layer, std::string tile, unsigned int pos, unsigned short row, unsigned short column);
 
-	// Collision methods
-	bool collisionDetected(const sf::IntRect& rect);
-	bool checkCollisionOnLayer(const sf::IntRect& rect, Tile**& layer, int row, int column);
-
 	//PRIVATE CONSTANTS
-	const unsigned short TILE_SIZE = 32; //This is the width and height of each of the tiles
+	static const unsigned short TILE_SIZE = 32; //This is the width and height of each of the tiles
 	const unsigned short NUM_WATER_FRAMES = 4;
 
-	Tile** map; //This 2d array contains the all of the tile information needed for the map
-	Tile** ground; //This 2d contains objects like bases trees, rocks, etc.
-	Tile** canopy; //This 2d contains objects like trees, top of rocks, etc.
-	Tile** mask; //This layer contains masks that are layered on top of other tiles to give depth
+	Tile** map = 0; //This 2d array contains the all of the tile information needed for the map
+	Tile** ground = 0; //This 2d contains objects like bases trees, rocks, etc.
+	Tile** canopy = 0; //This 2d contains objects like trees, top of rocks, etc.
+	Tile** mask = 0; //This layer contains masks that are layered on top of other tiles to give depth
 	sf::Sprite* groundSprites;
 	sf::Sprite tiles, mapSprite, canopySprite, maskSprite, waterSprite;
 	sf::RenderTexture mapTexture, canopyTexture, groundTexture, maskTexture;
@@ -89,13 +98,18 @@ private:
 	sf::Clock waterAniClock;
 	Water *waterAnimator = 0;
 
-	unsigned short currentWaterFrame = 0;
 	int numRows, numColumns; //numRows and numColumns contain the total number of rows and columns in the array
 
 	//TOOLS
 	sf::RenderTexture collisionTexture, gridTexture, transitionTexture;
 	sf::Sprite collisionSprite, gridSprite, transitionSprite;
 	bool renderCollisionLayer = false, renderGridLayer = false, renderTransitionLayer = false;
+
+private:
+	// Collision methods
+	bool collisionDetected(const sf::IntRect& rect);
+	bool checkCollisionOnLayer(const sf::IntRect& rect, Tile**& layer, int row, int column);
+
 };
 
 #endif

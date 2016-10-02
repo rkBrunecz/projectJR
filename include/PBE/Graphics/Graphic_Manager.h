@@ -43,8 +43,9 @@ namespace pb
 
 		// Non shader post effect methods
 		void dimScreen(sf::Color dimColor, unsigned short alpha);
-		void fadeIn(sf::Color fadeColor, float updateInterval);
-		void fadeOut(sf::Color fadeColor, float updateInterval);
+		void fadeIn(sf::Color fadeColor, float updateInterval, int increment);
+		void fadeOut(sf::Color fadeColor, float updateInterval, int increment);
+		void updateEffect(sf::RenderTarget& target);
 		bool effectFinished();
 
 	private:	
@@ -55,7 +56,7 @@ namespace pb
 			{
 				this->fileName = fileName;
 
-				pb::load(&texture, fileName);
+				pb::System::load(&texture, fileName);
 			}
 
 			const sf::Texture* getTexture()
