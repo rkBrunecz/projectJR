@@ -13,7 +13,6 @@ UI handles several user interface components. Primarily used to create additiona
 
 #include <Windows.h>
 #include <SFML\Graphics.hpp>
-#include "Map.h"
 
 class UI
 {
@@ -23,7 +22,6 @@ public:
 	static sf::Vector2i getNewMapParams(std::string* str);
 	static std::string getMap(std::string filter);
 	static sf::Vector2i getCoordinates(std::string windowName);
-
 
 private:
 	static sf::RenderWindow* mainWindow;

@@ -15,8 +15,8 @@ namespace pb
 
 		clock = new sf::Clock();
 
-		this->hours = currentHour;
-		this->minutes = currentMinutes;
+		this->hours = currentHour % HOURS_IN_DAY;
+		this->minutes = currentMinutes % 60;
 
 		timeScale = 1 / scale;
 	}

@@ -39,7 +39,10 @@ public:
 	const Player &operator= (const Player& p);
 
 	// PUBLIC FUNCTIONS
-	void changePlayerState(const States state);
+	void loadState(const States state);
+
+	// TEST
+	void renderPosition(double alpha);
 
 	// Graphic entity methods
 	void updateDrawList();
@@ -56,13 +59,14 @@ public:
 
 private:
 	// PRIVATE CONSTANTS
-	const float VELOCITY = 180;
+	const float VELOCITY = 150;
 	const short WIDTH = 20, HEIGHT = 3;
 	const short MOVEMENT_UPDATES = 15;
 
 	// PRIVATE VARIABLES
 	sf::Clock characterAniClock;
-	float x, y;
+	sf::Vector2f pos, lastPos;
+	sf::Vector2f velocity;
 
 	States state = World;
 
@@ -74,10 +78,10 @@ private:
 		sf::Sprite sprite;
 		sf::CircleShape shadow;
 
-		void setPosition(float x, float y)
+		void setPosition(sf::Vector2i pos)
 		{
-			sprite.setPosition(x, y);
-			shadow.setPosition(x - 8, y - 8);
+			sprite.setPosition((sf::Vector2f)pos);
+			shadow.setPosition((float)pos.x - 8, (float)pos.y - 8);;
 		}
 	} character;
 };

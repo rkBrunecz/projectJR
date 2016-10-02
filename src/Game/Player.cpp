@@ -37,18 +37,14 @@ Player::Player()
 	character.shadow.setFillColor(sf::Color(0, 0, 0, 110));
 
 	walk = new Walk(3, 1, 2, 32, 32, 0.2f, 3 * 32, 0, 2 * 32, 32);
-
-	character.setPosition(x, y);
-
-	Game::camera->updatePosition(sf::Vector2f(x, y));
 }
 
 Player::Player(const Player& p) : Battle_Object(p)
 {
 	state = p.state;
 	characterAniClock = p.characterAniClock;
-	x = p.x;
-	y = p.y;
+	pos = p.pos;
+	lastPos = p.lastPos;
 
 	// Allocate memory
 	uppercut = new Attack();
@@ -68,8 +64,8 @@ const Player &Player::operator=(const Player& p)
 
 	state = p.state;
 	characterAniClock = p.characterAniClock;
-	x = p.x;
-	y = p.y;
+	pos = p.pos;
+	lastPos = p.lastPos;
 
 	Battle_Object::operator=(p);
 
@@ -99,7 +95,7 @@ Player::~Player()
 	delete walk;
 }
 
-void Player::changePlayerState(const States state)
+void Player::loadState(const States state)
 {
 	this->state = state;
 
@@ -140,7 +136,7 @@ void Player::changePlayerState(const States state)
 		character.shadow.setFillColor(sf::Color(0, 0, 0, 110));
 
 		walk->updateWalkCycle(Walk::None, &characterAniClock);
-		Game::camera->updatePosition(sf::Vector2f(x, y));
+		Game::camera->updatePosition(pos);
 
 		break;
 
@@ -240,6 +236,8 @@ in a direction that the player chooses.
 */
 void Player::updatePosition(const float elapsedTime)
 {
+	lastPos = pos;
+
 	// LOCAL VARIABLES
 	bool positionUpdated = true;
 	Walk::WalkingDirection dir = Walk::None;
@@ -279,22 +277,29 @@ void Player::updatePosition(const float elapsedTime)
 	walk->updateWalkCycle(dir, &characterAniClock);
 
 	// Create a bounding box to check for collision
-	sf::IntRect bb((int)(x - (WIDTH * 0.5f) + offSetX), (int)(y - offSetYDir + offSetY), WIDTH, HEIGHT);
+	sf::IntRect bb((int)(pos.x - (WIDTH * 0.5f) + offSetX), (int)(pos.y - offSetYDir + offSetY), WIDTH, HEIGHT);
 
 	// May seem unintuitive to place y first then x. Think of it as y = rows and x = columns
 	if (positionUpdated && pb::collisionDetected(bb))
 	{
+		velocity = sf::Vector2f(0, 0);
 		walk->updateWalkCycle(Walk::None, &characterAniClock);
 		return;
 	}
 
 	// Update positions
-	x += offSetX;
-	y += offSetY;
+	velocity = sf::Vector2f(offSetX, offSetY);
+	pos += velocity;
+}
+
+void Player::renderPosition(double alpha)
+{
+	// Predict the players next position
+	sf::Vector2f posInterpolation = sf::Vector2f(float(pos.x * alpha + lastPos.x * (1.f - alpha)), float(pos.y * alpha + lastPos.y * (1.f - alpha)));
 
 	// Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
-	character.setPosition(x, y);
-	Game::camera->updatePosition(sf::Vector2f(x, y));
+	character.setPosition((sf::Vector2i)posInterpolation);
+	Game::camera->updatePosition(sf::Vector2f((sf::Vector2i)posInterpolation));
 }
 
 /*
@@ -306,11 +311,12 @@ This updates the players position in the game world.
 */
 void Player::setPosition(const sf::Vector2f coords)
 {
-	x = coords.x;
-	y = coords.y;
+	pos = coords;
+	lastPos = coords;
 
-	character.setPosition(x, y);
-	
+	// Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
+	character.setPosition((sf::Vector2i)pos);
+
 	walk->updateWalkCycle(Walk::None, &characterAniClock);
 }
 
@@ -323,7 +329,7 @@ This method returns the players bounding box so that the calling method has info
 */
 const sf::IntRect Player::getRect()
 {
-	return sf::IntRect((int)(x - (WIDTH * 0.5f)), (int)y, WIDTH, HEIGHT);
+	return sf::IntRect((int)(pos.x - (WIDTH * 0.5f)), (int)pos.y, WIDTH, HEIGHT);
 }
 
 bool Player::collisionDetected(const sf::IntRect& rect)

@@ -10,6 +10,9 @@ Game::Game(const std::string versionNumber)
 	// Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	desktop = sf::VideoMode::getDesktopMode();
 
+	// Set version number
+	this->versionNumber = versionNumber;
+
 	// Set up window properties
 	window = new sf::RenderWindow(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR " + versionNumber, sf::Style::Fullscreen);
 	window->setVerticalSyncEnabled(verticalSyncEnabled);
@@ -20,7 +23,7 @@ Game::Game(const std::string versionNumber)
 	camera = new pb::Camera(desktop.width, desktop.height, 0.5f);
 
 	// Intialize a game clock with some default values
-	gameClock = new pb::In_Game_Clock(2, 8, 0, 24, 8, 8, 4, 4);
+	gameClock = new pb::In_Game_Clock(10, 8, 0, 24, 8, 8, 4, 4);
 
 	// Initialize graphic manager
 	graphicManager = new pb::Graphic_Manager(*gameClock);
@@ -30,13 +33,14 @@ Game::Game(const std::string versionNumber)
 
 	// Initialize a player object
 	player = new Player();
+	player->setPosition(sf::Vector2f(6 * 32, 6 * 32)); // Default player position
 }
 
 Game::Game(std::string versionNumber, int argc, char* argv[]) : Game(versionNumber)
 {
 	// Local variables
 	float x = 0, y = 0;
-	
+
 	if (argc == 4)
 	{
 		currentMap = argv[1];
@@ -67,9 +71,6 @@ void Game::initialize()
 	map = new Map(currentMap);
 
 	graphicManager->updateBufferSize(map->getMapSize()); // Update buffers used to draw shaders
-
-	// Default player position
-	player->setPosition(sf::Vector2f(6 * 32, 6 * 32));
 }
 
 void Game::processEvents()
@@ -78,74 +79,105 @@ void Game::processEvents()
 	sf::Event event;
 	while (window->pollEvent(event))
 	{
-		if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+		switch (event.type)
+		{
+		case sf::Event::Closed:
 			window->close();
-		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) //Pause the game if the spacebar is pressed
-		{
-			if (state == Play || state == Battle)
+
+			break;
+
+		// Keyboard key is pressed
+		case sf::Event::KeyPressed:
+			if (event.key.code == sf::Keyboard::Escape)
+				window->close();
+			else if (event.key.code == sf::Keyboard::Space) //Pause the game if the spacebar is pressed
 			{
-				state = Pause;
-				graphicManager->enableDayShift(false);
+				if (state == Play || state == Battle)
+				{
+					state = Pause;
+					graphicManager->enableDayShift(false);
+				}
+				else
+				{
+					state = returnState;
+
+					if (returnState != Battle)
+						graphicManager->enableDayShift(true);
+				}
 			}
-			else
+			else if (event.key.code == sf::Keyboard::Tab)
+				map->displayCollsionLayer();
+			else if (event.key.code == sf::Keyboard::G)
+				map->displayGridLayer();
+			else if (event.key.code == sf::Keyboard::T)
+				map->displayTransitionLayer();
+			//Resize window if the F11 key is pressed
+			else if (event.key.code == sf::Keyboard::F11)
 			{
-				state = returnState;
+				window->close(); //Close the current window
 
-				if (returnState != Battle)
-					graphicManager->enableDayShift(true);
+				//Create a window in Windowed mode
+				if (windowState == Fullscreen)
+				{
+					window->create(sf::VideoMode(desktop.width - (desktop.width / 4), desktop.height - (desktop.height / 4), desktop.bitsPerPixel), "Project JR " + versionNumber, sf::Style::Titlebar);
+					windowState = Windowed;
+				}
+				else //Create a window in fullscreen mode
+				{
+					window->create(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR " + versionNumber, sf::Style::Fullscreen);
+					windowState = Fullscreen;
+				}
+
+				if (verticalSyncEnabled)
+				{
+					window->setVerticalSyncEnabled(verticalSyncEnabled);
+					window->setFramerateLimit(0);
+				}
+				else
+					window->setFramerateLimit(60);
+
+				window->setMouseCursorVisible(false);
+				window->setKeyRepeatEnabled(false);
 			}
-		}
-		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Tab)
-			map->displayCollsionLayer();
-		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::G)
-			map->displayGridLayer();
-		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::T)
-			map->displayTransitionLayer();
-		//Resize window if the F11 key is pressed
-		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F11)
-		{
-			window->close(); //Close the current window
-
-			//Create a window in Windowed mode
-			if (windowState == Fullscreen)
+			else if (event.key.code == sf::Keyboard::B)
 			{
-				window->create(sf::VideoMode(desktop.width - (desktop.width / 4), desktop.height - (desktop.height / 4), desktop.bitsPerPixel), "Project JR " + versionNumber, sf::Style::Titlebar);
-				windowState = Windowed;
+				if (state == Play)
+					returnState = InitiateBattle;
+				else
+					returnState = InitiateOverworld;
+
+				graphicManager->fadeOut(sf::Color::Black, 0.02f, 15);
+				state = Fading;
 			}
-			else //Create a window in fullscreen mode
+			else if (event.key.code == sf::Keyboard::V)
 			{
-				window->create(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR " + versionNumber, sf::Style::Fullscreen);
-				windowState = Fullscreen;
+				verticalSyncEnabled = !verticalSyncEnabled;
+				window->setVerticalSyncEnabled(verticalSyncEnabled);
+					
+				if (!verticalSyncEnabled)
+					window->setFramerateLimit(30); // DEBUG
+				else
+					window->setFramerateLimit(0);
 			}
 
-			window->setVerticalSyncEnabled(true);
-		}
-		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::B)
-		{
-			if (state == Play)
-				returnState = InitiateBattle;
-			else
-				returnState = InitiateOverworld;
+			// If in a battle, store the last key pressed
+			if (state == Battle)
+				lastKeyPressed = event;
 
-			graphicManager->fadeOut(sf::Color::Black, 0.020f);
-			state = Fading;
-		}
-		else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::V)
-		{
-			verticalSyncEnabled = !verticalSyncEnabled;
+			break;
 
-			window->setVerticalSyncEnabled(verticalSyncEnabled);
-		}
 		//If the window loses focus, pause the game
-		else if (event.type == sf::Event::LostFocus)
+		case sf::Event::LostFocus:
 			state = Pause;
+
+			break;
+
 		//When the window regains focus, resume the game
-		else if (event.type == sf::Event::GainedFocus)
+		case sf::Event::GainedFocus:
 			state = returnState;
 
-		//Store the last key pressed if in the battle state
-		if (state == Battle && event.type == sf::Event::KeyPressed)
-			lastKeyPressed = event;
+			break;
+		}
 	}
 }
 
@@ -157,16 +189,13 @@ void Game::update()
 	case Play:
 	{
 		//Update positions
-		player->updatePosition(elapsedTime);
+		player->updatePosition(dt);
 		gameClock->updateClock();
-
-		//Draw all graphics
-		map->updateDrawList(player, true);
 
 		//Check to see if a map transition is needed
 		if (map->transitioning(player))
 		{
-			graphicManager->fadeOut(sf::Color::Black, 0.020f); // Start a fade out
+			graphicManager->fadeOut(sf::Color::Black, 0.02f, 15); // Start a fade out
 			returnState = Transition;
 			state = Fading;
 		}
@@ -175,9 +204,7 @@ void Game::update()
 	}
 	case Battle:
 	{
-		battle->startTurn(lastKeyPressed, elapsedTime);
-
-		battle->updateDrawList(true);
+		battle->startTurn(lastKeyPressed, dt);
 
 		lastKeyPressed.key.code = sf::Keyboard::Unknown;
 
@@ -185,12 +212,6 @@ void Game::update()
 	}
 	case Pause:
 	{
-		//Draw all graphics
-		if (returnState == Play)
-			map->updateDrawList(player, false);
-		else
-			battle->updateDrawList(false);
-
 		// Pause the day shift and dim the screen
 		graphicManager->enableDayShift(false);
 		graphicManager->dimScreen(sf::Color::Black, 130);
@@ -199,12 +220,17 @@ void Game::update()
 	}
 	case Transition:
 	{
+		graphicManager->clearTextureList();
+		audioManager->clearSoundList();
+		player->loadState(Player::World);
+
 		currentMap = map->moveToMap(player); //Transition to the next map
+		graphicManager->updateBufferSize(map->getMapSize()); // Update buffers used to draw shaders
 
 		state = Fading;
 		returnState = Play; // Resume game after loading has finished
 
-		graphicManager->fadeIn(sf::Color::Black, false); // Fade back in after the transition finished
+		graphicManager->fadeIn(sf::Color::Black, 0.02f, 15); // Fade back in after the transition finished
 
 		break;
 	}
@@ -218,20 +244,21 @@ void Game::update()
 		delete camera;
 		camera = new pb::Camera(window->getSize().x, window->getSize().y, 0.5f, "screenshake.wav");
 
-		player->changePlayerState(Player::Battle); // change player state
+		player->loadState(Player::Battle); // change player state
 
 		// Intialize a list of players to send to the battle engine
 		Battle_Object* players[1];
 		players[0] = player;
 
 		// Instantiate a battle object
-		battle = new Battle_Engine(players, 1, camera->getCamera().getSize().x, camera->getCamera().getSize().y);
+		battle = new Battle_Engine(players, 1, camera->getSize().x, camera->getSize().y);
+		graphicManager->updateBufferSize(sf::Vector2i(window->getSize().x, window->getSize().y)); // Update buffers used to draw shaders
 
 		// Change game state
 		state = Fading;
 		returnState = Battle;
 
-		graphicManager->fadeIn(sf::Color::Black, 0.020f); // Start a Fade in
+		graphicManager->fadeIn(sf::Color::Black, 0.02f, 15); // Start a Fade in
 
 		break;
 	}
@@ -250,8 +277,9 @@ void Game::update()
 		camera = new pb::Camera(window->getSize().x, window->getSize().y, 0.5f);
 
 		map->loadMap(currentMap); // Load the map
+		graphicManager->updateBufferSize(map->getMapSize()); // Update buffers used to draw shaders
 
-		player->changePlayerState(Player::World); // change player state
+		player->loadState(Player::World); // change player state
 
 		graphicManager->enableDayShift(true); // re-enable day shift
 
@@ -259,58 +287,117 @@ void Game::update()
 		state = Fading;
 		returnState = Play;
 
-		graphicManager->fadeIn(sf::Color::Black, 0.020f); // Start a Fade in
+		graphicManager->fadeIn(sf::Color::Black, 0.02f, 15); // Start a Fade in
 
 		break;
 	}
 	case Fading:
 		// If fade has finished, return to the proper state
 		if (graphicManager->effectFinished())
-		{
 			state = returnState;
-			update(); // Update the game in the proper state
-			
-			break; // break out
-		}
 
-		// Add the games previous state to the draw list
-		if (returnState == InitiateBattle || returnState == Transition || returnState == Play)
-			map->updateDrawList(player, false);
-		else if (returnState == InitiateOverworld || returnState == Battle)
-			battle->updateDrawList(true);
+		graphicManager->updateEffect(*window);
 
 		break;
 	}
 }
 
-void Game::render()
+void Game::render(double alpha)
 {
-	//Clear the window
+	switch (state)
+	{
+	case Play:
+		player->renderPosition(alpha);
+
+		//Draw all graphics
+		map->updateDrawList(player, true);
+
+		break;
+
+	case Battle:
+		battle->updateDrawList(true, alpha);
+
+		break;
+
+	case Pause:
+		//Draw all graphics
+		if (returnState == Play)
+			map->updateDrawList(player, false);
+		else
+			battle->updateDrawList(false, alpha);
+
+		break;
+
+	case Fading:
+		// Add the games previous state to the draw list
+		if (returnState == InitiateBattle || returnState == Transition || returnState == Play)
+			map->updateDrawList(player, false);
+		else if (returnState == InitiateOverworld || returnState == Battle)
+			battle->updateDrawList(true, alpha);
+
+		break;
+	}
+
+	// Clear the window
 	window->clear();
 
 	camera->animateCamera(); // Apply any camera animations
-	window->setView(camera->getCamera()); //Update the windows view
+	window->setView(*camera); // Update the windows view
 	
 	graphicManager->draw(window, gameClock->getTime()); // Use day/night version of graphic manager draw
 
-	//Redisplay everything in the window
+	// Redisplay everything in the window
 	window->display();
 }
 
+/*
+runGame
+
+This is where the game loop starts. The game loop for this application is based off of
+Glenn Fiedler's game loop. It can be found here: http://gafferongames.com/game-physics/fix-your-timestep/
+
+*/
 void Game::runGame()
 {
 	initialize();
 
+	// Local Variables
+	sf::Clock clock;
+	
+	double currentTime = clock.getElapsedTime().asSeconds();
+	double accumulator = 0.0;
+	double frameTime;
+
+	double alpha;
+
 	// GAME LOOP
 	while (window->isOpen())
 	{
-		// Get elapsed time since last update
-		elapsedTime = clock.restart().asSeconds();
-
+		// Process events
 		processEvents();
 
-		update();
+		// Get time
+		sf::Time t = clock.getElapsedTime();
+		frameTime = t.asSeconds() - currentTime;
+		if (frameTime > 0.25)
+			frameTime = 0.25;
 
-		render();
+		currentTime = t.asSeconds();
+
+		accumulator += frameTime;
+		// Consume time to obtain a steady frame rate using a fixed timestep
+		while (accumulator >= dt)
+		{
+			// Update game logic
+			update();
+
+			accumulator -= dt;
+		}
+
+		// Calcuate alpha value used in interpolation calculations
+		alpha = accumulator / dt;
+
+		// Render the game
+		render(alpha);
 	}
 }

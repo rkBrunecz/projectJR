@@ -6,7 +6,8 @@ UI handles several user interface components. Primarily used to create additiona
 @version 1.0 10/15/2015
 */
 
-#include "UI.h"
+#include "MapEditor/UI.h"
+#include "PBE\System\System.h"
 
 sf::RenderWindow* UI::mainWindow = NULL;
 
@@ -19,8 +20,7 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 {
 	sf::RenderWindow window(sf::VideoMode(400, 225, 0), "New Map", sf::Style::Close);
 	sf::Font font;
-	if (!font.loadFromFile("res/Font/arial.ttf"))
-		exit(EXIT_FAILURE);
+	pb::System::load(&font, "arial.ttf");
 
 	//LOCAL VARIABLES
 	sf::Text Rows("Rows:", font, 20), Columns("Columns:", font, 20), FileName("File Name:", font, 20);
@@ -33,36 +33,36 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 
 	//Set the position for the Rows text. Set it to the center of the screen. Additionally, set the color of the text to white.
 	FileName.setPosition((window.getSize().x / 2) - (Rows.getLocalBounds().width / 2) - 160, (window.getSize().y / 2) - 75);
-	FileName.setColor(sf::Color::White);
+	FileName.setFillColor(sf::Color::White);
 	
 	Rows.setPosition((window.getSize().x / 2) - (Rows.getLocalBounds().width / 2) - 123, (window.getSize().y / 2) - 35);
-	Rows.setColor(sf::Color::White);
+	Rows.setFillColor(sf::Color::White);
 
 	Columns.setPosition((window.getSize().x / 2) - (Columns.getLocalBounds().width / 2) - 134, (window.getSize().y / 2));
-	Columns.setColor(sf::Color::White);
+	Columns.setFillColor(sf::Color::White);
 
 	//Set up properties of the enteredName text field
 	enteredName.setFont(font);
-	enteredName.setColor(sf::Color(0, 155, 0, 255));
+	enteredName.setFillColor(sf::Color(0, 155, 0, 255));
 	enteredName.setCharacterSize(20);
 	enteredName.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 73);
-	enteredName.setColor(sf::Color::Black);
+	enteredName.setFillColor(sf::Color::Black);
 
 	bar.setPosition((window.getSize().x / 2) - (textField3.getLocalBounds().width / 2) + 17, (window.getSize().y / 2) - 73);
 
 	//Set up properties of the enteredW text field
 	enteredW.setFont(font);
-	enteredW.setColor(sf::Color(0, 155, 0, 255));
+	enteredW.setFillColor(sf::Color(0, 155, 0, 255));
 	enteredW.setCharacterSize(20);
 	enteredW.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 33);
-	enteredW.setColor(sf::Color::Black);
+	enteredW.setFillColor(sf::Color::Black);
 
 	//Set up properties of the enteredH text field
 	enteredH.setFont(font);
-	enteredH.setColor(sf::Color(0, 0, 0, 255));
+	enteredH.setFillColor(sf::Color(0, 0, 0, 255));
 	enteredH.setCharacterSize(20);
 	enteredH.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) + 7);
-	enteredH.setColor(sf::Color::Black);
+	enteredH.setFillColor(sf::Color::Black);
 
 	//Set up properties of the text field
 	textField.setFillColor(sf::Color::White);
@@ -258,8 +258,7 @@ sf::Vector2i UI::getCoordinates(std::string windowName)
 {
 	sf::RenderWindow window(sf::VideoMode(400, 200, 0), windowName, sf::Style::Close);
 	sf::Font font;
-	if (!font.loadFromFile("res/Font/arial.ttf"))
-		exit(EXIT_FAILURE);
+	pb::System::load(&font, "arial.ttf");
 
 	//LOCAL VARIABLES
 	sf::Text Row("Row :", font, 20), Column("Column :", font, 20);
@@ -271,27 +270,27 @@ sf::Vector2i UI::getCoordinates(std::string windowName)
 	bool valuesEntered = false, enteringRow = true, enteringColumn = false;
 
 	Row.setPosition((window.getSize().x / 2) - (Row.getLocalBounds().width / 2) - 120, (window.getSize().y / 2) - 35);
-	Row.setColor(sf::Color::White);
+	Row.setFillColor(sf::Color::White);
 
 	Column.setPosition((window.getSize().x / 2) - (Column.getLocalBounds().width / 2) - 134, (window.getSize().y / 2));
-	Column.setColor(sf::Color::White);
+	Column.setFillColor(sf::Color::White);
 
 
 	//Set up properties of the enteredW text field
 	enteredRow.setFont(font);
-	enteredRow.setColor(sf::Color(0, 155, 0, 255));
+	enteredRow.setFillColor(sf::Color(0, 155, 0, 255));
 	enteredRow.setCharacterSize(20);
 	enteredRow.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 33);
-	enteredRow.setColor(sf::Color::Black);
+	enteredRow.setFillColor(sf::Color::Black);
 
 	bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17, (window.getSize().y / 2) - 33);
 
 	//Set up properties of the enteredH text field
 	enteredColumn.setFont(font);
-	enteredColumn.setColor(sf::Color(0, 0, 0, 255));
+	enteredColumn.setFillColor(sf::Color(0, 0, 0, 255));
 	enteredColumn.setCharacterSize(20);
 	enteredColumn.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) + 7);
-	enteredColumn.setColor(sf::Color::Black);
+	enteredColumn.setFillColor(sf::Color::Black);
 
 	//Set up properties of the text field
 	textField.setFillColor(sf::Color::White);

@@ -2,6 +2,7 @@
 #define Shader_H
 
 #include "SFML\Graphics.hpp"
+#include "PBE\System\System.h"
 
 namespace pb
 {
@@ -15,8 +16,10 @@ namespace pb
 
 		void load()
 		{
-			if (!sf::Shader::isAvailable() || !loadShader())
+			if (!sf::Shader::isAvailable())
 				exit(EXIT_FAILURE);
+
+			loadShader();
 		}
 
 		void update(const short alpha)
@@ -33,7 +36,7 @@ namespace pb
 
 	private:
 		// VIRTUAL METHODS
-		virtual bool loadShader() = 0;
+		virtual void loadShader() = 0;
 
 		// The various update methods
 		virtual void updateParameters(const short alpha) { };
@@ -51,21 +54,13 @@ namespace pb
 		{
 			pixelToAlpha.a = (sf::Uint8)alpha;
 
-			shader.setParameter("texture", sf::Shader::CurrentTexture);
-			shader.setParameter("color", pixelToAlpha);
+			shader.setUniform("texture", sf::Shader::CurrentTexture);
+			shader.setUniform("color", sf::Glsl::Vec4(pixelToAlpha));
 		}
 
-		bool loadShader()
+		void loadShader()
 		{
-			if (!shader.loadFromFile("res/Shaders/" + name + ".frag", sf::Shader::Fragment))
-			{
-				printf("\"res/Shaders/%s.frag\" could not be found!\n", name.c_str());
-				system("pause");
-
-				return false;
-			}
-
-			return true;
+			pb::System::load(&shader, name + ".frag", sf::Shader::Fragment);
 		}
 
 	private:

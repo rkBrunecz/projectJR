@@ -34,9 +34,7 @@ private:
 	void initialize();
 	void processEvents();
 	void update();
-	void render();
-
-	static void initializeStatics();
+	void render(double alpha);
 
 	// Private Constants
 	const enum Game_States //Dictates the state the game is in
@@ -77,8 +75,7 @@ private:
 	pb::In_Game_Clock *gameClock;
 
 	// Used to track the elapsed time between frames
-	sf::Clock clock; 
-	float elapsedTime; // In seconds
+	const float dt = 0.01f; // In seconds
 
 	// Tracks if V-Sync is available
 	bool verticalSyncEnabled = true;
