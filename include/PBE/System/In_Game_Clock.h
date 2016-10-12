@@ -40,6 +40,8 @@ namespace pb
 		void pause();
 		void resume();
 
+		void changeFactor(double timeScale);
+
 		const short getMorningHours();
 		const short getAfternoonHours();
 		const short getEveningHours();

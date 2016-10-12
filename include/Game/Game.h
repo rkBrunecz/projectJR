@@ -8,7 +8,7 @@
 #include "PBE\Audio\Audio_Manager.h"
 #include "PBE\System\In_Game_Clock.h"
 #include "Game\Battle\Battle_Engine.h"
-#include "Map.h"
+#include "Game\Map\Map.h"
 #include "Player.h"
 
 
@@ -59,6 +59,8 @@ private:
 	Game_States state = Play, returnState = Play;
 	Window_States windowState = Fullscreen; //Set window state to fullscreen
 
+	float zoomLevelWorld = 0.5f;
+
 	std::string versionNumber;
 	sf::RenderWindow *window;
 	sf::VideoMode desktop;
@@ -76,6 +78,7 @@ private:
 
 	// Used to track the elapsed time between frames
 	const float dt = 0.01f; // In seconds
+	sf::Time currentTime;
 
 	// Tracks if V-Sync is available
 	bool verticalSyncEnabled = true;

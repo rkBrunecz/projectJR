@@ -1,35 +1,35 @@
 #ifndef Editable_Map_H
 #define Editable_Map_H
 
-#include "Game\Map.h"
+#include "Game\Map\Map.h"
+#include "PBE\System\Camera.h"
+#include "PBE\Graphics\Graphic_Manager.h"
 
 class Editable_Map : public Map
 {
 public:
 	//PUBLIC FUNCTIONS
 	Editable_Map();
+	Editable_Map(pb::Graphic_Manager *tilePaneManager, const sf::Vector2i& tileSheetCoords);
 
-	void updateDrawList(sf::RenderWindow *window, sf::Vector2f mouseCoords);
+	void updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager *graphicManager, const pb::Camera& camera, const sf::Vector2f& mouseCoords, const sf::Time& currentTime);
+	void updateTileSheet(const sf::RenderWindow& window, pb::Graphic_Manager *tilePaneManager, const sf::Vector2f& mousePos, pb::In_Game_Clock& gameClock);
 
-	void loadMap(std::string mapName);
-	void initializeTileSheetCoords(sf::RenderWindow* window);
-	void createMap(unsigned int rows, unsigned int columns, std::string mapName, std::string sheetFileName);
-	void setTile(sf::Vector2i mouseCoords);
-	void addTileToPos();
+	void loadMap(std::string mapName, pb::Graphic_Manager* graphicManager, pb::Camera* camera);
+	void createMap(unsigned int rows, unsigned int columns, std::string mapName, std::string sheetFileName, pb::Graphic_Manager* graphicManager, pb::Camera* camera);
+	void setTile(const sf::Vector2i& mouseCoords);
+	void addTileToPos(sf::RenderWindow *window);
 	void saveMap();
-	void allowTileManipulation();
-	void forceUpdate();
-
-	void createGrid(); // Remove?
 
 	static unsigned short getTileSize();
 
 	bool isMapLoaded();
+	bool inMapBounds(const sf::Vector2f& mouseCoords);
 
 	std::string getMapName();
 
-	int getRows();
-	int getColumns();
+	unsigned int getRows();
+	unsigned int getColumns();
 
 private:
 	struct TransitionPoint
@@ -40,40 +40,46 @@ private:
 		std::vector<sf::Vector2i> transitionPoints;
 	};
 
+	struct Selected_Tile
+	{
+		std::string specialTile = "None";
+		int pos = -1;
+
+		void setSpecialTile(const std::string& tile)
+		{
+			pos = -1;
+			specialTile = tile;
+		}
+	};
+
 	// Private methods for initializing a map
-	void initialize(std::ifstream& mapFile);
+	void initialize(std::ifstream& mapFile, pb::Graphic_Manager* graphicManager, pb::Camera* camera);
 	void initializeTransitionPoints(std::ifstream& mapFile);
+	void initializeTileSheetCoords(const sf::Vector2i& tileSheetCoords);
 
-	// Private methods
-	void drawTileSheet(sf::RenderWindow *window, sf::Vector2f mousePos);
+	void addTileToMap(Tile_Data& tD, unsigned int row, unsigned int column);
 
-	void updateMap(sf::RenderTexture& texture, Tile**& layer);
 	void deleteTileFromPos(int row, int column);
 	void deleteTransitionPoint(int row, int column);
 	void rotateTile(int row, int column);
 	void mirrorTileAtPos(int row, int column);
-	void setTransitionPoint(int row, int column);
-
-	bool isSameTile(Tile**& layer, int row, int column);
-
-	int boolToString(bool b);
-
-	std::string tileToString(Tile**& layer, int row, int column);
+	void setTransitionPoint(int row, int column, sf::RenderWindow *window);
+	void testMap(unsigned int row, unsigned int column);
 
 	// Private constants
 	const unsigned int NUM_TILES_IN_SHEET = 200;
 
 	// Private variables
-	sf::Text currentRowColumn;
+	sf::Text currentRowColumn, currentTime;
 	sf::Font font;
 	sf::Sprite tileSheetSprite;
-	sf::RectangleShape mousePos, selectedTile, deleteTile, transitionTile, rotationTile, mirrorTile, deleteTransTile;
+	sf::RectangleShape mousePos, selectedTile, deleteTile, transitionTile, rotationTile, mirrorTile, deleteTransTile, testMapTile;
 
 	int numTransitionPoints = 0;
-	bool mapLoaded = false, tileRotatedRecently = false, tileMirroredRecently = false, tileDeletedRecently = false, transitionPlacedRecently = false, transitionRemovedRecently = false;
+	bool mapLoaded = false;
 	sf::Vector2i tileSheetCoords;
-	std::string tileData[200];
-	std::string currentTile = "No Tile", nameOfFile = "NULL", nameOfTileSheet = "NULL", nameOfSheetFile = "NULL"; //Options are tile data, "No Tile", "Rotate", "Transition", "Mirror", "DeleteTransition", and "Delete"
+	Selected_Tile currentTile;
+	std::string nameOfFile = "NULL", nameOfTileSheet = "NULL", nameOfSheetFile = "NULL"; 
 	std::vector<TransitionPoint> transitions; //Vector containing information about all transition points in a map
 
 };

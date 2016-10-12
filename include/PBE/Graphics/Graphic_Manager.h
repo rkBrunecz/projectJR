@@ -30,7 +30,6 @@ namespace pb
 
 		const sf::Texture *addTexture(std::string fileName);
 		void addToDrawList(sf::Drawable *d, bool isShadow);
-		void updateBufferSize(sf::Vector2i size);
 
 		// Basic draw method
 		void draw(sf::RenderWindow *window);

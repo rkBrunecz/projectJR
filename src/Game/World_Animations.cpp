@@ -76,30 +76,3 @@ void Walk::advanceAnimationFrame(int top)
 	else
 		currentLeft += frameAdvance;
 }
-
-/* WATER Class */
-
-Water::Water(int numFrames, int startingLoopFrame, int finalLoopFrame, int width, int height, float updateInterval) : Animation(numFrames, startingLoopFrame, finalLoopFrame, width, height, updateInterval)
-{
-	currentFrame = startingLoopFrame;
-}
-
-void Water::updateWaterCycle(sf::Clock* clock)
-{
-	if (clock->getElapsedTime().asSeconds() < updateInterval)
-		return;
-
-	clock->restart();
-
-	if (currentFrame == STARTING_LOOP_FRAME)
-		frameAdvance = 1;
-	else if (currentFrame == FINAL_LOOP_FRAME)
-		frameAdvance = -1;
-
-	currentFrame += frameAdvance;
-}
-
-void Water::updateAnimation(sf::Sprite* sprite, sf::RenderTexture* frames)
-{
-	sprite->setTexture(frames[currentFrame].getTexture());
-}

@@ -25,54 +25,54 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 	//LOCAL VARIABLES
 	sf::Text Rows("Rows:", font, 20), Columns("Columns:", font, 20), FileName("File Name:", font, 20);
 	sf::Text enteredW, enteredH, enteredName;
-	sf::RectangleShape textField(sf::Vector2f(window.getSize().x * 0.5, 25)), textField2(sf::Vector2f(window.getSize().x * 0.5, 25)), textField3(sf::Vector2f(window.getSize().x * 0.5, 25));
+	sf::RectangleShape textField(sf::Vector2f(window.getSize().x * 0.5f, 25)), textField2(sf::Vector2f(window.getSize().x * 0.5f, 25)), textField3(sf::Vector2f(window.getSize().x * 0.5f, 25));
 	sf::RectangleShape bar(sf::Vector2f(3, 20));
 	sf::Clock barBlink;
 	std::string rows, columns, fileName;
 	bool valuesEntered = false, enteringRows = false, enteringColumns = false, enteringFileName = true;
 
 	//Set the position for the Rows text. Set it to the center of the screen. Additionally, set the color of the text to white.
-	FileName.setPosition((window.getSize().x / 2) - (Rows.getLocalBounds().width / 2) - 160, (window.getSize().y / 2) - 75);
+	FileName.setPosition(float((window.getSize().x / 2) - (Rows.getLocalBounds().width / 2) - 160), float((window.getSize().y / 2) - 75));
 	FileName.setFillColor(sf::Color::White);
 	
-	Rows.setPosition((window.getSize().x / 2) - (Rows.getLocalBounds().width / 2) - 123, (window.getSize().y / 2) - 35);
+	Rows.setPosition(float((window.getSize().x / 2) - (Rows.getLocalBounds().width / 2) - 123), float((window.getSize().y / 2) - 35));
 	Rows.setFillColor(sf::Color::White);
 
-	Columns.setPosition((window.getSize().x / 2) - (Columns.getLocalBounds().width / 2) - 134, (window.getSize().y / 2));
+	Columns.setPosition(float((window.getSize().x / 2) - (Columns.getLocalBounds().width / 2) - 134), float((window.getSize().y / 2)));
 	Columns.setFillColor(sf::Color::White);
 
 	//Set up properties of the enteredName text field
 	enteredName.setFont(font);
 	enteredName.setFillColor(sf::Color(0, 155, 0, 255));
 	enteredName.setCharacterSize(20);
-	enteredName.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 73);
+	enteredName.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) - 73));
 	enteredName.setFillColor(sf::Color::Black);
 
-	bar.setPosition((window.getSize().x / 2) - (textField3.getLocalBounds().width / 2) + 17, (window.getSize().y / 2) - 73);
+	bar.setPosition(float((window.getSize().x / 2) - (textField3.getLocalBounds().width / 2) + 17), float((window.getSize().y / 2) - 73));
 
 	//Set up properties of the enteredW text field
 	enteredW.setFont(font);
 	enteredW.setFillColor(sf::Color(0, 155, 0, 255));
 	enteredW.setCharacterSize(20);
-	enteredW.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 33);
+	enteredW.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) - 33));
 	enteredW.setFillColor(sf::Color::Black);
 
 	//Set up properties of the enteredH text field
 	enteredH.setFont(font);
 	enteredH.setFillColor(sf::Color(0, 0, 0, 255));
 	enteredH.setCharacterSize(20);
-	enteredH.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) + 7);
+	enteredH.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) + 7));
 	enteredH.setFillColor(sf::Color::Black);
 
 	//Set up properties of the text field
 	textField.setFillColor(sf::Color::White);
-	textField.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 35);
+	textField.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) - 35));
 
 	textField2.setFillColor(sf::Color::White);
-	textField2.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) + 5);
+	textField2.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) + 5));
 
 	textField3.setFillColor(sf::Color::White);
-	textField3.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 75);
+	textField3.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) - 75));
 
 	while (!valuesEntered)
 	{
@@ -189,11 +189,11 @@ sf::Vector2i UI::getNewMapParams(std::string* str)
 			}
 
 		if (enteringFileName)
-			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (fileName.length() * 11), (window.getSize().y / 2) - 73);
+			bar.setPosition(textField3.getPosition().x + enteredName.getLocalBounds().width, textField3.getPosition().y + (bar.getSize().y * 0.125f));
 		else if (enteringRows)
-			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (rows.length() * 10), (window.getSize().y / 2) - 33);
+			bar.setPosition(textField.getPosition().x + enteredW.getLocalBounds().width, textField.getPosition().y + (bar.getSize().y * 0.125f));
 		else if (enteringColumns)
-			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (columns.length() * 10), (window.getSize().y / 2) + 7);
+			bar.setPosition(textField2.getPosition().x + enteredH.getLocalBounds().width, textField2.getPosition().y + (bar.getSize().y * 0.125f));
 
 		window.draw(Rows);
 		window.draw(Columns);
@@ -263,16 +263,16 @@ sf::Vector2i UI::getCoordinates(std::string windowName)
 	//LOCAL VARIABLES
 	sf::Text Row("Row :", font, 20), Column("Column :", font, 20);
 	sf::Text enteredRow, enteredColumn;
-	sf::RectangleShape textField(sf::Vector2f(window.getSize().x * 0.5, 25)), textField2(sf::Vector2f(window.getSize().x * 0.5, 25));
+	sf::RectangleShape textField(sf::Vector2f(window.getSize().x * 0.5f, 25)), textField2(sf::Vector2f(window.getSize().x * 0.5f, 25));
 	sf::RectangleShape bar(sf::Vector2f(3, 20));
 	sf::Clock barBlink;
 	std::string row, column;
 	bool valuesEntered = false, enteringRow = true, enteringColumn = false;
 
-	Row.setPosition((window.getSize().x / 2) - (Row.getLocalBounds().width / 2) - 120, (window.getSize().y / 2) - 35);
+	Row.setPosition(float( (window.getSize().x / 2) - (Row.getLocalBounds().width / 2) - 120), float((window.getSize().y / 2) - 35));
 	Row.setFillColor(sf::Color::White);
 
-	Column.setPosition((window.getSize().x / 2) - (Column.getLocalBounds().width / 2) - 134, (window.getSize().y / 2));
+	Column.setPosition(float((window.getSize().x / 2) - (Column.getLocalBounds().width / 2) - 134), float((window.getSize().y / 2)));
 	Column.setFillColor(sf::Color::White);
 
 
@@ -280,24 +280,24 @@ sf::Vector2i UI::getCoordinates(std::string windowName)
 	enteredRow.setFont(font);
 	enteredRow.setFillColor(sf::Color(0, 155, 0, 255));
 	enteredRow.setCharacterSize(20);
-	enteredRow.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 33);
+	enteredRow.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) - 33));
 	enteredRow.setFillColor(sf::Color::Black);
 
-	bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17, (window.getSize().y / 2) - 33);
+	bar.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17), float((window.getSize().y / 2) - 33));
 
 	//Set up properties of the enteredH text field
 	enteredColumn.setFont(font);
 	enteredColumn.setFillColor(sf::Color(0, 0, 0, 255));
 	enteredColumn.setCharacterSize(20);
-	enteredColumn.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) + 7);
+	enteredColumn.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) + 7));
 	enteredColumn.setFillColor(sf::Color::Black);
 
 	//Set up properties of the text field
 	textField.setFillColor(sf::Color::White);
-	textField.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) - 35);
+	textField.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) - 35));
 
 	textField2.setFillColor(sf::Color::White);
-	textField2.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15, (window.getSize().y / 2) + 5);
+	textField2.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 15), float((window.getSize().y / 2) + 5));
 
 	while (!valuesEntered)
 	{
@@ -393,9 +393,9 @@ sf::Vector2i UI::getCoordinates(std::string windowName)
 		}
 
 		if (enteringRow)
-			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (row.length() * 10), (window.getSize().y / 2) - 33);
+			bar.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (row.length() * 10)), float((window.getSize().y / 2) - 33));
 		else if (enteringColumn)
-			bar.setPosition((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (column.length() * 10), (window.getSize().y / 2) + 7);
+			bar.setPosition(float((window.getSize().x / 2) - (textField.getLocalBounds().width / 2) + 17 + (column.length() * 10)), float((window.getSize().y / 2) + 7));
 
 		window.draw(Row);
 		window.draw(Column);

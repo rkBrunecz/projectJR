@@ -56,6 +56,11 @@ namespace pb
 		}
 	}
 
+	void In_Game_Clock::changeFactor(double timeScale)
+	{
+		this->timeScale = 1 / timeScale;
+	}
+
 	void In_Game_Clock::pause()
 	{
 		delete clock;

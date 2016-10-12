@@ -7,42 +7,42 @@
 #include "PBE\System\Camera.h"
 #include "PBE\Graphics\Graphic_Manager.h"
 #include "PBE\System\In_Game_Clock.h"
+#include "Menu_Bar.h"
 #include "Editable_Map.h"
 #include "UI.h"
 
 class Map_Editor : public sf::NonCopyable
 {
 public:
-	// Static variables
-	static pb::Camera *camera;
-	static pb::Graphic_Manager *graphicManager, *tilePaneManager;
-
 	// Constructor
-	Map_Editor(const std::string versionNum);
+	Map_Editor(const std::string& versionNum);
+	Map_Editor(const std::string& title, const std::string& mapToLoad);
 
 	// Destructor
 	~Map_Editor();
 
 	void runEditor();
 
+	sf::Vector2i runForResult();
+
 private:
-	void processEvents();
-	void update();
-	void render();
-
-	bool displayCursor();
-	void moveCamera();
-
-	// Private constants
-	const enum Editor_States 
+	// Public constants
+	const enum Editor_States
 	{
 		Build,
 		New,
 		Load,
-		Save,
-		TestMap,
-		ForceUpdate
+		Save
 	};
+
+	void processEvents();
+	void update();
+	void render();
+
+	void parseMenuBarString(const std::string& s);
+
+	bool displayCursor();
+	void moveCamera();
 
 	// Private variables
 	float zoomFactor = 1;
@@ -58,7 +58,16 @@ private:
 
 	Editable_Map *map = 0;
 
-	sf::RectangleShape menuBar, tilePane;
+	sf::Clock clock;
+	sf::Time currentTime;
+
+	Menu_Bar *menuBar;
+	sf::RectangleShape tilePane;
+
+	pb::Camera *camera = 0;
+	pb::Graphic_Manager *graphicManager = 0, *tilePaneManager = 0;
+
+	bool leftMouseBtnClicked = false;
 };
 
 #endif

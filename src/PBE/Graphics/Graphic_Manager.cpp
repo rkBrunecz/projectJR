@@ -74,12 +74,6 @@ namespace pb
 		drawList.push_back(new Graphic_Obj(d, hasShadow));
 	}
 
-	void Graphic_Manager::updateBufferSize(sf::Vector2i size)
-	{
-		if (buffer != 0)
-			buffer->create(size.x, size.y);
-	}
-
 	void Graphic_Manager::draw(sf::RenderWindow* window)
 	{
 		for (unsigned int i = 0; i < drawList.size(); i++)
@@ -107,7 +101,14 @@ namespace pb
 	{
 		// Local variables
 		sf::Color dayColor = dayShift->updateDayTime(t);
+
+		if (buffer->getSize().x != window->getSize().x || buffer->getSize().y != window->getSize().y)
+			buffer->create(window->getSize().x, window->getSize().y);
 		
+		// Set views
+		buffer->setView(window->getView());
+		window->setView(window->getDefaultView());
+
 		buffer->clear(); // clear render texture for drawing
 
 		for (unsigned int i = 0; i < drawList.size(); i++)

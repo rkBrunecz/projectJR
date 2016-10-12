@@ -7,47 +7,83 @@ This file is the driving force behind the map editor. It directs user input in v
 */
 
 // Headers
-//#include "vld.h" // Check for memory leaks. Comment out if not being used
 #include "MapEditor/Map_Editor.h"
 
-// Global variables
-pb::Camera *Map_Editor::camera;
-pb::Graphic_Manager *Map_Editor::graphicManager, *Map_Editor::tilePaneManager;
-
-Map_Editor::Map_Editor(const std::string versionNum)
+Map_Editor::Map_Editor(const std::string& versionNum)
 {
-	//Create a fullscreen window with same pixel depth (a.k.a bit depth/color depth) as the desktop
 	desktop = sf::VideoMode::getDesktopMode();
-	window = new sf::RenderWindow(sf::VideoMode(desktop.width - (desktop.width * 0.1), desktop.height - (desktop.height * 0.25), desktop.bitsPerPixel), "Map Editor " + versionNum, sf::Style::Default);
+	window = new sf::RenderWindow(sf::VideoMode(unsigned int(desktop.width - (desktop.width * 0.1f)), unsigned int(desktop.height - (desktop.height * 0.25f)), desktop.bitsPerPixel), "Map Editor " + versionNum, sf::Style::Default);
 	window->setVerticalSyncEnabled(true);
 
 	//Set up camera properties
-	camera = new pb::Camera(desktop.width - 384, desktop.height - (desktop.height * 0.25), zoomFactor);
-	camera->setCenter(desktop.width / 2, desktop.height / 2);
-	camera->setViewport(sf::FloatRect(0, 0.03f, 0.85f, 0.97f));
+	camera = new pb::Camera(int(window->getSize().x - (window->getSize().x * 0.20f)), int(desktop.height - (desktop.height * 0.25f)), zoomFactor);
+	camera->setCenter(float(desktop.width / 2), float(desktop.height / 2));
+	camera->setViewport(sf::FloatRect(0, 0.03f, (window->getSize().x - (window->getSize().x * 0.20f)) / window->getSize().x, 0.97f));
 
 	gameClock = new pb::In_Game_Clock(2, 8, 0, 24, 8, 8, 4, 4);
 
 	graphicManager = new pb::Graphic_Manager(*gameClock);
 	tilePaneManager = new pb::Graphic_Manager();
 
-	tilePaneManager->updateBufferSize(sf::Vector2i(1920, 1080));
-
-	//Set up a menu bar
-	menuBar.setPosition(0, 0);
-	menuBar.setSize(sf::Vector2f(desktop.width - (desktop.width * 0.1), (desktop.height - (desktop.height * 0.25)) * 0.03));
-	menuBar.setFillColor(sf::Color(238, 233, 233, 255));
-	menuBar.setOutlineColor(sf::Color(0, 0, 0, 255));
-	menuBar.setOutlineThickness(1);
+	// Set up menu menuBar
+	menuBar = new Menu_Bar(sf::Vector2f(desktop.width - (desktop.width * 0.1f), (desktop.height - (desktop.height * 0.25f)) * 0.03f), sf::Vector2f(0, 0), sf::Color(238, 233, 233, 255), sf::Color(0, 0, 0, 255), 1);
+	menuBar->addDropDownItem("File", "New");
+	menuBar->addDropDownItem("File", "Save");
+	menuBar->addDropDownItem("File", "Load");
+	menuBar->addDropDownItem("View", "Display Grid");
+	menuBar->addDropDownItem("View", "Display Collisions");
+	menuBar->addDropDownItem("View", "Display Transitions");
+	menuBar->addDropDownItem("Time", "1x");
+	menuBar->addDropDownItem("Time", "5x");
+	menuBar->addDropDownItem("Time", "10x");
+	menuBar->addDropDownItem("Time", "20x");
+	menuBar->addDropDownItem("Time", "40x");
+	menuBar->addDropDownItem("Time", "Real Time");
 
 	//Set up a tile pane
-	tilePane.setPosition(window->getSize().x - 384, menuBar.getSize().y);
-	tilePane.setSize(sf::Vector2f(384, window->getSize().y - menuBar.getSize().y));
+	tilePane.setPosition(window->getSize().x - (window->getSize().x * 0.20f), menuBar->getSize().y);
+	tilePane.setSize(sf::Vector2f((window->getSize().x * 0.20f), window->getSize().y - menuBar->getSize().y));
 	tilePane.setFillColor(sf::Color(238, 233, 233, 255));
 	tilePane.setOutlineColor(sf::Color(0, 0, 0, 255));
 	tilePane.setOutlineThickness(1);
 
 	UI::intializeMainWindow(window);
+}
+
+Map_Editor::Map_Editor(const std::string& title, const std::string& mapToLoad)
+{
+	desktop = sf::VideoMode::getDesktopMode();
+	window = new sf::RenderWindow(sf::VideoMode(unsigned int(desktop.width - (desktop.width * 0.1f)), unsigned int(desktop.height - (desktop.height * 0.25f)), desktop.bitsPerPixel), title, sf::Style::Close);
+	window->setVerticalSyncEnabled(true);
+
+	//Set up camera properties
+	camera = new pb::Camera(window->getSize().x, window->getSize().y, zoomFactor);
+	camera->setCenter(float(desktop.width / 2), float(desktop.height / 2));
+	camera->setViewport(sf::FloatRect(0, 0.03f, 1.f, 0.97f));
+
+	gameClock = new pb::In_Game_Clock(2, 8, 0, 24, 8, 8, 4, 4);
+
+	graphicManager = new pb::Graphic_Manager(*gameClock);
+	tilePaneManager = new pb::Graphic_Manager();
+
+	map = new Editable_Map();
+	map->loadMap(mapToLoad, graphicManager, camera);
+
+	// Set up menu menuBar
+	menuBar = new Menu_Bar(sf::Vector2f(desktop.width - (desktop.width * 0.1f), (desktop.height - (desktop.height * 0.25f)) * 0.03f), sf::Vector2f(0, 0), sf::Color(238, 233, 233, 255), sf::Color(0, 0, 0, 255), 1);
+	menuBar->addDropDownItem("View", "Display Grid");
+	menuBar->addDropDownItem("View", "Display Collisions");
+	menuBar->addDropDownItem("View", "Display Transitions");
+
+	camera->setCenter(float(window->getSize().x / 2), float(window->getSize().y / 2));
+
+	sf::Vector2i moveCamera = sf::Vector2i(0, 0);
+	if (map->getColumns() * Editable_Map::getTileSize() < window->getSize().x)
+		moveCamera.x = (window->getSize().x / 2) - (map->getMapSize().x / 2);
+	if (map->getRows() * Editable_Map::getTileSize() < window->getSize().y)
+		moveCamera.y = (window->getSize().y / 2) - ((map->getColumns() * Editable_Map::getTileSize()) / 2);
+
+	camera->move((float)-moveCamera.x, (float)-moveCamera.y);
 }
 
 Map_Editor::~Map_Editor()
@@ -59,13 +95,19 @@ Map_Editor::~Map_Editor()
 
 	delete map;
 	delete gameClock;
+	delete menuBar;
 }
 
 bool Map_Editor::displayCursor()
 {
 	sf::Vector2i mouseCoords = sf::Mouse::getPosition(*window);
 
-	return (mouseCoords.x <= window->getSize().x - 384 && mouseCoords.y >= window->getSize().y * window->getView().getViewport().top) ? false : true;
+	if (menuBar->isContainerShowing())
+		return true;
+	else if (mouseCoords.x <= window->getSize().x - tilePane.getSize().x && mouseCoords.y >= window->getSize().y * window->getView().getViewport().top)
+		return false;
+
+	return true;
 }
 
 void Map_Editor::moveCamera()
@@ -78,15 +120,49 @@ void Map_Editor::moveCamera()
 	if (camera->getSize().x <= map->getMapSize().x && camera->getSize().y <= map->getMapSize().y)
 		pos = 0.1f * sf::Vector2f(sf::Mouse::getPosition(*window) - rightButtonPos) + camera->getCenter();
 	else if (camera->getSize().x >= map->getMapSize().x)
-		pos = 0.1f * sf::Vector2f(0, (sf::Mouse::getPosition(*window) - rightButtonPos).y) + sf::Vector2f(0, camera->getCenter().y);
+		pos = 0.1f * sf::Vector2f(0.f, (float)(sf::Mouse::getPosition(*window) - rightButtonPos).y) + sf::Vector2f(0.f, camera->getCenter().y);
 	else if (camera->getSize().y >= map->getMapSize().y)
-		pos = 0.1f * sf::Vector2f((sf::Mouse::getPosition(*window) - rightButtonPos).x, 0) + sf::Vector2f(camera->getCenter().x, 0);
+		pos = 0.1f * sf::Vector2f((float)(sf::Mouse::getPosition(*window) - rightButtonPos).x, 0.f) + sf::Vector2f(camera->getCenter().x, 0.f);
 
 	camera->updatePosition(pos);
 }
 
+void Map_Editor::parseMenuBarString(const std::string& s)
+{
+	if (s.compare("Display Grid") == 0 && map != 0)
+		map->displayGridLayer();
+	else if (s.compare("Display Collisions") == 0 && map != 0)
+		map->displayCollsionLayer();
+	else if (s.compare("Display Transitions") == 0 && map != 0)
+		map->displayTransitionLayer();
+	else if (s.compare("1x") == 0)
+		gameClock->changeFactor(1);
+	else if (s.compare("5x") == 0)
+		gameClock->changeFactor(5);
+	else if (s.compare("10x") == 0)
+		gameClock->changeFactor(10);
+	else if (s.compare("20x") == 0)
+		gameClock->changeFactor(20);
+	else if (s.compare("40x") == 0)
+		gameClock->changeFactor(40);
+	else if (s.compare("Real Time") == 0)
+		gameClock->changeFactor(1 / 60);
+	else if (s.compare("New") == 0)
+		state = New;
+	else if (s.compare("Save") == 0)
+		state = Save;
+	else if (s.compare("Load") == 0)
+		state = Load;
+	else
+		return;
+
+	menuBar->hideContainers();
+}
+
 void Map_Editor::processEvents()
 {
+	leftMouseBtnClicked = false;
+
 	sf::Event event;
 	while (window->pollEvent(event))
 	{
@@ -106,30 +182,32 @@ void Map_Editor::processEvents()
 				map->displayGridLayer();
 			else if (event.key.code == sf::Keyboard::T)
 				map->displayTransitionLayer();
-			else if (event.key.code == sf::Keyboard::L)
-				state = Load;
-			else if (event.key.code == sf::Keyboard::N)
-				state = New;
-			else if (event.key.code == sf::Keyboard::S)
-				state = Save;
-			else if (event.key.code == sf::Keyboard::U)
-				state = ForceUpdate;
-			else if (event.key.code == sf::Keyboard::R)
-				state = TestMap;
 			
 			break;
 
 		case sf::Event::MouseButtonPressed:
 			if (event.mouseButton.button == sf::Mouse::Right)
 				rightButtonPos = sf::Mouse::getPosition(*window);
-			
+			else if (event.mouseButton.button == sf::Mouse::Left)
+			{
+				std::string s = "Nothing";
+
+				if (menuBar != 0)
+					parseMenuBarString(s = menuBar->itemClicked(sf::Mouse::getPosition(*window)));
+				
+				if (s.compare("Nothing") == 0)
+					leftMouseBtnClicked = true;
+			}
+
 			break;
 
 		case sf::Event::MouseWheelScrolled:
 			if (zoomFactor - (0.05 *event.mouseWheelScroll.delta) > 0.2 && zoomFactor - (0.05 *event.mouseWheelScroll.delta) < 1)
 			{
-				camera->zoom(1 - 0.05f * event.mouseWheelScroll.delta);
-				zoomFactor -= (0.05 * event.mouseWheelScroll.delta);
+				camera->zoom(1.f - 0.05f * event.mouseWheelScroll.delta);
+				zoomFactor -= (0.05f * event.mouseWheelScroll.delta);
+
+				camera->moveCameraInBounds();
 			}
 			
 			break;
@@ -147,32 +225,35 @@ void Map_Editor::update()
 	switch (state)
 	{
 	case Build:
+		menuBar->update(sf::Mouse::getPosition(*window));
+
 		if (map != 0 && map->isMapLoaded())
 		{
 			window->setView(*camera);
 
 			gameClock->updateClock();
 
-			if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && sf::Mouse::getPosition().x < window->getSize().x - 382 && sf::Mouse::getPosition().y > 32)
+			if (!menuBar->isContainerShowing() && sf::Mouse::isButtonPressed(sf::Mouse::Right) && sf::Mouse::getPosition().x < window->getSize().x - tilePane.getSize().x && sf::Mouse::getPosition().y > menuBar->getSize().y)
 				moveCamera();
 			else
 				window->setMouseCursorVisible(displayCursor());
 
 			sf::Vector2f mouse_pos = window->mapPixelToCoords(sf::Mouse::getPosition(*window));
+
 			tilePaneManager->addToDrawList(&tilePane, false);
-			map->updateDrawList(window, mouse_pos);
+
+			map->updateDrawList(window, graphicManager, *camera, mouse_pos, currentTime);
+			map->updateTileSheet(*window, tilePaneManager, mouse_pos, *gameClock);
 
 			sf::Vector2i mousePos = sf::Mouse::getPosition(*window);
-			if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && mousePos.x < window->getSize().x - tilePane.getSize().x && mousePos.y > menuBar.getSize().y)
-				map->addTileToPos();
-			else if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+			if (leftMouseBtnClicked && mousePos.x < window->getSize().x - tilePane.getSize().x && mousePos.y > menuBar->getSize().y)
+				map->addTileToPos(window);
+			else if (leftMouseBtnClicked)
 				map->setTile(mousePos);
-			
-			if (!sf::Mouse::isButtonPressed(sf::Mouse::Left))
-				map->allowTileManipulation();
 		}
 
 		break;
+
 	case Load:
 	{
 		state = Build;
@@ -189,18 +270,16 @@ void Map_Editor::update()
 		map = 0;
 
 		// Create a new map
-		map = new Editable_Map();
-		map->initializeTileSheetCoords(window);
+		map = new Editable_Map(tilePaneManager, (sf::Vector2i)tilePane.getPosition());
 
-		map->loadMap(loadedMapName);
-		camera->setCenter(window->getSize().x / 2, window->getSize().y / 2);
-		graphicManager->updateBufferSize(map->getMapSize());
+		map->loadMap(loadedMapName, graphicManager, camera);
+		camera->setCenter(float(window->getSize().x / 2), float(window->getSize().y / 2));
 
-		sf::Vector2i moveCamera = sf::Vector2i(0, 0);
+		sf::Vector2f moveCamera = sf::Vector2f(0, 0);
 		if (map->getColumns() * Editable_Map::getTileSize() < window->getSize().x)
-			moveCamera.x = (window->getSize().x / 2) - tilePane.getSize().x;
+			moveCamera.x = float((window->getSize().x / 2) - (map->getMapSize().x / 2));
 		if (map->getRows() * Editable_Map::getTileSize() < window->getSize().y)
-			moveCamera.y = (window->getSize().y / 2) - ((map->getColumns() * Editable_Map::getTileSize()) / 2) - menuBar.getSize().y;
+			moveCamera.y = float((window->getSize().y / 2) - ((map->getColumns() * Editable_Map::getTileSize()) / 2) - menuBar->getSize().y);
 
 		camera->move(-moveCamera.x, -moveCamera.y);
 
@@ -211,14 +290,6 @@ void Map_Editor::update()
 
 		if (map->isMapLoaded())
 			map->saveMap();
-
-		break;
-
-	case ForceUpdate:
-		state = Build;
-
-		if (map->isMapLoaded())
-			map->forceUpdate();
 
 		break;
 
@@ -244,59 +315,32 @@ void Map_Editor::update()
 		map = 0;
 
 		// Create a new map
-		map = new Editable_Map();
-		map->initializeTileSheetCoords(window);
+		map = new Editable_Map(tilePaneManager, (sf::Vector2i)tilePane.getPosition());
 
 		sheetFileName = std::strstr(sheetFileName.c_str(), "res\\Maps\\jrs\\");
 		fileName = "res/Maps/" + fileName + ".jrm";
 
 		if (v != sf::Vector2i(-1, -1))
-			map->createMap(v.y, v.x, fileName, sheetFileName);
+			map->createMap(v.y, v.x, fileName, sheetFileName, graphicManager, camera);
 		else
 			break;
 
-		camera->setCenter(window->getSize().x / 2, window->getSize().y / 2);
-		graphicManager->updateBufferSize(map->getMapSize());
+		camera->setCenter(float(window->getSize().x / 2), float(window->getSize().y / 2));
 
-		sf::Vector2i moveCamera = sf::Vector2i(0, 0);
-		if (v.x * Editable_Map::getTileSize() < window->getSize().x)
-			moveCamera.x = (window->getSize().x / 2) - tilePane.getSize().x;
-		if (v.y * Editable_Map::getTileSize() < window->getSize().y)
-			moveCamera.y = (window->getSize().y / 2) - ((v.y * Editable_Map::getTileSize()) / 2) - menuBar.getSize().y;
+		sf::Vector2f moveCamera = sf::Vector2f(0, 0);
+		if ((unsigned int)v.x * Editable_Map::getTileSize() < window->getSize().x)
+			moveCamera.x = float((window->getSize().x / 2) - (map->getMapSize().x / 2));
+		if ((unsigned int)v.y * Editable_Map::getTileSize() < window->getSize().y)
+			moveCamera.y = float((window->getSize().y / 2) - ((v.y * Editable_Map::getTileSize()) / 2) - menuBar->getSize().y);
 
 		camera->move(-moveCamera.x, -moveCamera.y);
 
 		break;
 	}
-	case TestMap:
-	{
-		state = Build;
-
-		if (!map->isMapLoaded())
-			return;
-
-		sf::Vector2i getTestPos = UI::getCoordinates("Starting Coordinates");
-		if (getTestPos == sf::Vector2i(-1, -1))
-			return;
-
-		std::string mapName = map->getMapName();
-
-		std::string cmd = "ProjectJR.exe " + mapName + " " + std::to_string(getTestPos.y) + " " + std::to_string(getTestPos.x);
-		LPSTR cmdArgs = const_cast<char *>(cmd.c_str());
-
-		PROCESS_INFORMATION ProcessInfo; //This is what we get as an [out] parameter
-
-		STARTUPINFO StartupInfo; //This is an [in] parameter
-		ZeroMemory(&StartupInfo, sizeof(StartupInfo));
-		StartupInfo.cb = sizeof StartupInfo; //Only compulsory field
-
-		CreateProcess("ProjectJR.exe", cmdArgs, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo);
-
-		break;
-	}
 	}
 
-	tilePaneManager->addToDrawList(&menuBar, false);
+	if (menuBar != 0)
+		tilePaneManager->addToDrawList(menuBar, false);
 }
 
 void Map_Editor::render()
@@ -309,32 +353,74 @@ void Map_Editor::render()
 	graphicManager->draw(window, gameClock->getTime());
 
 	// Draw the tile pane
-	window->setView(window->getDefaultView());
-	tilePaneManager->draw(window);
+	if (tilePaneManager != 0)
+	{
+		window->setView(window->getDefaultView());
+		tilePaneManager->draw(window);
+	}
 
 	window->display();
 }
 
 void Map_Editor::runEditor()
 {
+	clock.restart();
+
 	while (window->isOpen())
 	{
-		window->setView(*camera);
+		currentTime = clock.getElapsedTime();
+
 		processEvents();
 
+		window->setView(*camera);
 		update();
 
 		render();
 	}
 }
 
-int main()
+sf::Vector2i Map_Editor::runForResult()
 {
-	// Local variables
-	std::string versionNum = "v.1.0a";
-	Map_Editor editor(versionNum);
+	sf::Vector2i returnCoords(-1, -1);
 
-	editor.runEditor();
+	while (window->isOpen())
+	{
+		currentTime = clock.getElapsedTime();
 
-	return 0; //Close the game
+		processEvents();
+
+		window->setView(*camera);
+		menuBar->update(sf::Mouse::getPosition(*window));
+
+		window->setView(*camera);
+
+		gameClock->updateClock();
+
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && sf::Mouse::getPosition().x < (int)window->getSize().x && sf::Mouse::getPosition().y > 0)
+			moveCamera();
+		else
+			window->setMouseCursorVisible(displayCursor());
+
+		sf::Vector2f mouse_pos = window->mapPixelToCoords(sf::Mouse::getPosition(*window));
+
+		map->updateDrawList(window, graphicManager, *camera, mouse_pos, currentTime);
+		tilePaneManager->addToDrawList(menuBar, false);
+
+		sf::Vector2i mousePos = sf::Mouse::getPosition(*window);
+		if (leftMouseBtnClicked && mousePos.x < (int)window->getSize().x && mousePos.y < (int)window->getSize().y)
+		{
+			if (map->inMapBounds(mouse_pos))
+			{
+				sf::Vector2f coords = window->mapPixelToCoords(sf::Mouse::getPosition(*window));
+				returnCoords = sf::Vector2i((int)coords.x / map->getTileSize(), (int)coords.y / map->getTileSize());
+			}
+		}
+
+		render();
+
+		if (returnCoords.x >= 0)
+			window->close();
+	}
+
+	return returnCoords;
 }
