@@ -14,6 +14,7 @@ This class handles animations for various sprites.
 #include <SFML\Graphics\RenderTexture.hpp>
 #include <SFML\System\Clock.hpp>
 #include <PBE\Graphics\Animation.h>
+#include "Game\Map\Layer.h"
 
 class Walk : public pb::Animation
 {
@@ -39,20 +40,6 @@ private:
 
 	// Private constants
 	int upWalkTop, downWalkTop, rightWalkTop, leftWalkTop, currentTop, currentLeft, frameAdvance;
-};
-
-class Water : public pb::Animation
-{
-public:
-	// Constructor
-	Water(int numFrames, int startingLoopFrame, int finalLoopFrame, int width, int height, float updateInterval);
-
-	// Public methods
-	void updateWaterCycle(sf::Clock* clock);
-	void updateAnimation(sf::Sprite* sprite, sf::RenderTexture* frames);
-
-private:
-	int currentFrame = 0, frameAdvance = 1;
 };
 
 #endif

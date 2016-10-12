@@ -20,7 +20,7 @@ Game::Game(const std::string versionNumber)
 	window->setKeyRepeatEnabled(false);
 
 	// Initialize camera, graphic manager, and audio manager
-	camera = new pb::Camera(desktop.width, desktop.height, 0.5f);
+	camera = new pb::Camera(window->getSize().x, window->getSize().y, zoomLevelWorld);
 
 	// Intialize a game clock with some default values
 	gameClock = new pb::In_Game_Clock(10, 8, 0, 24, 8, 8, 4, 4);
@@ -33,7 +33,7 @@ Game::Game(const std::string versionNumber)
 
 	// Initialize a player object
 	player = new Player();
-	player->setPosition(sf::Vector2f(6 * 32, 6 * 32)); // Default player position
+	player->setPosition(sf::Vector2f(22 * 32, 22 * 32)); // Default player position
 }
 
 Game::Game(std::string versionNumber, int argc, char* argv[]) : Game(versionNumber)
@@ -69,8 +69,6 @@ Game::~Game()
 void Game::initialize()
 {
 	map = new Map(currentMap);
-
-	graphicManager->updateBufferSize(map->getMapSize()); // Update buffers used to draw shaders
 }
 
 void Game::processEvents()
@@ -102,7 +100,10 @@ void Game::processEvents()
 					state = returnState;
 
 					if (returnState != Battle)
+					{
+						gameClock->resume();
 						graphicManager->enableDayShift(true);
+					}
 				}
 			}
 			else if (event.key.code == sf::Keyboard::Tab)
@@ -175,6 +176,7 @@ void Game::processEvents()
 		//When the window regains focus, resume the game
 		case sf::Event::GainedFocus:
 			state = returnState;
+			gameClock->resume();
 
 			break;
 		}
@@ -212,6 +214,8 @@ void Game::update()
 	}
 	case Pause:
 	{
+		gameClock->pause();
+
 		// Pause the day shift and dim the screen
 		graphicManager->enableDayShift(false);
 		graphicManager->dimScreen(sf::Color::Black, 130);
@@ -225,7 +229,6 @@ void Game::update()
 		player->loadState(Player::World);
 
 		currentMap = map->moveToMap(player); //Transition to the next map
-		graphicManager->updateBufferSize(map->getMapSize()); // Update buffers used to draw shaders
 
 		state = Fading;
 		returnState = Play; // Resume game after loading has finished
@@ -252,7 +255,6 @@ void Game::update()
 
 		// Instantiate a battle object
 		battle = new Battle_Engine(players, 1, camera->getSize().x, camera->getSize().y);
-		graphicManager->updateBufferSize(sf::Vector2i(window->getSize().x, window->getSize().y)); // Update buffers used to draw shaders
 
 		// Change game state
 		state = Fading;
@@ -274,10 +276,9 @@ void Game::update()
 
 		// Delete previous game camera and create the world camera
 		delete camera;
-		camera = new pb::Camera(window->getSize().x, window->getSize().y, 0.5f);
+		camera = new pb::Camera(window->getSize().x, window->getSize().y, zoomLevelWorld);
 
 		map->loadMap(currentMap); // Load the map
-		graphicManager->updateBufferSize(map->getMapSize()); // Update buffers used to draw shaders
 
 		player->loadState(Player::World); // change player state
 
@@ -310,7 +311,7 @@ void Game::render(double alpha)
 		player->renderPosition(alpha);
 
 		//Draw all graphics
-		map->updateDrawList(player, true);
+		map->updateDrawList(player, currentTime, true);
 
 		break;
 
@@ -322,7 +323,7 @@ void Game::render(double alpha)
 	case Pause:
 		//Draw all graphics
 		if (returnState == Play)
-			map->updateDrawList(player, false);
+			map->updateDrawList(player, currentTime, false);
 		else
 			battle->updateDrawList(false, alpha);
 
@@ -331,7 +332,7 @@ void Game::render(double alpha)
 	case Fading:
 		// Add the games previous state to the draw list
 		if (returnState == InitiateBattle || returnState == Transition || returnState == Play)
-			map->updateDrawList(player, false);
+			map->updateDrawList(player, currentTime, false);
 		else if (returnState == InitiateOverworld || returnState == Battle)
 			battle->updateDrawList(true, alpha);
 
@@ -343,7 +344,7 @@ void Game::render(double alpha)
 
 	camera->animateCamera(); // Apply any camera animations
 	window->setView(*camera); // Update the windows view
-	
+
 	graphicManager->draw(window, gameClock->getTime()); // Use day/night version of graphic manager draw
 
 	// Redisplay everything in the window
@@ -363,7 +364,7 @@ void Game::runGame()
 
 	// Local Variables
 	sf::Clock clock;
-	
+
 	double currentTime = clock.getElapsedTime().asSeconds();
 	double accumulator = 0.0;
 	double frameTime;
@@ -378,6 +379,8 @@ void Game::runGame()
 
 		// Get time
 		sf::Time t = clock.getElapsedTime();
+		this->currentTime = t;
+
 		frameTime = t.asSeconds() - currentTime;
 		if (frameTime > 0.25)
 			frameTime = 0.25;

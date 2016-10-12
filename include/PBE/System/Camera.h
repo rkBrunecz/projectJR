@@ -25,6 +25,7 @@ namespace pb
 		void setBounds(float x, float y);
 		void updatePosition(const sf::Vector2f& position);
 		void setCameraSize(float x, float y);
+		void moveCameraInBounds();
 		const sf::Vector2f getCameraOrigins();
 		
 		// ANIMATION METHODS

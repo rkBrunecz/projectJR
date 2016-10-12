@@ -83,6 +83,27 @@ namespace pb
 		setCenter(cameraX, cameraY);
 	}
 
+	void Camera::moveCameraInBounds()
+	{
+		sf::Vector2f cameraPos(getCenter());
+
+		if (getSize().x > cameraBounds.x)
+			cameraPos.x = getCenter().x;
+		else if (getCenter().x + (getSize().x  * 0.5f) > cameraBounds.x)
+			cameraPos.x = cameraBounds.x - (getSize().x * 0.5f);
+		else if (getCenter().x - (getSize().x * 0.5f) < 0)
+			cameraPos.x = (getSize().x * 0.5f);
+
+		if (getSize().y > cameraBounds.y)
+			cameraPos.y = getCenter().y;
+		else if (getCenter().y + (getSize().y * 0.5f) > cameraBounds.y)
+			cameraPos.y = cameraBounds.y - (getSize().y * 0.5f);
+		else if (getCenter().y - (getSize().y * 0.5f) < 0)
+			cameraPos.y = (getSize().y * 0.5f);
+
+		setCenter(cameraPos);
+	}
+
 	const sf::Vector2f Camera::getCameraOrigins()
 	{
 		return cameraOrigins;

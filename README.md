@@ -1,14 +1,19 @@
 #ProjectJR
 *Developers:	Randall Brunecz, Joshua Gray*			
-*Last Updated:	09/17/2016*		   								   
+*Last Updated:	10/11/2016*		   								   
 
 Game description will be updated when the game developes more. Currently, the project is focused on building the tools and the engine to run the game. The engine is being built from scratch utilizing the SFML library. The scope of the project is difficult to measure since the features and additions are decided on a regular basis. Initially, the game was going to be very simple with a simplistic engine. However, as time goes on, the complextity of the game increases. 
 
 Many of the graphics on display in the game have been made by one of the two developers. However, there are also a number of graphics that are being used from various artists from around the web. All of these will be replaced one day, but the artists deserve credit for their incredible work. You can find links to these resources in the [RESOURCES](#resources) section.  
 
-You can obtain the resources needed to run the game and mapeditor [here](http://www.mediafire.com/download/xtl01kdtk13l4qo/res.zip).  
+You can obtain the resources needed to run the game and mapeditor [here](https://www.mediafire.com/?40bibadp11yfqk4).  
 
 ###Trailers:
+
+####A New World ~ 10/11/2016
+<a href="https://www.youtube.com/watch?v=hu95BioSC2g
+" target="_blank"><img src="http://img.youtube.com/vi/hu95BioSC2g/0.jpg" 
+alt="Trailer 3" width="240" height="180" border="10" /></a>
 
 ####Day and Night ~ 9/17/2016
 <a href="https://www.youtube.com/watch?v=_VDVgpRwQOM
@@ -107,14 +112,9 @@ Map editor will allow for quick content creation and the implementation of inter
 
 ####MAP EDITOR CONTROLS
 **ESC** : Closes the application  
-**L** : Allows the user to load in a map  
-**N** : Allows the user to create a new map  
-**S** : Allows the user to save a map  
 **TAB** : Displays collision boundaries for objects in the game  
 **G** : Displays grid lines to show where tiles start and finish  
-**T** : Displays all the transition points on the map  
-**U** : Forces the editor to update all layers  
-**R** : Allows the user to perform a test run from the current map being worked on.  
+**T** : Displays all the transition points on the map   
 
 ####CAMERA CONTROLS
 **Right Mouse Button** : When a map is created or loaded, right clicking and holding will allow for the user to drag the camera. The further the user pulls, the faster the camera moves.  

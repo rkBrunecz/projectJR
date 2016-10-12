@@ -16,10 +16,12 @@ The main.cpp file is the entry point for the game.
 //#include <vld.h> // Check for memory leaks. Comment out if not being used
 #include "Game\Game.h"
 
+std::vector<int> v;
+
 int main(int argc, char* argv[])
 {
 	// Local variables
-	Game *game = NULL;
+	Game *game = 0;
 	std::string version = "v.1.2a"; // Version number
 
 	if (argc == 4)
