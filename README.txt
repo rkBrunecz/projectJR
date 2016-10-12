@@ -1,6 +1,6 @@
 -----------------------------------------------------------------
 * Developers:	Randall Brunecz, Joshua Gray			*
-* Last Updated:	04/03/2016		   			*					   
+* Last Updated:	10/11/2016		   			*					   
 -----------------------------------------------------------------
 
 DESCRIPTION
@@ -99,14 +99,9 @@ CONTROLS
 
 MAP EDITOR CONTROLS
 ESC 		   : Closes the application
-L  	  	   : Allows the user to load in a map
-N  		   : Allows the user to create a new map 
-S  		   : Allows the user to save a map
 TAB		   : Displays collision boundaries for objects in the game
 G  		   : Displays grid lines to show where tiles start and finish
 T  		   : Displays all the transition points on the map
-U  		   : Forces the editor to update all layers
-R		   : Allows the user to perform a test run from the current map being worked on. 
 
 CAMERA CONTROLS
 Right Mouse Button : When a map is created or loaded, right clicking and holding will allow for the user to drag the camera. The further the user pulls, the faster the camera moves.
