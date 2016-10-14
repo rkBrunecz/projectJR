@@ -341,22 +341,21 @@ void Editable_Map::updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager 
 {
 	// Cull out unnecessary tiles
 	unsigned int startColumn = unsigned int((camera.getCenter().x - (camera.getSize().x / 2)) / TILE_SIZE);
+	if (camera.getSize().x / TILE_SIZE >= numColumns)
+		startColumn = 0;
+
 	unsigned int startRow = unsigned int((camera.getCenter().y - (camera.getSize().y / 2)) / TILE_SIZE);
+	if (camera.getSize().y / TILE_SIZE >= numRows)
+		startRow = 0;
 
 	unsigned int viewWidth = unsigned int((camera.getCenter().x + (camera.getSize().x / 2)) / TILE_SIZE);
 	unsigned int viewHeight = unsigned int((camera.getCenter().y + (camera.getSize().y / 2)) / TILE_SIZE);
 
-	// If the view extends past the borders of the map, loop over all the tiles in each layer
+	// If the view extends past the borders of the map, clamp the width/height to numColumns - 1/numRows - 1
 	if (viewWidth >= numColumns)
-	{
-		startColumn = 0;
 		viewWidth = numColumns - 1;
-	}
 	if (viewHeight >= numRows)
-	{
-		startRow = 0;
 		viewHeight = numRows - 1;
-	}
 
 	// Clear verticies
 	mapLayer->clearVertexArray();
@@ -367,6 +366,8 @@ void Editable_Map::updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager 
 	transitionLayer->clearVertexArray();
 	for (unsigned int i = 0; i < numRows; i++)
 		groundLayers[i]->clearVertexArray();
+
+	int tiles = 0;
 
 	// Draw ONLY the visible tiles
 	for (unsigned int i = startRow; i <= viewHeight; i++)
@@ -390,8 +391,12 @@ void Editable_Map::updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager 
 			}
 			if (renderTransitionLayer)
 				transitionLayer->update(i, j);
+
+			tiles++;
 		}
 	}
+
+	printf("%d\n", tiles);
 
 	graphicManager->addToDrawList(mapLayer, false);
 	graphicManager->addToDrawList(maskLayer, false);
