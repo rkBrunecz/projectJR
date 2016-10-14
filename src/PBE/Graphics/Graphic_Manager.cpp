@@ -25,8 +25,12 @@ namespace pb
 
 	Graphic_Manager::~Graphic_Manager()
 	{
+		// Delete shaders
 		delete alpha;
+
+		// Delete buffers
 		delete buffer;
+
 		delete dayShift;
 		delete effect;
 
@@ -102,33 +106,34 @@ namespace pb
 		// Local variables
 		sf::Color dayColor = dayShift->updateDayTime(t);
 
+		// Recreate the buffers to match the windows size if they do not already match
 		if (buffer->getSize().x != window->getSize().x || buffer->getSize().y != window->getSize().y)
 			buffer->create(window->getSize().x, window->getSize().y);
 		
 		// Set views
 		buffer->setView(window->getView());
+
 		window->setView(window->getDefaultView());
 
-		buffer->clear(); // clear render texture for drawing
+		// Clear buffer for drawing
+		buffer->clear();
+
+		// Update alpha shader
+		alpha->update(dayShift->getShadowAlpha());
 
 		for (unsigned int i = 0; i < drawList.size(); i++)
 		{
 			if (drawList[i]->hasShadow)
-			{
-				alpha->update(dayShift->getShadowAlpha());
-
 				buffer->draw(*drawList[i]->drawable, alpha->getShader());
-			}
 			else
 				buffer->draw(*drawList[i]->drawable);
 
 			delete drawList[i];
 		}
 
-		// Finished drawing to render texture
 		buffer->display();
 
-		// Apply day and night shift
+		// Apply day and night shift effect
 		sf::Sprite s(buffer->getTexture());
 		s.setColor(dayColor);
 
