@@ -455,24 +455,25 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool anima
 	std::vector<std::vector<pb::Graphic_Entity*>> drawAtPos;
 	bool playerDrawn = false;
 
-	// Cull out unnecessary tiles
+	// Determine which column to start from
 	unsigned int startColumn = unsigned int((Game::camera->getCenter().x - (Game::camera->getSize().x / 2)) / TILE_SIZE);
-	unsigned int startRow = unsigned int((Game::camera->getCenter().y - (Game::camera->getSize().y / 2)) / TILE_SIZE);
+	if(Game::camera->getSize().x / TILE_SIZE >= numColumns)
+		startColumn = 0;
 
+	// Determine which row to start from
+	unsigned int startRow = unsigned int((Game::camera->getCenter().y - (Game::camera->getSize().y / 2)) / TILE_SIZE);
+	if (Game::camera->getSize().y / TILE_SIZE >= numRows)
+		startRow = 0;
+
+	// Cull out tiles based on view size
 	unsigned int viewWidth = unsigned int((Game::camera->getCenter().x + (Game::camera->getSize().x / 2)) / TILE_SIZE);
 	unsigned int viewHeight = unsigned int((Game::camera->getCenter().y + (Game::camera->getSize().y / 2)) / TILE_SIZE);
 
-	// If the view extends past the borders of the map, loop over all the tiles in each layer
+	// If the view extends past the borders of the map, clamp the width/height to numColumns - 1/numRows - 1
 	if (viewWidth >= numColumns)
-	{
-		startColumn = 0;
 		viewWidth = numColumns - 1;
-	}
 	if (viewHeight >= numRows)
-	{
-		startRow = 0;
 		viewHeight = numRows - 1;
-	}
 
 	// Resize the vector to include only what will be shown
 	drawAtPos.resize(viewHeight + 1);
