@@ -23,7 +23,7 @@ Game::Game(const std::string versionNumber)
 	camera = new pb::Camera(window->getSize().x, window->getSize().y, zoomLevelWorld);
 
 	// Intialize a game clock with some default values
-	gameClock = new pb::In_Game_Clock(10, 8, 0, 24, 8, 8, 4, 4);
+	gameClock = new pb::In_Game_Clock(10, 10, 0, 24, 8, 8, 4, 4);
 
 	// Initialize graphic manager
 	graphicManager = new pb::Graphic_Manager(*gameClock);
@@ -69,6 +69,7 @@ Game::~Game()
 void Game::initialize()
 {
 	map = new Map(currentMap);
+	map->setLightInterval(sf::Vector2u(22, 5));
 }
 
 void Game::processEvents()
@@ -129,13 +130,25 @@ void Game::processEvents()
 					windowState = Fullscreen;
 				}
 
-				if (verticalSyncEnabled)
+				if (verticalSyncEnabled && windowState != Windowed)
 				{
 					window->setVerticalSyncEnabled(verticalSyncEnabled);
 					window->setFramerateLimit(0);
 				}
 				else
 					window->setFramerateLimit(60);
+
+				// Recreate the camera
+				sf::Vector2f pos = camera->getCenter();
+				sf::Vector2f cameraBounds = camera->getCameraBounds();
+
+				// Delete old camera
+				delete camera;
+
+				// Initialize new camera
+				camera = new pb::Camera(window->getSize().x, window->getSize().y, zoomLevelWorld);
+				camera->setBounds(cameraBounds.x, cameraBounds.y);
+				camera->setCenter(pos);	
 
 				window->setMouseCursorVisible(false);
 				window->setKeyRepeatEnabled(false);
@@ -311,7 +324,7 @@ void Game::render(double alpha)
 		player->renderPosition(alpha);
 
 		//Draw all graphics
-		map->updateDrawList(player, currentTime, true);
+		map->updateDrawList(player, currentTime, gameClock->getTime(), true);
 
 		break;
 
@@ -323,7 +336,7 @@ void Game::render(double alpha)
 	case Pause:
 		//Draw all graphics
 		if (returnState == Play)
-			map->updateDrawList(player, currentTime, false);
+			map->updateDrawList(player, currentTime, gameClock->getTime(), false);
 		else
 			battle->updateDrawList(false, alpha);
 
@@ -332,7 +345,7 @@ void Game::render(double alpha)
 	case Fading:
 		// Add the games previous state to the draw list
 		if (returnState == InitiateBattle || returnState == Transition || returnState == Play)
-			map->updateDrawList(player, currentTime, false);
+			map->updateDrawList(player, currentTime, gameClock->getTime(), false);
 		else if (returnState == InitiateOverworld || returnState == Battle)
 			battle->updateDrawList(true, alpha);
 
