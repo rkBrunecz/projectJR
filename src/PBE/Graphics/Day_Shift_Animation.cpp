@@ -8,7 +8,7 @@ namespace pb
 	{
 		// Local variables
 		sf::Color colorOfDay;
-		short totalMinutesPassed;
+		short totalMinutesPassed = 0;
 		pb::Time time = clock.getTime();
 
 		// Determine the time of day
@@ -20,7 +20,9 @@ namespace pb
 
 			// Resolve to a negative number to calculate the correct color of day (this is because the color value should be decrementing downwards to color value EVENING)
 			totalMinutesPassed = -(time.hours - (EVENING_HOURS + DAWN_HOURS + MORNING_HOURS)) * 60; // 60 minutes in an hour
-			shadowAlpha = SHADOW_ALPHA_MAX - (totalMinutesPassed / shadowUpdateInterval);
+			totalMinutesPassed -= time.minutes;
+
+			shadowAlpha = SHADOW_ALPHA_MAX + (totalMinutesPassed * shadowUpdateInterval);
 		}
 		else if (time.hours >= EVENING_HOURS + DAWN_HOURS) // Morning
 		{
@@ -30,16 +32,19 @@ namespace pb
 
 			// Resolve to a negative number to calculate the correct color of day (this is because the color value should be decrementing downwards to color value EVENING)
 			totalMinutesPassed = -(time.hours - (EVENING_HOURS + DAWN_HOURS)) * 60; // 60 minutes in an hour
+			totalMinutesPassed -= time.minutes;
 		}
 		else if (time.hours >= EVENING_HOURS) // Dawn
 		{
 			timeOfDay = Dawn;
-			determineIntervals(DAWN, MORNING, EVENING_HOURS);
+			determineIntervals(DAWN, MORNING, DAWN_HOURS);
 			colorOfDay = DAWN;
-
+			
 			// Resolve to a positive number to calculate the correct color of day (this is because the color value should be incrementing upwards to color value MORNING)
-			totalMinutesPassed = time.hours * 60; // 60 minutes in an hour
-			shadowAlpha = SHADOW_ALPHA_MAX + (totalMinutesPassed / shadowUpdateInterval);
+			totalMinutesPassed = (time.hours - EVENING_HOURS) * 60; // 60 minutes in an hour
+			totalMinutesPassed += time.minutes;
+
+			shadowAlpha = 0.0f + (totalMinutesPassed * shadowUpdateInterval);
 		}
 		else // Evening
 		{
@@ -49,13 +54,15 @@ namespace pb
 
 			// Resolve to a positive number to calculate the correct color of day (this is because the color value should be incrementing upwards to color value MORNING)
 			totalMinutesPassed = time.hours * 60; // 60 minutes in an hour
+			totalMinutesPassed += time.minutes;
+
 			shadowAlpha = 0.0f;
 		}
 
 		// Calculate the correct color value of the given time
 		dayTimeColor.r = (sf::Uint8)(colorOfDay.r + (totalMinutesPassed * redUpdateInterval));
 		dayTimeColor.g = (sf::Uint8)(colorOfDay.g + (totalMinutesPassed * greenUpdateInterval));
-		dayTimeColor.b = (sf::Uint8)(colorOfDay.b + (totalMinutesPassed * greenUpdateInterval));
+		dayTimeColor.b = (sf::Uint8)(colorOfDay.b + (totalMinutesPassed * blueUpdateInterval));
 
 		accumulator = sf::Vector3f(dayTimeColor.r, dayTimeColor.g, dayTimeColor.b);
 	}
