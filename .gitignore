@@ -1,11 +1,11 @@
 # Ignore all files types
-*
+*.*
 
 # Do NOT ignore these
 !.gitignore
-!.cpp
-!.h
-!.frag
-!.txt
-!.md
+!*.cpp
+!*.h
+!*.frag
+!*.txt
+!*.md
 !*/
