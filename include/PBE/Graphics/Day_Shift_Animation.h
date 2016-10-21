@@ -27,6 +27,7 @@ namespace pb
 
 		const sf::Color updateDayTime(Time& time);
 		const short getShadowAlpha();
+		const short getShadowAlphaMax() { return SHADOW_ALPHA_MAX; }
 
 	private:
 		// Private methods
