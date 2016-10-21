@@ -16,7 +16,7 @@ public:
 	// Destructor
 	~Layer();
 
-	void update(unsigned int tileSize, unsigned int row, unsigned int column, const sf::Time& currentTime);
+	void update(unsigned int tileSize, unsigned int row, unsigned int column, const sf::Time& currentTime, pb::Graphic_Manager& graphicManager);
 
 	void clearVertexArray();
 
