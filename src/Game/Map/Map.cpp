@@ -20,6 +20,7 @@ The constructor of the map class creates a map that can be drawn.
 Map::Map(std::string mapName)
 {
 	pb::addToCollisionList(this);
+	Tile::lightsOn = false;
 
 	loadMap(mapName);
 }
@@ -181,6 +182,31 @@ void Map::initializeTileData(const std::string& jrsFile)
 
 void Map::initializeTile(const std::string& input, int inputPos, Tile *t)
 {
+	// Determine if tile produces light
+	if (input[inputPos] == 'L')
+	{
+		// Obtain the distance the light travels out in all directions
+		inputPos++;
+		float steps = (float)atoi(input.substr(inputPos, input.find('(')).c_str());
+		
+		// Obtain the color of the light
+		inputPos = input.find('(') + 1;
+		int r = atoi(input.substr(inputPos, input.find(',')).c_str());
+		inputPos = input.find(',', inputPos) + 1;
+		int g = atoi(input.substr(inputPos, input.find(inputPos, ',')).c_str());
+		inputPos = input.find(',', inputPos) + 1;
+		int b = atoi(input.substr(inputPos, input.find(inputPos, ',')).c_str());
+		inputPos = input.find(',', inputPos) + 1;
+		int a = atoi(input.substr(inputPos, input.find(')')).c_str());
+
+		// Obtain the intensity of the light
+		inputPos = input.find(')') + 1;
+		float intensity = (float)atof(input.substr(inputPos, input.find('L', inputPos)).c_str());
+		inputPos = input.find('L', inputPos) + 1;
+
+		t->light = new pb::Light(sf::Color(r, g, b, a), steps, intensity);
+	}
+
 	t->row = input[inputPos++] - '0';
 	t->column = input[inputPos++] - '0';
 	t->rotation = input[inputPos++] - '0';
@@ -345,6 +371,10 @@ unsigned short Map::addTileToMap(const std::string& input, unsigned short pos, u
 
 		if (rotation != 0)
 			updateBoundingBox(&at);
+		
+		// Update light position
+		if (at.light != 0)
+			at.light->lightPos = sf::Vector2f(float(column * TILE_SIZE + (TILE_SIZE * 0.5f)), float(row * TILE_SIZE + TILE_SIZE));
 
 		L->addTile(at, row, column);
 
@@ -366,6 +396,11 @@ unsigned short Map::addTileToMap(const std::string& input, unsigned short pos, u
 		if (rotation != 0)
 			updateBoundingBox(&t);
 
+		// Update light position
+		if (t.light != 0)
+			t.light->lightPos = sf::Vector2f(float(column * TILE_SIZE + (TILE_SIZE * 0.5f)), float(row * TILE_SIZE + TILE_SIZE));
+
+		// Add tile to layer
 		L->addTile(t, row, column);
 
 		if (t.collidable)
@@ -449,25 +484,36 @@ void Map::emptyMap()
 	tileData.clear();
 }
 
-void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool animate)
+void Map::setLightInterval(const sf::Vector2u& interval)
+{
+	lightInterval = interval;
+}
+
+void Map::updateDrawList(Player* player, const sf::Time& currentTime, const pb::Time& currentInGameTime, bool animate)
 {
 	//LOCAL VARIABLES
 	std::vector<std::vector<pb::Graphic_Entity*>> drawAtPos;
 	bool playerDrawn = false;
 
+	// Determine if lights should be on or off
+	if (lightInterval == sf::Vector2u(0, 0) || (unsigned int)currentInGameTime.hours >= lightInterval.x || (unsigned int)currentInGameTime.hours <= lightInterval.y)
+		Tile::lightsOn = true;
+	else
+		Tile::lightsOn = false;
+
 	// Determine which column to start from
-	unsigned int startColumn = unsigned int((Game::camera->getCenter().x - (Game::camera->getSize().x / 2)) / TILE_SIZE);
-	if(Game::camera->getSize().x / TILE_SIZE >= numColumns)
+	unsigned int startColumn = unsigned int((Game::camera->getCenter().x - Game::camera->getSize().x) / TILE_SIZE);
+	if (Game::camera->getSize().x / TILE_SIZE >= numColumns || Game::camera->getCenter().x < Game::camera->getSize().x)
 		startColumn = 0;
 
 	// Determine which row to start from
-	unsigned int startRow = unsigned int((Game::camera->getCenter().y - (Game::camera->getSize().y / 2)) / TILE_SIZE);
-	if (Game::camera->getSize().y / TILE_SIZE >= numRows)
+	unsigned int startRow = unsigned int((Game::camera->getCenter().y - Game::camera->getSize().y) / TILE_SIZE);
+	if (Game::camera->getSize().y / TILE_SIZE >= numRows || Game::camera->getCenter().y < Game::camera->getSize().y)
 		startRow = 0;
 
 	// Cull out tiles based on view size
-	unsigned int viewWidth = unsigned int((Game::camera->getCenter().x + (Game::camera->getSize().x / 2)) / TILE_SIZE);
-	unsigned int viewHeight = unsigned int((Game::camera->getCenter().y + (Game::camera->getSize().y / 2)) / TILE_SIZE);
+	unsigned int viewWidth = unsigned int((Game::camera->getCenter().x + Game::camera->getSize().x) / TILE_SIZE);
+	unsigned int viewHeight = unsigned int((Game::camera->getCenter().y + Game::camera->getSize().y) / TILE_SIZE);
 
 	// If the view extends past the borders of the map, clamp the width/height to numColumns - 1/numRows - 1
 	if (viewWidth >= numColumns)
@@ -493,10 +539,10 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool anima
 	{
 		for (unsigned int j = startColumn; j <= viewWidth; j++)
 		{
-			mapLayer->update(TILE_SIZE, i, j, currentTime);
-			maskLayer->update(TILE_SIZE, i, j, currentTime);
-			groundLayers[i]->update(TILE_SIZE, i, j, currentTime);
-			canopyLayer->update(TILE_SIZE, i, j, currentTime);
+			mapLayer->update(TILE_SIZE, i, j, currentTime, *Game::graphicManager);
+			maskLayer->update(TILE_SIZE, i, j, currentTime, *Game::graphicManager);
+			groundLayers[i]->update(TILE_SIZE, i, j, currentTime, *Game::graphicManager);
+			canopyLayer->update(TILE_SIZE, i, j, currentTime, *Game::graphicManager);
 
 			//TOOLS
 			if (renderCollisionLayer)
@@ -513,8 +559,8 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool anima
 		}
 	}
 
-	Game::graphicManager->addToDrawList(mapLayer, false);
-	Game::graphicManager->addToDrawList(maskLayer, false);
+	Game::graphicManager->addToDrawList(mapLayer);
+	Game::graphicManager->addToDrawList(maskLayer);
 
 	//Get the column and row the graphic object is in
 	int row = (int)(player->getRect().top + player->getRect().height) / TILE_SIZE;
@@ -558,11 +604,11 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool anima
 
 	//TOOLS
 	if (renderCollisionLayer)
-		Game::graphicManager->addToDrawList(collisionLayer, false);
+		Game::graphicManager->addToDrawList(collisionLayer);
 	if (renderGridLayer)
-		Game::graphicManager->addToDrawList(gridLayer, false);
+		Game::graphicManager->addToDrawList(gridLayer);
 	if (renderTransitionLayer)
-		Game::graphicManager->addToDrawList(transitionLayer, false);
+		Game::graphicManager->addToDrawList(transitionLayer);
 }
 
 

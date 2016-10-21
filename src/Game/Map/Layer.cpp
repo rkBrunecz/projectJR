@@ -17,7 +17,7 @@ Layer::~Layer()
 		delete layer[i];
 }
 
-void Layer::update(unsigned int tileSize, unsigned int row, unsigned int column, const sf::Time& currentTime)
+void Layer::update(unsigned int tileSize, unsigned int row, unsigned int column, const sf::Time& currentTime, pb::Graphic_Manager& graphicManager)
 {
 	unsigned int layerRow = (numRows != 1 ? row : 0);
 
@@ -25,6 +25,9 @@ void Layer::update(unsigned int tileSize, unsigned int row, unsigned int column,
 	{
 		layer[layerRow * numColumns + column]->update(currentTime);
 		updateVerticies(row, column, tileSize, *layer[layerRow * numColumns + column]);
+
+		if (Tile::lightsOn && layer[layerRow * numColumns + column]->light != 0)
+			graphicManager.addLight(layer[layerRow * numColumns + column]->light);
 	}
 }
 
