@@ -12,7 +12,7 @@ public:
 	Editable_Map();
 	Editable_Map(pb::Graphic_Manager *tilePaneManager, const sf::Vector2i& tileSheetCoords);
 
-	void updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager *graphicManager, const pb::Camera& camera, const sf::Vector2f& mouseCoords, const sf::Time& currentTime);
+	void updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager *graphicManager, const pb::Camera& camera, const sf::Vector2f& mouseCoords, const sf::Time& currentTime, const pb::Time& inGameTime);
 	void updateTileSheet(const sf::RenderWindow& window, pb::Graphic_Manager *tilePaneManager, const sf::Vector2f& mousePos, pb::In_Game_Clock& gameClock);
 
 	void loadMap(std::string mapName, pb::Graphic_Manager* graphicManager, pb::Camera* camera);
