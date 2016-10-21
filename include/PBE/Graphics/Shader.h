@@ -3,6 +3,7 @@
 
 #include "SFML\Graphics.hpp"
 #include "PBE\System\System.h"
+#include "PBE\Graphics\Light.h"
 
 namespace pb
 {
@@ -27,6 +28,16 @@ namespace pb
 			updateParameters(alpha);
 		}
 
+		void update(const sf::Vector3f *lightPositions, const sf::Glsl::Vec4 *colors, const float *intensities, int numLights)
+		{
+			updateParameters(lightPositions, colors, intensities, numLights);
+		}
+
+		void update(const short alpha, float maxOpacity, const sf::Vector3f *lightPositions, int numLights)
+		{
+			updateParameters(alpha, maxOpacity, lightPositions, numLights);
+		}
+
 	protected:
 		Shader(const std::string name) : name(name) { };
 
@@ -40,6 +51,8 @@ namespace pb
 
 		// The various update methods
 		virtual void updateParameters(const short alpha) { };
+		virtual void updateParameters(const sf::Vector3f *lightPositions, const sf::Glsl::Vec4 *colors, const float *intensities, int numLights) { };
+		virtual void updateParameters(const short alpha, float maxOpacity, const sf::Vector3f *lightPositions, int numLights) { };
 	};
 
 	class Alpha : public Shader
@@ -65,6 +78,66 @@ namespace pb
 
 	private:
 		sf::Color pixelToAlpha; // Color of pixel to alpha
+	};
+
+	class Lighting : public Shader
+	{
+	public:
+		Lighting() : Shader("Lighting")
+		{
+		
+		}
+
+		void updateParameters(const sf::Vector3f *lightPositions, const sf::Glsl::Vec4 *colors, const float *intensities, int numLights)
+		{
+			shader.setUniform("texture", sf::Shader::CurrentTexture);
+			
+			if (numLights != 0)
+			{
+				shader.setUniformArray("lightColor", colors, numLights);
+				shader.setUniformArray("lights", lightPositions, numLights);
+				shader.setUniformArray("intensities", intensities, numLights);
+			}
+
+			shader.setUniform("numLights", numLights);
+		}
+
+		void loadShader()
+		{
+			pb::System::load(&shader, "lighting.frag", sf::Shader::Fragment);
+		}
+	};
+
+	class Shadow : public Shader
+	{
+	public:
+		Shadow() : Shader("Shadow")
+		{
+
+		}
+
+		void updateParameters(const short alpha, float maxOpacity, const sf::Vector3f *lightPositions, int numLights)
+		{
+			sf::Color c = sf::Color::Black;
+			c.a = (sf::Uint8)alpha;
+
+			maxOpacity = maxOpacity / 255;
+
+			shader.setUniform("texture", sf::Shader::CurrentTexture);
+			shader.setUniform("color", sf::Glsl::Vec4(c));
+
+			if (numLights != 0)
+				shader.setUniformArray("lights", lightPositions, numLights);
+
+
+			shader.setUniform("maxOpacity", maxOpacity);
+			shader.setUniform("numLights", numLights);
+		}
+
+		void loadShader()
+		{
+			pb::System::load(&shader, "shadow.frag", sf::Shader::Fragment);
+		}
 	};
 };
 
