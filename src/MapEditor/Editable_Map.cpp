@@ -313,8 +313,13 @@ void Editable_Map::addTileToMap(Tile_Data& tD, unsigned int row, unsigned int co
 
 			collisionLayer->addVerticies(realRow, column, float(column * TILE_SIZE + at.bBX), float(realRow * TILE_SIZE + at.bBY), at.width, at.height);
 		}
-		else if (L->getTile(row, column)->collidable && !at.collidable)
+		else if (L->getTile(row, column) != 0 && L->getTile(row, column)->collidable && !at.collidable)
 			collisionLayer->removeVerticies(row, column);
+
+		// Update light position
+		if (at.light != 0)
+			at.light->lightPos = sf::Vector2f(float(column * TILE_SIZE + (TILE_SIZE * 0.5f)), float(row * TILE_SIZE + TILE_SIZE));
+
 
 		L->addTile(at, row, column);
 	}
@@ -329,27 +334,36 @@ void Editable_Map::addTileToMap(Tile_Data& tD, unsigned int row, unsigned int co
 
 			collisionLayer->addVerticies(realRow, column, float(column * TILE_SIZE + t.bBX), float(realRow * TILE_SIZE + t.bBY), t.width, t.height);
 		}
-		else if (L->getTile(row, column)->collidable && !t.collidable)
+		else if (L->getTile(row, column) != 0 && L->getTile(row, column)->collidable && !t.collidable)
 			collisionLayer->removeVerticies(row, column);
 
-		L->addTile(t, row, column);
+		// Update light position
+		if (t.light != 0)
+			t.light->lightPos = sf::Vector2f(float(column * TILE_SIZE + (TILE_SIZE * 0.5f)), float(row * TILE_SIZE + TILE_SIZE));
 
+		L->addTile(t, row, column);
 	}
 }
 
-void Editable_Map::updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager *graphicManager, const pb::Camera& camera, const sf::Vector2f& mouseCoords, const sf::Time& currentTime)
+void Editable_Map::updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager *graphicManager, const pb::Camera& camera, const sf::Vector2f& mouseCoords, const sf::Time& currentTime, const pb::Time& inGameTime)
 {
+	// Determine if lights should be on or off
+	if (lightInterval == sf::Vector2u(0, 0) || (unsigned int)inGameTime.hours >= lightInterval.x || (unsigned int)inGameTime.hours < lightInterval.y)
+		Tile::lightsOn = true;
+	else
+		Tile::lightsOn = false;
+
 	// Cull out unnecessary tiles
-	unsigned int startColumn = unsigned int((camera.getCenter().x - (camera.getSize().x / 2)) / TILE_SIZE);
-	if (camera.getSize().x / TILE_SIZE >= numColumns)
+	unsigned int startColumn = unsigned int((camera.getCenter().x - camera.getSize().x) / TILE_SIZE);
+	if (camera.getSize().x / TILE_SIZE >= numColumns || camera.getCenter().x < camera.getSize().x)
 		startColumn = 0;
 
-	unsigned int startRow = unsigned int((camera.getCenter().y - (camera.getSize().y / 2)) / TILE_SIZE);
-	if (camera.getSize().y / TILE_SIZE >= numRows)
+	unsigned int startRow = unsigned int((camera.getCenter().y - camera.getSize().y) / TILE_SIZE);
+	if (camera.getSize().y / TILE_SIZE >= numRows || camera.getCenter().y < camera.getSize().y)
 		startRow = 0;
 
-	unsigned int viewWidth = unsigned int((camera.getCenter().x + (camera.getSize().x / 2)) / TILE_SIZE);
-	unsigned int viewHeight = unsigned int((camera.getCenter().y + (camera.getSize().y / 2)) / TILE_SIZE);
+	unsigned int viewWidth = unsigned int((camera.getCenter().x + camera.getSize().x) / TILE_SIZE);
+	unsigned int viewHeight = unsigned int((camera.getCenter().y + camera.getSize().y) / TILE_SIZE);
 
 	// If the view extends past the borders of the map, clamp the width/height to numColumns - 1/numRows - 1
 	if (viewWidth >= numColumns)
@@ -367,17 +381,15 @@ void Editable_Map::updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager 
 	for (unsigned int i = 0; i < numRows; i++)
 		groundLayers[i]->clearVertexArray();
 
-	int tiles = 0;
-
 	// Draw ONLY the visible tiles
 	for (unsigned int i = startRow; i <= viewHeight; i++)
 	{
 		for (unsigned int j = startColumn; j <= viewWidth; j++)
 		{
-			mapLayer->update(TILE_SIZE, i, j, currentTime);
-			maskLayer->update(TILE_SIZE, i, j, currentTime);
-			groundLayers[i]->update(TILE_SIZE, i, j, currentTime);
-			canopyLayer->update(TILE_SIZE, i, j, currentTime);
+			mapLayer->update(TILE_SIZE, i, j, currentTime, *graphicManager);
+			maskLayer->update(TILE_SIZE, i, j, currentTime, *graphicManager);
+			groundLayers[i]->update(TILE_SIZE, i, j, currentTime, *graphicManager);
+			canopyLayer->update(TILE_SIZE, i, j, currentTime, *graphicManager);
 
 			//TOOLS
 			if (renderCollisionLayer)
@@ -391,26 +403,22 @@ void Editable_Map::updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager 
 			}
 			if (renderTransitionLayer)
 				transitionLayer->update(i, j);
-
-			tiles++;
 		}
 	}
 
-	printf("%d\n", tiles);
-
-	graphicManager->addToDrawList(mapLayer, false);
-	graphicManager->addToDrawList(maskLayer, false);
+	graphicManager->addToDrawList(mapLayer);
+	graphicManager->addToDrawList(maskLayer);
 	for (unsigned int i = 0; i < numRows; i++)
 		graphicManager->addToDrawList(groundLayers[i], true);
 	graphicManager->addToDrawList(canopyLayer, true); //Draw the canopy
 
 	//TOOLS
 	if (renderCollisionLayer)
-		graphicManager->addToDrawList(collisionLayer, false);
+		graphicManager->addToDrawList(collisionLayer);
 	if (renderGridLayer)
-		graphicManager->addToDrawList(gridLayer, false);
+		graphicManager->addToDrawList(gridLayer);
 	if (renderTransitionLayer)
-		graphicManager->addToDrawList(transitionLayer, false);
+		graphicManager->addToDrawList(transitionLayer);
 
 	if (!sf::Mouse::isButtonPressed(sf::Mouse::Right))
 	{
@@ -418,7 +426,7 @@ void Editable_Map::updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager 
 			floor(mouseCoords.y / TILE_SIZE) * TILE_SIZE));
 
 		if (mousePos.getPosition().x <= TILE_SIZE * (numColumns - 1) && mousePos.getPosition().y <= TILE_SIZE * (numRows - 1) && mousePos.getPosition().x >= 0 && mousePos.getPosition().y >= 0)
-			graphicManager->addToDrawList(&mousePos, false);
+			graphicManager->addToDrawList(&mousePos);
 		else
 			window->setMouseCursorVisible(true);
 	}
@@ -427,13 +435,13 @@ void Editable_Map::updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager 
 
 void Editable_Map::updateTileSheet(const sf::RenderWindow& window, pb::Graphic_Manager *tilePaneManager, const sf::Vector2f& mousePos, pb::In_Game_Clock& gameClock)
 {
-	tilePaneManager->addToDrawList(&tileSheetSprite, false);
-	tilePaneManager->addToDrawList(&deleteTile, false);
-	tilePaneManager->addToDrawList(&deleteTransTile, false);
-	tilePaneManager->addToDrawList(&transitionTile, false);
-	tilePaneManager->addToDrawList(&rotationTile, false);
-	tilePaneManager->addToDrawList(&mirrorTile, false);
-	tilePaneManager->addToDrawList(&testMapTile, false);
+	tilePaneManager->addToDrawList(&tileSheetSprite);
+	tilePaneManager->addToDrawList(&deleteTile);
+	tilePaneManager->addToDrawList(&deleteTransTile);
+	tilePaneManager->addToDrawList(&transitionTile);
+	tilePaneManager->addToDrawList(&rotationTile);
+	tilePaneManager->addToDrawList(&mirrorTile);
+	tilePaneManager->addToDrawList(&testMapTile);
 
 	// Get game time
 	pb::Time t = gameClock.getTime();
@@ -451,17 +459,17 @@ void Editable_Map::updateTileSheet(const sf::RenderWindow& window, pb::Graphic_M
 
 	// Update position of current time string and add it to draw list
 	currentTime.setPosition(sf::Vector2f((float)tileSheetCoords.x, float(window.getSize().y - currentTime.getCharacterSize() * 2)));
-	tilePaneManager->addToDrawList(&currentTime, false);
+	tilePaneManager->addToDrawList(&currentTime);
 
 	if (mousePos.x <= numColumns * TILE_SIZE && sf::Mouse::getPosition(window).x <= tileSheetCoords.x && mousePos.x >= 0 &&
 		sf::Mouse::getPosition(window).y >= TILE_SIZE && mousePos.y <= numRows * TILE_SIZE && mousePos.y >= 0)
 	{
 		currentRowColumn.setString(std::to_string((int)(mousePos.y / TILE_SIZE)) + ", " + std::to_string((int)(mousePos.x / TILE_SIZE)));
-		tilePaneManager->addToDrawList(&currentRowColumn, false);
+		tilePaneManager->addToDrawList(&currentRowColumn);
 	}
 
 	if (currentTile.specialTile.compare("None") != 0 || currentTile.pos >= 0)
-		tilePaneManager->addToDrawList(&selectedTile, false);
+		tilePaneManager->addToDrawList(&selectedTile);
 }
 
 bool Editable_Map::isMapLoaded()

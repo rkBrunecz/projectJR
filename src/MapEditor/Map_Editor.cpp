@@ -20,7 +20,7 @@ Map_Editor::Map_Editor(const std::string& versionNum)
 	camera->setCenter(float(desktop.width / 2), float(desktop.height / 2));
 	camera->setViewport(sf::FloatRect(0, 0.03f, (window->getSize().x - (window->getSize().x * 0.20f)) / window->getSize().x, 0.97f));
 
-	gameClock = new pb::In_Game_Clock(2, 8, 0, 24, 8, 8, 4, 4);
+	gameClock = new pb::In_Game_Clock(2, 20, 30, 24, 8, 8, 4, 4);
 
 	graphicManager = new pb::Graphic_Manager(*gameClock);
 	tilePaneManager = new pb::Graphic_Manager();
@@ -242,7 +242,7 @@ void Map_Editor::update()
 
 			tilePaneManager->addToDrawList(&tilePane, false);
 
-			map->updateDrawList(window, graphicManager, *camera, mouse_pos, currentTime);
+			map->updateDrawList(window, graphicManager, *camera, mouse_pos, currentTime, gameClock->getTime());
 			map->updateTileSheet(*window, tilePaneManager, mouse_pos, *gameClock);
 
 			sf::Vector2i mousePos = sf::Mouse::getPosition(*window);
@@ -271,6 +271,7 @@ void Map_Editor::update()
 
 		// Create a new map
 		map = new Editable_Map(tilePaneManager, (sf::Vector2i)tilePane.getPosition());
+		map->setLightInterval(sf::Vector2u(22, 5));
 
 		map->loadMap(loadedMapName, graphicManager, camera);
 		camera->setCenter(float(window->getSize().x / 2), float(window->getSize().y / 2));
@@ -316,6 +317,7 @@ void Map_Editor::update()
 
 		// Create a new map
 		map = new Editable_Map(tilePaneManager, (sf::Vector2i)tilePane.getPosition());
+		map->setLightInterval(sf::Vector2u(22, 5));
 
 		sheetFileName = std::strstr(sheetFileName.c_str(), "res\\Maps\\jrs\\");
 		fileName = "res/Maps/" + fileName + ".jrm";
@@ -403,7 +405,7 @@ sf::Vector2i Map_Editor::runForResult()
 
 		sf::Vector2f mouse_pos = window->mapPixelToCoords(sf::Mouse::getPosition(*window));
 
-		map->updateDrawList(window, graphicManager, *camera, mouse_pos, currentTime);
+		map->updateDrawList(window, graphicManager, *camera, mouse_pos, currentTime, gameClock->getTime());
 		tilePaneManager->addToDrawList(menuBar, false);
 
 		sf::Vector2i mousePos = sf::Mouse::getPosition(*window);
