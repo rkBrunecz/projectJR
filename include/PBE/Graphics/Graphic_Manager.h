@@ -29,7 +29,8 @@ namespace pb
 		~Graphic_Manager();
 
 		const sf::Texture *addTexture(std::string fileName);
-		void addToDrawList(sf::Drawable *d, bool isShadow);
+		void addLight(pb::Light *l);
+		void addToDrawList(sf::Drawable *d, bool hasShadow = false);
 
 		// Basic draw method
 		void draw(sf::RenderWindow *window);
@@ -90,8 +91,10 @@ namespace pb
 
 		std::vector<Texture *> textures;
 		std::vector<Graphic_Obj *> drawList;
-		sf::RenderTexture *buffer = 0; // Used to apply shaders
-		pb::Shader *alpha = 0;
+		std::vector<Light *> lights;
+
+		sf::RenderTexture *buffer = 0, *buffer2 = 0; // Used to apply shaders
+		pb::Shader *alpha = 0, *lighting = 0, *shadow = 0;
 		pb::Effect *effect = 0; // Used for simple effects, like screen diming and fading
 		pb::Day_Shift_Animation *dayShift = 0;
 		bool updateTime = true;
