@@ -109,6 +109,11 @@ namespace pb
 		return cameraOrigins;
 	}
 
+	const sf::Vector2f Camera::getCameraBounds()
+	{
+		return cameraBounds;
+	}
+
 	void Camera::animateCamera()
 	{
 		switch (animation)
