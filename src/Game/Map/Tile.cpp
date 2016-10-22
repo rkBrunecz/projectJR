@@ -101,18 +101,72 @@ void Tile::update(const sf::Time& t)
 	updateTile(t);
 }
 
+bool Tile::collidedWithTile(const sf::IntRect& rect, unsigned int row, unsigned int column, unsigned int tileSize)
+{
+	bool collision = false;
+
+	//Create a bounding box for the current tile.
+	sf::IntRect boundingBox(column * tileSize + bBX,
+		row * tileSize + bBY,
+		width,
+		height);
+
+	if (boundingBox.top == rect.height + rect.top)
+	{
+		tileCollision(sf::Vector2i(rect.top, rect.left));
+		collision = true;
+	}
+	else
+		collision = rect.intersects(boundingBox);
+
+	if (collision)
+		tileCollision(sf::Vector2i(rect.top, rect.left));
+
+	//Check to see if the entity is inside of a objects colliding point
+	return collidable == true ? collision : false;
+}
+
 void Animated_Tile::updateTile(const sf::Time& t)
 {
+	if (ANIMATION_TYPE == Collision && !tileInteractedWith)
+		return;
+
 	if (numLoops != 0 && currentLoop == numLoops)
 	{
 		currentLoop = 0;
+		currentFrame = 0;
+		tileInteractedWith = false;
+
 		return;
 	}
 
 	float update = t.asSeconds() / updateInterval;
 
+	// Divide by number of animation frames to see if they divide into the current time evenly or oddly
 	if (int(update / numAnimationFrames) % 2 == 0)
-		this->column = int(update) % numAnimationFrames;
+		this->currentFrame = int(update) % numAnimationFrames;
 	else
-		this->column = (numAnimationFrames - 1) - (int(update) % numAnimationFrames);
+	{
+		short frame = (numAnimationFrames - 1) - (int(update) % numAnimationFrames);
+		
+		if (frame != currentFrame)
+		{
+			this->currentFrame = frame;
+
+			if (currentFrame == 0 && ANIMATION_TYPE != Infinite)
+				currentLoop++;
+		}
+	}
+}
+
+void Animated_Tile::tileCollision(const sf::Vector2i& position)
+{
+	if (ANIMATION_TYPE != Collision || lastPositionUpdate == position)
+		return;
+
+	lastPositionUpdate = position;
+
+	tileInteractedWith = true;
+	currentLoop = 0;
+	currentFrame = 0;
 }

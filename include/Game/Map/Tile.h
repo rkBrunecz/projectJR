@@ -37,22 +37,40 @@ public:
 
 	void update(const sf::Time& t);
 
+	bool collidedWithTile(const sf::IntRect& rect, unsigned int row, unsigned int column, unsigned int tileSize);
+
+	virtual unsigned short getColumn() { return column; };
+
 private:
+	virtual void tileCollision(const sf::Vector2i& position) { };
 	virtual void updateTile(const sf::Time& t) { };
 };
 
 class Animated_Tile : public Tile
 {
 public:
+	const enum Type
+	{
+		Collision,
+		Infinite
+	} ANIMATION_TYPE;
+
 	// Variables
+	sf::Vector2i lastPositionUpdate = sf::Vector2i(-1, -1);
 	unsigned short numAnimationFrames = 0;
 	unsigned short numLoops = 0; // If 0, the tile animates infinitely. 
+	bool tileInteractedWith;
 	float updateInterval = 0.f;
+
+	Animated_Tile(Type t) : ANIMATION_TYPE(t), Tile() { };
 
 private:
 	unsigned short currentLoop = 0, currentFrame = 0;
 
+	void tileCollision(const sf::Vector2i& position);
 	void updateTile(const sf::Time& t);
+
+	unsigned short getColumn() { return column + currentFrame; }
 };
 
 #endif;
