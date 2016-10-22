@@ -39,11 +39,11 @@ public:
 private:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
-	void updateVerticies(unsigned int row, unsigned int column, unsigned int tileSize, const Tile& t);
+	void updateVerticies(unsigned int row, unsigned int column, unsigned int tileSize, Tile& t);
 
-	void rotateTile(sf::Vertex *quad, unsigned int tileSize, const Tile& t);
+	void rotateTile(sf::Vertex *quad, unsigned int tileSize, Tile& t);
 
-	void mirrorTile(sf::Vertex *quad, unsigned int tileSize, const Tile& t);
+	void mirrorTile(sf::Vertex *quad, unsigned int tileSize);
 
 	const sf::Texture *tileset;
 	std::vector<Tile *>layer;
