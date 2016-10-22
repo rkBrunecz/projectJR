@@ -155,9 +155,16 @@ void Map::initializeTileData(const std::string& jrsFile)
 				}
 				else
 				{
-					tileData[pos]->at = new Animated_Tile();
+					inputPos++;
 
-					tileData[pos]->at->numAnimationFrames = atoi(input.substr(2, input.find('(')).c_str());
+					if (input[inputPos] == 'C')
+						tileData[pos]->at = new Animated_Tile(Animated_Tile::Collision);
+					else if (input[inputPos] == 'I')
+						tileData[pos]->at = new Animated_Tile(Animated_Tile::Infinite);
+
+					inputPos++;
+
+					tileData[pos]->at->numAnimationFrames = atoi(input.substr(inputPos, input.find('(')).c_str());
 					tileData[pos]->at->updateInterval = 1 / (float)atoi(input.substr(input.find('(') + 1, input.find(')')).c_str());
 
 					inputPos = input.find_last_of('*');
@@ -223,7 +230,7 @@ void Map::initializeTile(const std::string& input, int inputPos, Tile *t)
 	t->boundingBoxString = "none";
 
 	//If collidable, add a bounding box
-	if (t->collidable && input[inputPos++] == ':')
+	if (input[inputPos++] == ':')
 	{
 		short transform = t->rotation;
 		std::string width = input.substr(inputPos, 2), height = input.substr(inputPos + 3, 2), sBBX = input.substr(inputPos + 6, 2), sBBY = input.substr(inputPos + 9, 2);
@@ -534,7 +541,7 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, const pb::
 	for (unsigned int i = 0; i < numRows; i++)
 		groundLayers[i]->clearVertexArray();
 
-	// Draw ONLY the visible tiles
+	// Draw Tiles within specified range
 	for (unsigned int i = startRow; i <= viewHeight; i++)
 	{
 		for (unsigned int j = startColumn; j <= viewWidth; j++)
@@ -576,10 +583,9 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, const pb::
 	//Determine the order that graphic objects are drawn based on their immediate surroundings.
 	if (t != 0 || t2 != 0)
 	{
-		row++;
-		if (t != 0 && (row * TILE_SIZE) + t->bBY > player->getRect().top ||
-			t2 != 0 && (row * TILE_SIZE) + t2->bBY > player->getRect().top)
-			row--;		
+		if (t != 0 && (row * TILE_SIZE) + t->bBY < player->getRect().top ||
+			t2 != 0 && (row * TILE_SIZE) + t2->bBY < player->getRect().top)
+			row++;	
 	}
 
 	drawAtPos[row].push_back(player);
@@ -672,11 +678,10 @@ bool Map::collisionDetected(const sf::IntRect& rect)
 	bool collision = false;
 
 	//Check collision of the player on the left side of player
-	if (mapLayer->getTile(row, column)->collidable)
-		collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
-	else if (groundLayers[row]->getTile(0, column) != 0 && groundLayers[row]->getTile(0, column)->collidable)
+	collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
+	if (!collision)
 		collision = groundLayers[row]->isColliding(rect, row, column, TILE_SIZE);
-	else if (maskLayer->getTile(row, column) != 0 && maskLayer->getTile(row, column)->collidable)
+	else if (!collision)
 		collision = maskLayer->isColliding(rect, row, column, TILE_SIZE);
 	
 	//Return true if collision has been detected
@@ -685,11 +690,11 @@ bool Map::collisionDetected(const sf::IntRect& rect)
 
 	//Check collision of the player on the right side of the player
 	column = (unsigned int)((rect.left + rect.width) / TILE_SIZE);
-	if (mapLayer->getTile(row, column)->collidable)
-		collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
-	else if (groundLayers[row]->getTile(0, column) != 0 && groundLayers[row]->getTile(0, column)->collidable)
+	
+	collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
+	if (!collision)
 		collision = groundLayers[row]->isColliding(rect, row, column, TILE_SIZE);
-	else if (maskLayer->getTile(row, column) != 0 && maskLayer->getTile(row, column)->collidable)
+	else if (!collision)
 		collision = maskLayer->isColliding(rect, row, column, TILE_SIZE);
 
 	return collision; //Return collision
