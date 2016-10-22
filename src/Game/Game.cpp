@@ -16,6 +16,7 @@ Game::Game(const std::string versionNumber)
 	// Set up window properties
 	window = new sf::RenderWindow(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR " + versionNumber, sf::Style::Fullscreen);
 	window->setVerticalSyncEnabled(verticalSyncEnabled);
+	window->setFramerateLimit(0);
 	window->setMouseCursorVisible(false);
 	window->setKeyRepeatEnabled(false);
 
@@ -362,6 +363,7 @@ void Game::render(double alpha)
 
 	// Redisplay everything in the window
 	window->display();
+	glFinish(); // Potential fix to minor stutter issue?
 }
 
 /*

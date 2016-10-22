@@ -1,6 +1,7 @@
 #ifndef Game_H
 #define Game_H
 
+#include <SFML\OpenGL.hpp>
 #include <SFML\Graphics\RenderWindow.hpp>
 #include <SFML\Window\Event.hpp>
 #include "PBE\System\Camera.h"
