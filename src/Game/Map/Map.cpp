@@ -376,7 +376,7 @@ unsigned short Map::addTileToMap(const std::string& input, unsigned short pos, u
 		at.mirror = mirrored;
 		at.tileType = tileType;
 
-		if (rotation != 0)
+		if (rotation != 0 || mirrored)
 			updateBoundingBox(&at);
 		
 		// Update light position
@@ -450,19 +450,23 @@ void Map::updateBoundingBox(Tile *t)
 	}
 	else if (transform == 1) //Tile rotated 90 degrees
 	{
-		t->bBX = TILE_SIZE - tD->height - tD->bBY;
-		t->bBY = TILE_SIZE - tD->width - tD->bBX;
+		t->bBX = (TILE_SIZE - tD->bBY) - tD->height;
+		t->bBY = tD->bBX;
 	}
 	else if (transform == 2) //Tile rotated 180 degrees
 	{
-		t->bBX = TILE_SIZE - tD->width - tD->bBX;
-		t->bBY = TILE_SIZE - tD->height - tD->bBY;
+		t->bBX = (TILE_SIZE - tD->bBX) - tD->width;
+		t->bBY = (TILE_SIZE - tD->bBY) - tD->height;
 	}
 	else if (transform == 3) //Tile rotate 270 degrees
 	{
 		t->bBX = tD->bBY;
-		t->bBY = tD->bBX;
+		t->bBY = (TILE_SIZE - tD->bBX) - tD->width;
 	}
+
+	// Update bounding box if tile has been mirrored
+	if (t->mirror)
+		t->bBX = (TILE_SIZE - t->bBX) - t->width;
 }
 
 /*
