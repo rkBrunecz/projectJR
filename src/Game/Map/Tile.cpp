@@ -141,22 +141,12 @@ void Animated_Tile::updateTile(const sf::Time& t)
 	}
 
 	float update = t.asSeconds() / updateInterval;
+	int frame = int(update) % numAnimationFrames;	
 
-	// Divide by number of animation frames to see if they divide into the current time evenly or oddly
-	if (int(update / numAnimationFrames) % 2 == 0)
-		this->currentFrame = int(update) % numAnimationFrames;
-	else
-	{
-		short frame = (numAnimationFrames - 1) - (int(update) % numAnimationFrames);
-		
-		if (frame != currentFrame)
-		{
-			this->currentFrame = frame;
+	if (currentFrame != frame && frame == 0 && ANIMATION_TYPE != Infinite)
+		currentLoop++;
 
-			if (currentFrame == 0 && ANIMATION_TYPE != Infinite)
-				currentLoop++;
-		}
-	}
+	currentFrame = frame;
 }
 
 void Animated_Tile::tileCollision(const sf::Vector2i& position)
