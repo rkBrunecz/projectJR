@@ -600,7 +600,10 @@ void Editable_Map::deleteTileFromPos(int row, int column)
 		Tile *t = mapLayer->getTile(row, column);
 
 		if (maskLayer->getTile(row, column)->collidable && t != 0)
+		{
 			mapLayer->changeTileCollision(row, column, tileData[t->row * tileDataColumns + t->column]->getTile()->collidable);
+			collisionLayer->addVerticies(row, column, float(column * TILE_SIZE + t->bBX), float(row * TILE_SIZE + t->bBY), t->width, t->height);
+		}
 		
 		L = maskLayer;
 	}
@@ -609,7 +612,13 @@ void Editable_Map::deleteTileFromPos(int row, int column)
 		return;
 
 	L->removeTile(row, column);
-	collisionLayer->removeVerticies(row, column);
+
+	// Remove collision block from collision layer if no layer has a collidable tile
+	if (canopyLayer->getTile(row, column) != 0 && !canopyLayer->getTile(row, column)->collidable &&
+		groundLayers[row]->getTile(row, column) != 0 && !groundLayers[row]->getTile(row, column)->collidable &&
+		maskLayer->getTile(row, column) != 0 && !maskLayer->getTile(row, column)->collidable &&
+		mapLayer->getTile(row, column) != 0 && !mapLayer->getTile(row, column)->collidable)
+		collisionLayer->removeVerticies(row, column);
 }
 
 void Editable_Map::deleteTransitionPoint(int row, int column)
@@ -684,7 +693,9 @@ void Editable_Map::rotateTile(int row, int column)
 		t->rotation = 0;
 
 	updateBoundingBox(t);
-	collisionLayer->addVerticies(row, column, float(column * TILE_SIZE + t->bBX), float(row * TILE_SIZE + t->bBY), t->width, t->height);
+
+	if (t->collidable)
+		collisionLayer->addVerticies(row, column, float(column * TILE_SIZE + t->bBX), float(row * TILE_SIZE + t->bBY), t->width, t->height);
 }
 
 void Editable_Map::mirrorTileAtPos(int row, int column)
@@ -712,7 +723,9 @@ void Editable_Map::mirrorTileAtPos(int row, int column)
 		t->mirror = false;
 
 	updateBoundingBox(t);
-	collisionLayer->addVerticies(row, column, float(column * TILE_SIZE + t->bBX), float(row * TILE_SIZE + t->bBY), t->width, t->height);
+
+	if (t->collidable)
+		collisionLayer->addVerticies(row, column, float(column * TILE_SIZE + t->bBX), float(row * TILE_SIZE + t->bBY), t->width, t->height);
 }
 
 void Editable_Map::setTransitionPoint(int row, int column, sf::RenderWindow *window)
