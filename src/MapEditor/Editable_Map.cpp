@@ -559,7 +559,7 @@ void Editable_Map::setTile(const sf::Vector2i& mouseCoords)
 	}
 }
 
-void Editable_Map::addTileToPos(sf::RenderWindow *window)
+void Editable_Map::addTileToPos(sf::RenderWindow *window, const pb::Time& t)
 {
 	if (currentTile.pos >= 0 && tileData[currentTile.pos] == 0)
 		return;
@@ -582,7 +582,7 @@ void Editable_Map::addTileToPos(sf::RenderWindow *window)
 	else if (currentTile.specialTile.compare("Transition") == 0)
 		setTransitionPoint(row, column, window);
 	else if (currentTile.specialTile.compare("TestMap") == 0)
-		testMap(row, column);
+		testMap(row, column, t);
 	else if (currentTile.pos != -1)
 		addTileToMap(*tileData[currentTile.pos], row, column);
 }
@@ -780,7 +780,7 @@ void Editable_Map::setTransitionPoint(int row, int column, sf::RenderWindow *win
 	transitions.push_back(tp);
 }
 
-void Editable_Map::testMap(unsigned int row, unsigned int column)
+void Editable_Map::testMap(unsigned int row, unsigned int column, const pb::Time& t)
 {
 	if (!mapLoaded)
 		return;
@@ -791,7 +791,7 @@ void Editable_Map::testMap(unsigned int row, unsigned int column)
 
 	std::string mapName = getMapName();
 
-	std::string cmd = "ProjectJR.exe " + mapName + " " + std::to_string(testPos.y) + " " + std::to_string(testPos.x);
+	std::string cmd = "ProjectJR.exe " + mapName + " " + std::to_string(testPos.y) + " " + std::to_string(testPos.x) + " " + std::to_string(t.hours) + " " + std::to_string(t.minutes);
 	LPSTR cmdArgs = const_cast<char *>(cmd.c_str());
 
 	PROCESS_INFORMATION ProcessInfo; //This is what we get as an [out] parameter
