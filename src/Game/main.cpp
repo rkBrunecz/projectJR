@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 	Game *game = 0;
 	std::string version = "v.1.2a"; // Version number
 
-	if (argc == 4)
+	if (argc == 6)
 		game = new Game(version, argc, argv);
 	else
 		game = new Game(version);
