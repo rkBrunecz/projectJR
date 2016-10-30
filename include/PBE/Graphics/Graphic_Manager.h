@@ -38,7 +38,7 @@ namespace pb
 		void draw(sf::RenderWindow *window);
 
 		// Use this draw method if you want to utilize the built in day and night shift, and shadow alpha shader
-		void draw(sf::RenderWindow *window, Time& t);
+		void draw(sf::RenderWindow *window, Time& t, bool clearLists = true);
 
 		void clearTextureList();
 		void enableDayShift(bool enable);
@@ -49,6 +49,8 @@ namespace pb
 		void fadeOut(sf::Color fadeColor, float updateInterval, int increment);
 		void updateEffect(sf::RenderTarget& target);
 		bool effectFinished();
+
+		bool drawListEmpty();
 
 	private:	
 		struct Texture

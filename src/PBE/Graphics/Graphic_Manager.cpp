@@ -124,7 +124,7 @@ namespace pb
 		drawList.clear();
 	}
 
-	void Graphic_Manager::draw(sf::RenderWindow* window, Time& t)
+	void Graphic_Manager::draw(sf::RenderWindow* window, Time& t, bool clearLists)
 	{
 		// Local variables
 		sf::Color dayColor = dayShift->updateDayTime(t);
@@ -171,8 +171,9 @@ namespace pb
 				buffer->draw(*drawList[i]->drawable, shadow->getShader());
 			else
 				buffer->draw(*drawList[i]->drawable);
-
-			delete drawList[i];
+			
+			if (clearLists)
+				delete drawList[i];
 		}
 
 		// Display the buffer
@@ -205,8 +206,11 @@ namespace pb
 		}
 
 		// Clear draw list and lights list
-		drawList.clear();
-		lights.clear();
+		if (clearLists)
+		{
+			drawList.clear();
+			lights.clear();
+		}
 
 		// Free memory
 		delete lightPositions;
@@ -250,5 +254,10 @@ namespace pb
 	bool Graphic_Manager::effectFinished()
 	{
 		return (effect == 0 ? true : effect->finished());
+	}
+
+	bool Graphic_Manager::drawListEmpty()
+	{
+		return (drawList.size() == 0 ? true : false);
 	}
 }
