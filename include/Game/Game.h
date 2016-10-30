@@ -56,6 +56,8 @@ private:
 		Windowed
 	};
 
+	const short TIME_SCALE = 10;
+
 	// Private variables
 	Game_States state = Play, returnState = Play;
 	Window_States windowState = Fullscreen; //Set window state to fullscreen

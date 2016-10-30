@@ -24,7 +24,7 @@ Game::Game(const std::string versionNumber)
 	camera = new pb::Camera(window->getSize().x, window->getSize().y, zoomLevelWorld);
 
 	// Intialize a game clock with some default values
-	gameClock = new pb::In_Game_Clock(10, 10, 0, 24, 8, 8, 4, 4);
+	gameClock = new pb::In_Game_Clock(TIME_SCALE, 10, 0, 24, 8, 8, 4, 4);
 
 	// Initialize graphic manager
 	graphicManager = new pb::Graphic_Manager(*gameClock);
@@ -41,12 +41,20 @@ Game::Game(std::string versionNumber, int argc, char* argv[]) : Game(versionNumb
 {
 	// Local variables
 	float x = 0, y = 0;
+	short hours = 0, minutes = 0;
 
-	if (argc == 4)
+	if (argc == 6)
 	{
 		currentMap = argv[1];
 		y = (float)atoi(argv[2]) * 32 + 16;
 		x = (float)atoi(argv[3]) * 32 + 16;
+
+		hours = atoi(argv[4]);
+		minutes = atoi(argv[5]);
+
+		gameClock->setTime(hours, minutes);
+
+		graphicManager->updateDayShiftEffect(*gameClock);
 	}
 
 	player->setPosition(sf::Vector2f(x, y));
