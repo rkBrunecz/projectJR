@@ -18,7 +18,8 @@ void main()
 			vec2 lightPos = vec2(lights[i].x, lights[i].y);
 			float steps = lights[i].z;
 			
-			if(distance(gl_FragCoord, lightPos) <= steps)
+			// Extend the range of where shadows draw to be slightly further than the radius of the light
+			if(distance(gl_FragCoord, lightPos) <= steps * 1.2)
 				pixel.a = max((1.1 - distance(gl_FragCoord, lightPos) / steps) * maxOpacity, pixel.a);
 		}
 	}
