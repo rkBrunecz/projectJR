@@ -39,7 +39,7 @@ public:
 	~Map();
 
 	//PUBLIC FUNCTIONS
-	virtual void updateDrawList(Player* player, const sf::Time& currentTime, const pb::Time& currentInGameTime, bool animate);
+	virtual void updateDrawList(Player* player, const sf::Time& currentTime, const pb::Time& currentInGameTime);
 	virtual void loadMap(std::string mapName);
 	
 	/*

@@ -500,7 +500,7 @@ void Map::setLightInterval(const sf::Vector2u& interval)
 	lightInterval = interval;
 }
 
-void Map::updateDrawList(Player* player, const sf::Time& currentTime, const pb::Time& currentInGameTime, bool animate)
+void Map::updateDrawList(Player* player, const sf::Time& currentTime, const pb::Time& currentInGameTime)
 {
 	//LOCAL VARIABLES
 	std::vector<std::vector<pb::Graphic_Entity*>> drawAtPos;

@@ -101,10 +101,7 @@ void Game::processEvents()
 			else if (event.key.code == sf::Keyboard::Space) //Pause the game if the spacebar is pressed
 			{
 				if (state == Play || state == Battle)
-				{
 					state = Pause;
-					graphicManager->enableDayShift(false);
-				}
 				else
 				{
 					state = returnState;
@@ -304,6 +301,7 @@ void Game::update()
 
 		player->loadState(Player::World); // change player state
 
+		gameClock->resume();
 		graphicManager->enableDayShift(true); // re-enable day shift
 
 		// Change states
@@ -333,7 +331,7 @@ void Game::render(double alpha)
 		player->renderPosition(alpha);
 
 		//Draw all graphics
-		map->updateDrawList(player, currentTime, gameClock->getTime(), true);
+		map->updateDrawList(player, currentTime, gameClock->getTime());
 
 		break;
 
@@ -342,19 +340,23 @@ void Game::render(double alpha)
 
 		break;
 
+
 	case Pause:
-		//Draw all graphics
-		if (returnState == Play)
-			map->updateDrawList(player, currentTime, gameClock->getTime(), false);
-		else
-			battle->updateDrawList(false, alpha);
+
+		if (graphicManager->drawListEmpty())
+		{
+			if (returnState == Play)
+				map->updateDrawList(player, currentTime, gameClock->getTime());
+			else if (returnState == Battle)
+				battle->updateDrawList(false, alpha);
+		}
 
 		break;
 
 	case Fading:
 		// Add the games previous state to the draw list
 		if (returnState == InitiateBattle || returnState == Transition || returnState == Play)
-			map->updateDrawList(player, currentTime, gameClock->getTime(), false);
+			map->updateDrawList(player, currentTime, gameClock->getTime());
 		else if (returnState == InitiateOverworld || returnState == Battle)
 			battle->updateDrawList(true, alpha);
 
@@ -367,7 +369,10 @@ void Game::render(double alpha)
 	camera->animateCamera(); // Apply any camera animations
 	window->setView(*camera); // Update the windows view
 
-	graphicManager->draw(window, gameClock->getTime()); // Use day/night version of graphic manager draw
+	if (state != Pause)
+		graphicManager->draw(window, gameClock->getTime()); // Use day/night version of graphic manager draw
+	else
+		graphicManager->draw(window, gameClock->getTime(), false); // Use day/night version of graphic manager draw
 
 	// Redisplay everything in the window
 	window->display();
@@ -397,9 +402,6 @@ void Game::runGame()
 	// GAME LOOP
 	while (window->isOpen())
 	{
-		// Process events
-		processEvents();
-
 		// Get time
 		sf::Time t = clock.getElapsedTime();
 		this->currentTime = t;
@@ -414,6 +416,9 @@ void Game::runGame()
 		// Consume time to obtain a steady frame rate using a fixed timestep
 		while (accumulator >= dt)
 		{
+			// Process events
+			processEvents();
+
 			// Update game logic
 			update();
 
