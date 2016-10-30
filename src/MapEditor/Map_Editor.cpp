@@ -20,7 +20,7 @@ Map_Editor::Map_Editor(const std::string& versionNum)
 	camera->setCenter(float(desktop.width / 2), float(desktop.height / 2));
 	camera->setViewport(sf::FloatRect(0, 0.03f, (window->getSize().x - (window->getSize().x * 0.20f)) / window->getSize().x, 0.97f));
 
-	gameClock = new pb::In_Game_Clock(2, 8, 0, 24, 8, 8, 4, 4);
+	gameClock = new pb::In_Game_Clock(2, 22, 0, 24, 8, 8, 4, 4);
 
 	graphicManager = new pb::Graphic_Manager(*gameClock);
 	tilePaneManager = new pb::Graphic_Manager();
@@ -38,6 +38,7 @@ Map_Editor::Map_Editor(const std::string& versionNum)
 	menuBar->addDropDownItem("Time", "10x");
 	menuBar->addDropDownItem("Time", "20x");
 	menuBar->addDropDownItem("Time", "40x");
+	menuBar->addDropDownItem("Time", "60x");
 	menuBar->addDropDownItem("Time", "Real Time");
 
 	//Set up a tile pane
@@ -145,6 +146,8 @@ void Map_Editor::parseMenuBarString(const std::string& s)
 		gameClock->changeFactor(20);
 	else if (s.compare("40x") == 0)
 		gameClock->changeFactor(40);
+	else if (s.compare("60x") == 0)
+		gameClock->changeFactor(60);
 	else if (s.compare("Real Time") == 0)
 		gameClock->changeFactor(1 / 60);
 	else if (s.compare("New") == 0)
@@ -247,7 +250,7 @@ void Map_Editor::update()
 
 			sf::Vector2i mousePos = sf::Mouse::getPosition(*window);
 			if (leftMouseBtnClicked && mousePos.x < window->getSize().x - tilePane.getSize().x && mousePos.y > menuBar->getSize().y)
-				map->addTileToPos(window);
+				map->addTileToPos(window, gameClock->getTime());
 			else if (leftMouseBtnClicked)
 				map->setTile(mousePos);
 		}
