@@ -66,6 +66,17 @@ namespace pb
 		return textures.back()->getTexture();
 	}
 
+	void Graphic_Manager::updateDayShiftEffect(pb::In_Game_Clock& clock)
+	{
+		if (dayShift != 0)
+		{
+			delete dayShift;
+			dayShift = 0;
+		}
+
+		dayShift = new Day_Shift_Animation(130, clock);
+	}
+
 	void Graphic_Manager::enableDayShift(bool enable)
 	{
 		updateTime = enable;

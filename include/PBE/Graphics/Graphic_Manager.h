@@ -31,6 +31,8 @@ namespace pb
 		const sf::Texture *addTexture(std::string fileName);
 		void addLight(pb::Light *l);
 		void addToDrawList(sf::Drawable *d, bool hasShadow = false);
+		
+		void updateDayShiftEffect(In_Game_Clock& clock);
 
 		// Basic draw method
 		void draw(sf::RenderWindow *window);
