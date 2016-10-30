@@ -19,7 +19,7 @@ void main()
 			float steps = lights[i].z;
 			
 			if(distance(gl_FragCoord, lightPos) <= steps)
-				pixel.a = max((1.0 - distance(gl_FragCoord, lightPos) / steps) * maxOpacity, pixel.a);
+				pixel.a = max((1.1 - distance(gl_FragCoord, lightPos) / steps) * maxOpacity, pixel.a);
 		}
 	}
 		
