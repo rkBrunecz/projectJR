@@ -318,7 +318,7 @@ void Editable_Map::addTileToMap(Tile_Data& tD, unsigned int row, unsigned int co
 
 		// Update light position
 		if (at.light != 0)
-			at.light->lightPos = sf::Vector2f(float(column * TILE_SIZE + (TILE_SIZE * 0.5f)), float(row * TILE_SIZE + TILE_SIZE));
+			at.light->lightPos += sf::Vector2f(float(column * TILE_SIZE), float(row * TILE_SIZE));
 
 
 		L->addTile(at, row, column);
@@ -339,7 +339,7 @@ void Editable_Map::addTileToMap(Tile_Data& tD, unsigned int row, unsigned int co
 
 		// Update light position
 		if (t.light != 0)
-			t.light->lightPos = sf::Vector2f(float(column * TILE_SIZE + (TILE_SIZE * 0.5f)), float(row * TILE_SIZE + TILE_SIZE));
+			t.light->lightPos += sf::Vector2f(float(column * TILE_SIZE), float(row * TILE_SIZE));
 
 		L->addTile(t, row, column);
 	}
