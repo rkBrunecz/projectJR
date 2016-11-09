@@ -161,6 +161,8 @@ void Map::initializeTileData(const std::string& jrsFile)
 						tileData[pos]->at = new Animated_Tile(Animated_Tile::Collision);
 					else if (input[inputPos] == 'I')
 						tileData[pos]->at = new Animated_Tile(Animated_Tile::Infinite);
+					else if (input[inputPos] == 'T')
+						tileData[pos]->at = new Animated_Tile(Animated_Tile::Toggle);
 
 					inputPos++;
 
@@ -194,10 +196,10 @@ void Map::initializeTile(const std::string& input, int inputPos, Tile *t)
 	{
 		// Obtain the distance the light travels out in all directions
 		inputPos++;
-		float steps = (float)atoi(input.substr(inputPos, input.find('(')).c_str());
+		float steps = (float)atoi(input.substr(inputPos, input.find('(', inputPos)).c_str());
 		
 		// Obtain the color of the light
-		inputPos = input.find('(') + 1;
+		inputPos = input.find('(', inputPos) + 1;
 		int r = atoi(input.substr(inputPos, input.find(',')).c_str());
 		inputPos = input.find(',', inputPos) + 1;
 		int g = atoi(input.substr(inputPos, input.find(inputPos, ',')).c_str());
@@ -207,11 +209,15 @@ void Map::initializeTile(const std::string& input, int inputPos, Tile *t)
 		int a = atoi(input.substr(inputPos, input.find(')')).c_str());
 
 		// Obtain the intensity of the light
-		inputPos = input.find(')') + 1;
-		float intensity = (float)atof(input.substr(inputPos, input.find('L', inputPos)).c_str());
-		inputPos = input.find('L', inputPos) + 1;
+		inputPos = input.find(')', inputPos) + 1;
+		float intensity = (float)atof(input.substr(inputPos, input.find('p', inputPos)).c_str());
 
 		t->light = new pb::Light(sf::Color(r, g, b, a), steps, intensity);
+		inputPos = input.find('p', inputPos) + 1;
+
+		t->light->lightPos = sf::Vector2f((float)atof(input.substr(inputPos, input.find('x', inputPos)).c_str()), (float)atof(input.substr(input.find('x', inputPos) + 1, input.find('L', inputPos)).c_str()));
+
+		inputPos = input.find('L', inputPos) + 1;
 	}
 
 	t->row = input[inputPos++] - '0';
@@ -381,7 +387,7 @@ unsigned short Map::addTileToMap(const std::string& input, unsigned short pos, u
 		
 		// Update light position
 		if (at.light != 0)
-			at.light->lightPos = sf::Vector2f(float(column * TILE_SIZE + (TILE_SIZE * 0.5f)), float(row * TILE_SIZE + TILE_SIZE));
+			at.light->lightPos += sf::Vector2f(float(column * TILE_SIZE), float(realRow * TILE_SIZE));
 
 		L->addTile(at, row, column);
 
@@ -405,7 +411,7 @@ unsigned short Map::addTileToMap(const std::string& input, unsigned short pos, u
 
 		// Update light position
 		if (t.light != 0)
-			t.light->lightPos = sf::Vector2f(float(column * TILE_SIZE + (TILE_SIZE * 0.5f)), float(row * TILE_SIZE + TILE_SIZE));
+			t.light->lightPos += sf::Vector2f(float(column * TILE_SIZE), float(realRow * TILE_SIZE));
 
 		// Add tile to layer
 		L->addTile(t, row, column);
@@ -498,6 +504,26 @@ void Map::emptyMap()
 void Map::setLightInterval(const sf::Vector2u& interval)
 {
 	lightInterval = interval;
+}
+
+void Map::interactWithTile(const sf::Vector2u& pos, const sf::Vector2u& directionPos)
+{
+	// Check the tile where the player is
+	unsigned int row = pos.y / TILE_SIZE, column = pos.x / TILE_SIZE;
+	
+	canopyLayer->interactedWithTile(row, column);
+	groundLayers[row]->interactedWithTile(row, column);
+	maskLayer->interactedWithTile(row, column);
+	mapLayer->interactedWithTile(row, column);
+
+	// Check the tile in front of the player
+	row = directionPos.y / TILE_SIZE;
+	column = directionPos.x / TILE_SIZE;
+
+	canopyLayer->interactedWithTile(row, column);
+	groundLayers[row]->interactedWithTile(row, column);
+	maskLayer->interactedWithTile(row, column);
+	mapLayer->interactedWithTile(row, column);
 }
 
 void Map::updateDrawList(Player* player, const sf::Time& currentTime, const pb::Time& currentInGameTime)
@@ -685,8 +711,9 @@ bool Map::collisionDetected(const sf::IntRect& rect)
 	collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
 	if (!collision)
 		collision = groundLayers[row]->isColliding(rect, row, column, TILE_SIZE);
-	else if (!collision)
+	if (!collision)
 		collision = maskLayer->isColliding(rect, row, column, TILE_SIZE);
+
 	
 	//Return true if collision has been detected
 	if (collision)
@@ -698,7 +725,7 @@ bool Map::collisionDetected(const sf::IntRect& rect)
 	collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
 	if (!collision)
 		collision = groundLayers[row]->isColliding(rect, row, column, TILE_SIZE);
-	else if (!collision)
+	if (!collision)
 		collision = maskLayer->isColliding(rect, row, column, TILE_SIZE);
 
 	return collision; //Return collision
@@ -740,6 +767,11 @@ void Map::displayTransitionLayer()
 		renderTransitionLayer = true;
 	else
 		renderTransitionLayer = false;
+}
+
+unsigned short Map::getTileSize()
+{
+	return TILE_SIZE;
 }
 
 /*

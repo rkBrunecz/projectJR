@@ -55,11 +55,15 @@ public:
 	*/
 	void setLightInterval(const sf::Vector2u& interval);
 
+	void interactWithTile(const sf::Vector2u& pos, const sf::Vector2u& directionPos);
+
 	const std::string moveToMap(Player* player);
 	
 	const sf::Vector2i getMapSize();
 
 	bool transitioning(Player* player);
+
+	unsigned short getTileSize();
 
 	//DEBUG tools
 	void displayCollsionLayer();
