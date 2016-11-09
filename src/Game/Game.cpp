@@ -119,6 +119,8 @@ void Game::processEvents()
 				map->displayGridLayer();
 			else if (event.key.code == sf::Keyboard::T)
 				map->displayTransitionLayer();
+			else if (event.key.code == sf::Keyboard::E && state == Play)
+				map->interactWithTile(player->getPosition(), player->getPosition(map->getTileSize()));
 			//Resize window if the F11 key is pressed
 			else if (event.key.code == sf::Keyboard::F11)
 			{
@@ -265,6 +267,9 @@ void Game::update()
 		// Delete previous game camera and create the battle camera
 		delete camera;
 		camera = new pb::Camera(window->getSize().x, window->getSize().y, 0.5f, "screenshake.wav");
+
+		// Pause game time when in battle
+		gameClock->pause();
 
 		player->loadState(Player::Battle); // change player state
 
