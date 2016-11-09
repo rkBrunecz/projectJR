@@ -34,6 +34,8 @@ public:
 
 	void changeTileCollision(unsigned int row, unsigned int column, bool collidable);
 
+	void interactedWithTile(unsigned int row, unsigned int column);
+
 	bool isColliding(const sf::IntRect& rect, unsigned int row, unsigned int column, unsigned int tileSize);
 
 private:

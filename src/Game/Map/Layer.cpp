@@ -26,8 +26,8 @@ void Layer::update(unsigned int tileSize, unsigned int row, unsigned int column,
 		layer[layerRow * numColumns + column]->update(currentTime);
 		updateVerticies(row, column, tileSize, *layer[layerRow * numColumns + column]);
 
-		if (Tile::lightsOn && layer[layerRow * numColumns + column]->light != 0)
-			graphicManager.addLight(layer[layerRow * numColumns + column]->light);
+		if (layer[layerRow * numColumns + column]->getLight() != 0)
+			graphicManager.addLight(layer[layerRow * numColumns + column]->getLight());
 	}
 }
 
@@ -51,6 +51,15 @@ void Layer::changeTileCollision(unsigned int row, unsigned int column, bool coll
 
 	if (layer[row * numColumns + column] != 0)
 		layer[row * numColumns + column]->collidable = collidable;
+}
+
+void Layer::interactedWithTile(unsigned int row, unsigned int column)
+{
+	if (numRows == 1)
+		row = 0;
+
+	if (layer[row * numColumns + column] != 0)
+		layer[row * numColumns + column]->interact();
 }
 
 void Layer::addTile(const Tile& t, unsigned int row, unsigned int column)
