@@ -251,6 +251,7 @@ void Player::updatePosition(const float elapsedTime)
 		offSetYDir = 5;
 
 		dir = Walk::Up;
+		facingDirection = Up;
 	}
 	// Move down
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
@@ -258,6 +259,7 @@ void Player::updatePosition(const float elapsedTime)
 		offSetY = VELOCITY * elapsedTime;
 
 		dir = Walk::Down;
+		facingDirection = Down;
 	}	
 	// Move right
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
@@ -265,6 +267,7 @@ void Player::updatePosition(const float elapsedTime)
 		offSetX = VELOCITY * elapsedTime;
 
 		dir = Walk::Right;
+		facingDirection = Right;
 	}
 	// Move left
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -272,6 +275,7 @@ void Player::updatePosition(const float elapsedTime)
 		offSetX = -VELOCITY * elapsedTime;
 
 		dir = Walk::Left;
+		facingDirection = Left;
 	}
 
 	walk->updateWalkCycle(dir, &characterAniClock);
@@ -300,6 +304,41 @@ void Player::renderPosition(double alpha)
 	// Update the position of the camera and character. Do not update the camera position if it is at the end of the map.
 	character.setPosition((sf::Vector2i)posInterpolation);
 	Game::camera->updatePosition(sf::Vector2f((sf::Vector2i)posInterpolation));
+}
+
+sf::Vector2u Player::getPosition()
+{
+	return sf::Vector2u(character.sprite.getPosition());
+}
+
+sf::Vector2u Player::getPosition(unsigned int tileSize)
+{
+	sf::Vector2u pos = sf::Vector2u(character.sprite.getPosition());
+
+	switch (facingDirection)
+	{
+	case Up:
+		pos.y = (pos.y - tileSize < 0 ? 0 : pos.y - tileSize);
+
+		break;
+
+	case Down:
+		pos.y += tileSize;
+
+		break;
+
+	case Right:
+		pos.x += tileSize;
+
+		break;
+
+	case Left:
+		pos.x = (pos.x - tileSize < 0 ? 0 : pos.x - tileSize);
+
+		break;
+	}
+
+	return pos;
 }
 
 /*

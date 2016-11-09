@@ -50,6 +50,11 @@ public:
 	void setPosition(const sf::Vector2f coords);
 	const sf::IntRect getRect();
 
+	sf::Vector2u getPosition();
+
+	// Obtains the position in front of current facing direction of the sprite
+	sf::Vector2u getPosition(unsigned int tileSize);
+
 	// Collidable methods
 	bool collisionDetected(const sf::IntRect& rect);
 
@@ -62,6 +67,12 @@ private:
 	const float VELOCITY = 150;
 	const short WIDTH = 20, HEIGHT = 3;
 	const short MOVEMENT_UPDATES = 15;
+	const enum Directions {
+		Up,
+		Down,
+		Left,
+		Right
+	};
 
 	// PRIVATE VARIABLES
 	sf::Clock characterAniClock;
@@ -69,6 +80,7 @@ private:
 	sf::Vector2f velocity;
 
 	States state = World;
+	Directions facingDirection = Down;
 
 	// Battle variables
 	Attack *chop = 0, *uppercut = 0, *arielSlash = 0;
