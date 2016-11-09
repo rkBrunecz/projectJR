@@ -1,12 +1,12 @@
 #ProjectJR
 *Developers:	Randall Brunecz, Joshua Gray*			
-*Last Updated:	10/11/2016*		   								   
+*Last Updated:	11/09/2016*		   								   
 
 Game description will be updated when the game developes more. Currently, the project is focused on building the tools and the engine to run the game. The engine is being built from scratch utilizing the SFML library. The scope of the project is difficult to measure since the features and additions are decided on a regular basis. Initially, the game was going to be very simple with a simplistic engine. However, as time goes on, the complextity of the game increases. 
 
 Many of the graphics on display in the game have been made by one of the two developers. However, there are also a number of graphics that are being used from various artists from around the web. All of these will be replaced one day, but the artists deserve credit for their incredible work. You can find links to these resources in the [RESOURCES](#resources) section.  
 
-You can obtain the resources needed to run the game and mapeditor [here](https://www.mediafire.com/?40bibadp11yfqk4).  
+You can obtain the resources needed to run the game and mapeditor [here](http://www.mediafire.com/file/8klixcmbrrhpayf/res.zip).  
 
 ###Trailers:
 
