@@ -39,7 +39,17 @@ public:
 
 	bool collidedWithTile(const sf::IntRect& rect, unsigned int row, unsigned int column, unsigned int tileSize);
 
+	virtual void interact() { };
+
 	virtual unsigned short getColumn() { return column; };
+
+	virtual pb::Light *getLight() 
+	{	
+		if (!lightsOn)
+			return 0;
+
+		return light;
+	}
 
 private:
 	virtual void tileCollision(const sf::Vector2i& position) { };
@@ -52,6 +62,7 @@ public:
 	const enum Type
 	{
 		Collision,
+		Toggle,
 		Infinite
 	} ANIMATION_TYPE;
 
@@ -63,6 +74,10 @@ public:
 	float updateInterval = 0.f;
 
 	Animated_Tile(Type t) : ANIMATION_TYPE(t), Tile() { };
+
+	void interact();
+
+	pb::Light *getLight();
 
 private:
 	unsigned short currentLoop = 0, currentFrame = 0;

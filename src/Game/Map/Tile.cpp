@@ -128,7 +128,7 @@ bool Tile::collidedWithTile(const sf::IntRect& rect, unsigned int row, unsigned 
 
 void Animated_Tile::updateTile(const sf::Time& t)
 {
-	if (ANIMATION_TYPE == Collision && !tileInteractedWith)
+	if ((ANIMATION_TYPE == Collision || ANIMATION_TYPE == Toggle) && !tileInteractedWith)
 		return;
 
 	if (numLoops != 0 && currentLoop == numLoops)
@@ -141,9 +141,17 @@ void Animated_Tile::updateTile(const sf::Time& t)
 	}
 
 	float update = t.asSeconds() / updateInterval;
-	int frame = int(update) % numAnimationFrames;	
+	int frame;
 
-	if (currentFrame != frame && frame == 0 && ANIMATION_TYPE != Infinite)
+	// First frame for a toggled animation is static. Skip the first frame to the active part of the animation
+	if (ANIMATION_TYPE == Toggle)
+		frame = (int(update) % (numAnimationFrames - 1)) + 1;	
+	else
+		frame = int(update) % numAnimationFrames;
+
+	int firstFrame = (ANIMATION_TYPE != Toggle ? 0 : 1);
+
+	if (currentFrame != frame && frame == firstFrame && ANIMATION_TYPE != Infinite)
 		currentLoop++;
 
 	currentFrame = frame;
@@ -159,4 +167,24 @@ void Animated_Tile::tileCollision(const sf::Vector2i& position)
 	tileInteractedWith = true;
 	currentLoop = 0;
 	currentFrame = 0;
+}
+
+void Animated_Tile::interact()
+{
+	tileInteractedWith = !tileInteractedWith;
+	currentLoop = 0;
+	currentFrame = 0;
+}
+
+pb::Light *Animated_Tile::getLight()
+{
+	if (ANIMATION_TYPE == Toggle && !tileInteractedWith)
+		return 0;
+	else if (ANIMATION_TYPE == Toggle && tileInteractedWith)
+		return light;
+	else if (!lightsOn)
+		return 0;
+
+	return light;
+
 }
