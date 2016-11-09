@@ -39,6 +39,7 @@ namespace pb
 		void updateClock();
 		void pause();
 		void resume();
+		void setTime(short currentHour, short currentMinute);
 
 		void changeFactor(double timeScale);
 

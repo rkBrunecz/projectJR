@@ -13,23 +13,33 @@ namespace pb
 	Graphic_Manager::Graphic_Manager()
 	{
 		buffer = new sf::RenderTexture();
+		buffer2 = new sf::RenderTexture();
 	}
 
 	Graphic_Manager::Graphic_Manager(In_Game_Clock& clock) : Graphic_Manager()
 	{
-		dayShift = new Day_Shift_Animation(110, clock);
+		dayShift = new Day_Shift_Animation(130, clock);
 
 		alpha = new pb::Alpha(sf::Color::Black);
 		alpha->load();
+
+		lighting = new pb::Lighting();
+		lighting->load();
+
+		shadow = new pb::Shadow();
+		shadow->load();
 	}
 
 	Graphic_Manager::~Graphic_Manager()
 	{
 		// Delete shaders
 		delete alpha;
+		delete lighting;
+		delete shadow;
 
 		// Delete buffers
 		delete buffer;
+		delete buffer2;
 
 		delete dayShift;
 		delete effect;
@@ -56,11 +66,19 @@ namespace pb
 		return textures.back()->getTexture();
 	}
 
+	void Graphic_Manager::updateDayShiftEffect(pb::In_Game_Clock& clock)
+	{
+		if (dayShift != 0)
+		{
+			delete dayShift;
+			dayShift = 0;
+		}
+
+		dayShift = new Day_Shift_Animation(130, clock);
+	}
+
 	void Graphic_Manager::enableDayShift(bool enable)
 	{
-		if (alpha == 0)
-			return;
-
 		updateTime = enable;
 	}
 
@@ -71,6 +89,11 @@ namespace pb
 			delete textures[i];
 
 		textures.clear();
+	}
+
+	void Graphic_Manager::addLight(pb::Light *l)
+	{
+		lights.push_back(l);
 	}
 
 	void Graphic_Manager::addToDrawList(sf::Drawable *d, bool hasShadow)
@@ -101,44 +124,75 @@ namespace pb
 		drawList.clear();
 	}
 
-	void Graphic_Manager::draw(sf::RenderWindow* window, Time& t)
+	void Graphic_Manager::draw(sf::RenderWindow* window, Time& t, bool clearLists)
 	{
 		// Local variables
 		sf::Color dayColor = dayShift->updateDayTime(t);
 
 		// Recreate the buffers to match the windows size if they do not already match
 		if (buffer->getSize().x != window->getSize().x || buffer->getSize().y != window->getSize().y)
+		{
 			buffer->create(window->getSize().x, window->getSize().y);
+			buffer2->create(window->getSize().x, window->getSize().y);
+		}
 		
 		// Set views
 		buffer->setView(window->getView());
-
 		window->setView(window->getDefaultView());
 
 		// Clear buffer for drawing
 		buffer->clear();
 
-		// Update alpha shader
-		alpha->update(dayShift->getShadowAlpha());
+		// Arrays used for the light and shadow shaders
+		sf::Vector3f *lightPositions = new sf::Vector3f[lights.size()];
+		sf::Glsl::Vec4 *colors = new sf::Glsl::Vec4[lights.size()];
+		float *intensities = new float[lights.size()];
 
+		sf::Vector2u originalViewSize = sf::Vector2u(unsigned int(buffer->getView().getViewport().width * window->getSize().x), unsigned int(buffer->getView().getViewport().height * window->getSize().y));
+		// Convert light positions from world coordinates to screen coordinates. Populate arrays for the light and shadow shaders
+		for (unsigned int i = 0; i < lights.size(); i++)
+		{
+			sf::Vector3f v = lights[i]->convertToScreenCoordinates(buffer->getView(), originalViewSize);
+			lightPositions[i].x = v.x;
+			lightPositions[i].y = v.y;
+			lightPositions[i].z = v.z;
+
+			colors[i] = lights[i]->lightColor;
+			intensities[i] = lights[i]->intensity;
+		}
+
+		// Update shadow shader
+		shadow->update(dayShift->getShadowAlpha(), dayShift->getShadowAlphaMax(), lightPositions, lights.size());
+
+		// Draw everything to the buffer
 		for (unsigned int i = 0; i < drawList.size(); i++)
 		{
 			if (drawList[i]->hasShadow)
-				buffer->draw(*drawList[i]->drawable, alpha->getShader());
+				buffer->draw(*drawList[i]->drawable, shadow->getShader());
 			else
 				buffer->draw(*drawList[i]->drawable);
-
-			delete drawList[i];
+			
+			if (clearLists)
+				delete drawList[i];
 		}
 
+		// Display the buffer
 		buffer->display();
 
 		// Apply day and night shift effect
 		sf::Sprite s(buffer->getTexture());
 		s.setColor(dayColor);
 
+		// Draw day and night shift effect to buffer 2
+		buffer2->clear();
+		buffer2->draw(s);
+		buffer2->display();
+
+		// Update lighting shader
+		lighting->update(lightPositions, colors, intensities, lights.size());
+
 		// Draw to window
-		window->draw(s);
+		window->draw(sf::Sprite(buffer2->getTexture()), lighting->getShader());
 		if (effect != 0)
 		{
 			effect->update(*window);
@@ -151,7 +205,17 @@ namespace pb
 			}
 		}
 
-		drawList.clear();
+		// Clear draw list and lights list
+		if (clearLists)
+		{
+			drawList.clear();
+			lights.clear();
+		}
+
+		// Free memory
+		delete lightPositions;
+		delete colors;
+		delete intensities;
 	}
 
 	void Graphic_Manager::dimScreen(sf::Color dimColor, unsigned short alpha)
@@ -190,5 +254,10 @@ namespace pb
 	bool Graphic_Manager::effectFinished()
 	{
 		return (effect == 0 ? true : effect->finished());
+	}
+
+	bool Graphic_Manager::drawListEmpty()
+	{
+		return (drawList.size() == 0 ? true : false);
 	}
 }

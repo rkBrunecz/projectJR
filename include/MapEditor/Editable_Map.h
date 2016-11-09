@@ -12,13 +12,13 @@ public:
 	Editable_Map();
 	Editable_Map(pb::Graphic_Manager *tilePaneManager, const sf::Vector2i& tileSheetCoords);
 
-	void updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager *graphicManager, const pb::Camera& camera, const sf::Vector2f& mouseCoords, const sf::Time& currentTime);
+	void updateDrawList(sf::RenderWindow *window, pb::Graphic_Manager *graphicManager, const pb::Camera& camera, const sf::Vector2f& mouseCoords, const sf::Time& currentTime, const pb::Time& inGameTime);
 	void updateTileSheet(const sf::RenderWindow& window, pb::Graphic_Manager *tilePaneManager, const sf::Vector2f& mousePos, pb::In_Game_Clock& gameClock);
 
 	void loadMap(std::string mapName, pb::Graphic_Manager* graphicManager, pb::Camera* camera);
 	void createMap(unsigned int rows, unsigned int columns, std::string mapName, std::string sheetFileName, pb::Graphic_Manager* graphicManager, pb::Camera* camera);
 	void setTile(const sf::Vector2i& mouseCoords);
-	void addTileToPos(sf::RenderWindow *window);
+	void addTileToPos(sf::RenderWindow *window, const pb::Time& t);
 	void saveMap();
 
 	static unsigned short getTileSize();
@@ -64,7 +64,7 @@ private:
 	void rotateTile(int row, int column);
 	void mirrorTileAtPos(int row, int column);
 	void setTransitionPoint(int row, int column, sf::RenderWindow *window);
-	void testMap(unsigned int row, unsigned int column);
+	void testMap(unsigned int row, unsigned int column, const pb::Time& t);
 
 	// Private constants
 	const unsigned int NUM_TILES_IN_SHEET = 200;

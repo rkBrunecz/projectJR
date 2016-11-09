@@ -20,6 +20,7 @@ The constructor of the map class creates a map that can be drawn.
 Map::Map(std::string mapName)
 {
 	pb::addToCollisionList(this);
+	Tile::lightsOn = false;
 
 	loadMap(mapName);
 }
@@ -154,9 +155,18 @@ void Map::initializeTileData(const std::string& jrsFile)
 				}
 				else
 				{
-					tileData[pos]->at = new Animated_Tile();
+					inputPos++;
 
-					tileData[pos]->at->numAnimationFrames = atoi(input.substr(2, input.find('(')).c_str());
+					if (input[inputPos] == 'C')
+						tileData[pos]->at = new Animated_Tile(Animated_Tile::Collision);
+					else if (input[inputPos] == 'I')
+						tileData[pos]->at = new Animated_Tile(Animated_Tile::Infinite);
+					else if (input[inputPos] == 'T')
+						tileData[pos]->at = new Animated_Tile(Animated_Tile::Toggle);
+
+					inputPos++;
+
+					tileData[pos]->at->numAnimationFrames = atoi(input.substr(inputPos, input.find('(')).c_str());
 					tileData[pos]->at->updateInterval = 1 / (float)atoi(input.substr(input.find('(') + 1, input.find(')')).c_str());
 
 					inputPos = input.find_last_of('*');
@@ -181,6 +191,35 @@ void Map::initializeTileData(const std::string& jrsFile)
 
 void Map::initializeTile(const std::string& input, int inputPos, Tile *t)
 {
+	// Determine if tile produces light
+	if (input[inputPos] == 'L')
+	{
+		// Obtain the distance the light travels out in all directions
+		inputPos++;
+		float steps = (float)atoi(input.substr(inputPos, input.find('(', inputPos)).c_str());
+		
+		// Obtain the color of the light
+		inputPos = input.find('(', inputPos) + 1;
+		int r = atoi(input.substr(inputPos, input.find(',')).c_str());
+		inputPos = input.find(',', inputPos) + 1;
+		int g = atoi(input.substr(inputPos, input.find(inputPos, ',')).c_str());
+		inputPos = input.find(',', inputPos) + 1;
+		int b = atoi(input.substr(inputPos, input.find(inputPos, ',')).c_str());
+		inputPos = input.find(',', inputPos) + 1;
+		int a = atoi(input.substr(inputPos, input.find(')')).c_str());
+
+		// Obtain the intensity of the light
+		inputPos = input.find(')', inputPos) + 1;
+		float intensity = (float)atof(input.substr(inputPos, input.find('p', inputPos)).c_str());
+
+		t->light = new pb::Light(sf::Color(r, g, b, a), steps, intensity);
+		inputPos = input.find('p', inputPos) + 1;
+
+		t->light->lightPos = sf::Vector2f((float)atof(input.substr(inputPos, input.find('x', inputPos)).c_str()), (float)atof(input.substr(input.find('x', inputPos) + 1, input.find('L', inputPos)).c_str()));
+
+		inputPos = input.find('L', inputPos) + 1;
+	}
+
 	t->row = input[inputPos++] - '0';
 	t->column = input[inputPos++] - '0';
 	t->rotation = input[inputPos++] - '0';
@@ -197,7 +236,7 @@ void Map::initializeTile(const std::string& input, int inputPos, Tile *t)
 	t->boundingBoxString = "none";
 
 	//If collidable, add a bounding box
-	if (t->collidable && input[inputPos++] == ':')
+	if (input[inputPos++] == ':')
 	{
 		short transform = t->rotation;
 		std::string width = input.substr(inputPos, 2), height = input.substr(inputPos + 3, 2), sBBX = input.substr(inputPos + 6, 2), sBBY = input.substr(inputPos + 9, 2);
@@ -343,8 +382,12 @@ unsigned short Map::addTileToMap(const std::string& input, unsigned short pos, u
 		at.mirror = mirrored;
 		at.tileType = tileType;
 
-		if (rotation != 0)
+		if (rotation != 0 || mirrored)
 			updateBoundingBox(&at);
+		
+		// Update light position
+		if (at.light != 0)
+			at.light->lightPos += sf::Vector2f(float(column * TILE_SIZE), float(realRow * TILE_SIZE));
 
 		L->addTile(at, row, column);
 
@@ -366,6 +409,11 @@ unsigned short Map::addTileToMap(const std::string& input, unsigned short pos, u
 		if (rotation != 0)
 			updateBoundingBox(&t);
 
+		// Update light position
+		if (t.light != 0)
+			t.light->lightPos += sf::Vector2f(float(column * TILE_SIZE), float(realRow * TILE_SIZE));
+
+		// Add tile to layer
 		L->addTile(t, row, column);
 
 		if (t.collidable)
@@ -408,19 +456,23 @@ void Map::updateBoundingBox(Tile *t)
 	}
 	else if (transform == 1) //Tile rotated 90 degrees
 	{
-		t->bBX = TILE_SIZE - tD->height - tD->bBY;
-		t->bBY = TILE_SIZE - tD->width - tD->bBX;
+		t->bBX = (TILE_SIZE - tD->bBY) - tD->height;
+		t->bBY = tD->bBX;
 	}
 	else if (transform == 2) //Tile rotated 180 degrees
 	{
-		t->bBX = TILE_SIZE - tD->width - tD->bBX;
-		t->bBY = TILE_SIZE - tD->height - tD->bBY;
+		t->bBX = (TILE_SIZE - tD->bBX) - tD->width;
+		t->bBY = (TILE_SIZE - tD->bBY) - tD->height;
 	}
 	else if (transform == 3) //Tile rotate 270 degrees
 	{
 		t->bBX = tD->bBY;
-		t->bBY = tD->bBX;
+		t->bBY = (TILE_SIZE - tD->bBX) - tD->width;
 	}
+
+	// Update bounding box if tile has been mirrored
+	if (t->mirror)
+		t->bBX = (TILE_SIZE - t->bBX) - t->width;
 }
 
 /*
@@ -449,25 +501,56 @@ void Map::emptyMap()
 	tileData.clear();
 }
 
-void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool animate)
+void Map::setLightInterval(const sf::Vector2u& interval)
+{
+	lightInterval = interval;
+}
+
+void Map::interactWithTile(const sf::Vector2u& pos, const sf::Vector2u& directionPos)
+{
+	// Check the tile where the player is
+	unsigned int row = pos.y / TILE_SIZE, column = pos.x / TILE_SIZE;
+	
+	canopyLayer->interactedWithTile(row, column);
+	groundLayers[row]->interactedWithTile(row, column);
+	maskLayer->interactedWithTile(row, column);
+	mapLayer->interactedWithTile(row, column);
+
+	// Check the tile in front of the player
+	row = directionPos.y / TILE_SIZE;
+	column = directionPos.x / TILE_SIZE;
+
+	canopyLayer->interactedWithTile(row, column);
+	groundLayers[row]->interactedWithTile(row, column);
+	maskLayer->interactedWithTile(row, column);
+	mapLayer->interactedWithTile(row, column);
+}
+
+void Map::updateDrawList(Player* player, const sf::Time& currentTime, const pb::Time& currentInGameTime)
 {
 	//LOCAL VARIABLES
 	std::vector<std::vector<pb::Graphic_Entity*>> drawAtPos;
 	bool playerDrawn = false;
 
+	// Determine if lights should be on or off
+	if (lightInterval == sf::Vector2u(0, 0) || (unsigned int)currentInGameTime.hours >= lightInterval.x || (unsigned int)currentInGameTime.hours <= lightInterval.y)
+		Tile::lightsOn = true;
+	else
+		Tile::lightsOn = false;
+
 	// Determine which column to start from
-	unsigned int startColumn = unsigned int((Game::camera->getCenter().x - (Game::camera->getSize().x / 2)) / TILE_SIZE);
-	if(Game::camera->getSize().x / TILE_SIZE >= numColumns)
+	unsigned int startColumn = unsigned int((Game::camera->getCenter().x - Game::camera->getSize().x) / TILE_SIZE);
+	if (Game::camera->getSize().x / TILE_SIZE >= numColumns || Game::camera->getCenter().x < Game::camera->getSize().x)
 		startColumn = 0;
 
 	// Determine which row to start from
-	unsigned int startRow = unsigned int((Game::camera->getCenter().y - (Game::camera->getSize().y / 2)) / TILE_SIZE);
-	if (Game::camera->getSize().y / TILE_SIZE >= numRows)
+	unsigned int startRow = unsigned int((Game::camera->getCenter().y - Game::camera->getSize().y) / TILE_SIZE);
+	if (Game::camera->getSize().y / TILE_SIZE >= numRows || Game::camera->getCenter().y < Game::camera->getSize().y)
 		startRow = 0;
 
 	// Cull out tiles based on view size
-	unsigned int viewWidth = unsigned int((Game::camera->getCenter().x + (Game::camera->getSize().x / 2)) / TILE_SIZE);
-	unsigned int viewHeight = unsigned int((Game::camera->getCenter().y + (Game::camera->getSize().y / 2)) / TILE_SIZE);
+	unsigned int viewWidth = unsigned int((Game::camera->getCenter().x + Game::camera->getSize().x) / TILE_SIZE);
+	unsigned int viewHeight = unsigned int((Game::camera->getCenter().y + Game::camera->getSize().y) / TILE_SIZE);
 
 	// If the view extends past the borders of the map, clamp the width/height to numColumns - 1/numRows - 1
 	if (viewWidth >= numColumns)
@@ -488,15 +571,15 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool anima
 	for (unsigned int i = 0; i < numRows; i++)
 		groundLayers[i]->clearVertexArray();
 
-	// Draw ONLY the visible tiles
+	// Draw Tiles within specified range
 	for (unsigned int i = startRow; i <= viewHeight; i++)
 	{
 		for (unsigned int j = startColumn; j <= viewWidth; j++)
 		{
-			mapLayer->update(TILE_SIZE, i, j, currentTime);
-			maskLayer->update(TILE_SIZE, i, j, currentTime);
-			groundLayers[i]->update(TILE_SIZE, i, j, currentTime);
-			canopyLayer->update(TILE_SIZE, i, j, currentTime);
+			mapLayer->update(TILE_SIZE, i, j, currentTime, *Game::graphicManager);
+			maskLayer->update(TILE_SIZE, i, j, currentTime, *Game::graphicManager);
+			groundLayers[i]->update(TILE_SIZE, i, j, currentTime, *Game::graphicManager);
+			canopyLayer->update(TILE_SIZE, i, j, currentTime, *Game::graphicManager);
 
 			//TOOLS
 			if (renderCollisionLayer)
@@ -513,8 +596,8 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool anima
 		}
 	}
 
-	Game::graphicManager->addToDrawList(mapLayer, false);
-	Game::graphicManager->addToDrawList(maskLayer, false);
+	Game::graphicManager->addToDrawList(mapLayer);
+	Game::graphicManager->addToDrawList(maskLayer);
 
 	//Get the column and row the graphic object is in
 	int row = (int)(player->getRect().top + player->getRect().height) / TILE_SIZE;
@@ -530,10 +613,9 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool anima
 	//Determine the order that graphic objects are drawn based on their immediate surroundings.
 	if (t != 0 || t2 != 0)
 	{
-		row++;
-		if (t != 0 && (row * TILE_SIZE) + t->bBY > player->getRect().top ||
-			t2 != 0 && (row * TILE_SIZE) + t2->bBY > player->getRect().top)
-			row--;		
+		if (t != 0 && (row * TILE_SIZE) + t->bBY < player->getRect().top ||
+			t2 != 0 && (row * TILE_SIZE) + t2->bBY < player->getRect().top)
+			row++;	
 	}
 
 	drawAtPos[row].push_back(player);
@@ -558,11 +640,11 @@ void Map::updateDrawList(Player* player, const sf::Time& currentTime, bool anima
 
 	//TOOLS
 	if (renderCollisionLayer)
-		Game::graphicManager->addToDrawList(collisionLayer, false);
+		Game::graphicManager->addToDrawList(collisionLayer);
 	if (renderGridLayer)
-		Game::graphicManager->addToDrawList(gridLayer, false);
+		Game::graphicManager->addToDrawList(gridLayer);
 	if (renderTransitionLayer)
-		Game::graphicManager->addToDrawList(transitionLayer, false);
+		Game::graphicManager->addToDrawList(transitionLayer);
 }
 
 
@@ -626,12 +708,12 @@ bool Map::collisionDetected(const sf::IntRect& rect)
 	bool collision = false;
 
 	//Check collision of the player on the left side of player
-	if (mapLayer->getTile(row, column)->collidable)
-		collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
-	else if (groundLayers[row]->getTile(0, column) != 0 && groundLayers[row]->getTile(0, column)->collidable)
+	collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
+	if (!collision)
 		collision = groundLayers[row]->isColliding(rect, row, column, TILE_SIZE);
-	else if (maskLayer->getTile(row, column) != 0 && maskLayer->getTile(row, column)->collidable)
+	if (!collision)
 		collision = maskLayer->isColliding(rect, row, column, TILE_SIZE);
+
 	
 	//Return true if collision has been detected
 	if (collision)
@@ -639,11 +721,11 @@ bool Map::collisionDetected(const sf::IntRect& rect)
 
 	//Check collision of the player on the right side of the player
 	column = (unsigned int)((rect.left + rect.width) / TILE_SIZE);
-	if (mapLayer->getTile(row, column)->collidable)
-		collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
-	else if (groundLayers[row]->getTile(0, column) != 0 && groundLayers[row]->getTile(0, column)->collidable)
+	
+	collision = mapLayer->isColliding(rect, row, column, TILE_SIZE);
+	if (!collision)
 		collision = groundLayers[row]->isColliding(rect, row, column, TILE_SIZE);
-	else if (maskLayer->getTile(row, column) != 0 && maskLayer->getTile(row, column)->collidable)
+	if (!collision)
 		collision = maskLayer->isColliding(rect, row, column, TILE_SIZE);
 
 	return collision; //Return collision
@@ -685,6 +767,11 @@ void Map::displayTransitionLayer()
 		renderTransitionLayer = true;
 	else
 		renderTransitionLayer = false;
+}
+
+unsigned short Map::getTileSize()
+{
+	return TILE_SIZE;
 }
 
 /*

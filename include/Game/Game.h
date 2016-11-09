@@ -1,6 +1,7 @@
 #ifndef Game_H
 #define Game_H
 
+#include <SFML\OpenGL.hpp>
 #include <SFML\Graphics\RenderWindow.hpp>
 #include <SFML\Window\Event.hpp>
 #include "PBE\System\Camera.h"
@@ -54,6 +55,8 @@ private:
 		Fullscreen,
 		Windowed
 	};
+
+	const short TIME_SCALE = 10;
 
 	// Private variables
 	Game_States state = Play, returnState = Play;

@@ -16,6 +16,7 @@ Game::Game(const std::string versionNumber)
 	// Set up window properties
 	window = new sf::RenderWindow(sf::VideoMode(desktop.width, desktop.height, desktop.bitsPerPixel), "Project JR " + versionNumber, sf::Style::Fullscreen);
 	window->setVerticalSyncEnabled(verticalSyncEnabled);
+	window->setFramerateLimit(0);
 	window->setMouseCursorVisible(false);
 	window->setKeyRepeatEnabled(false);
 
@@ -23,7 +24,7 @@ Game::Game(const std::string versionNumber)
 	camera = new pb::Camera(window->getSize().x, window->getSize().y, zoomLevelWorld);
 
 	// Intialize a game clock with some default values
-	gameClock = new pb::In_Game_Clock(10, 8, 0, 24, 8, 8, 4, 4);
+	gameClock = new pb::In_Game_Clock(TIME_SCALE, 10, 0, 24, 8, 8, 4, 4);
 
 	// Initialize graphic manager
 	graphicManager = new pb::Graphic_Manager(*gameClock);
@@ -40,12 +41,20 @@ Game::Game(std::string versionNumber, int argc, char* argv[]) : Game(versionNumb
 {
 	// Local variables
 	float x = 0, y = 0;
+	short hours = 0, minutes = 0;
 
-	if (argc == 4)
+	if (argc == 6)
 	{
 		currentMap = argv[1];
 		y = (float)atoi(argv[2]) * 32 + 16;
 		x = (float)atoi(argv[3]) * 32 + 16;
+
+		hours = atoi(argv[4]);
+		minutes = atoi(argv[5]);
+
+		gameClock->setTime(hours, minutes);
+
+		graphicManager->updateDayShiftEffect(*gameClock);
 	}
 
 	player->setPosition(sf::Vector2f(x, y));
@@ -69,6 +78,7 @@ Game::~Game()
 void Game::initialize()
 {
 	map = new Map(currentMap);
+	map->setLightInterval(sf::Vector2u(22, 5));
 }
 
 void Game::processEvents()
@@ -91,10 +101,7 @@ void Game::processEvents()
 			else if (event.key.code == sf::Keyboard::Space) //Pause the game if the spacebar is pressed
 			{
 				if (state == Play || state == Battle)
-				{
 					state = Pause;
-					graphicManager->enableDayShift(false);
-				}
 				else
 				{
 					state = returnState;
@@ -112,6 +119,8 @@ void Game::processEvents()
 				map->displayGridLayer();
 			else if (event.key.code == sf::Keyboard::T)
 				map->displayTransitionLayer();
+			else if (event.key.code == sf::Keyboard::E && state == Play)
+				map->interactWithTile(player->getPosition(), player->getPosition(map->getTileSize()));
 			//Resize window if the F11 key is pressed
 			else if (event.key.code == sf::Keyboard::F11)
 			{
@@ -129,13 +138,25 @@ void Game::processEvents()
 					windowState = Fullscreen;
 				}
 
-				if (verticalSyncEnabled)
+				if (verticalSyncEnabled && windowState != Windowed)
 				{
 					window->setVerticalSyncEnabled(verticalSyncEnabled);
 					window->setFramerateLimit(0);
 				}
 				else
 					window->setFramerateLimit(60);
+
+				// Recreate the camera
+				sf::Vector2f pos = camera->getCenter();
+				sf::Vector2f cameraBounds = camera->getCameraBounds();
+
+				// Delete old camera
+				delete camera;
+
+				// Initialize new camera
+				camera = new pb::Camera(window->getSize().x, window->getSize().y, zoomLevelWorld);
+				camera->setBounds(cameraBounds.x, cameraBounds.y);
+				camera->setCenter(pos);	
 
 				window->setMouseCursorVisible(false);
 				window->setKeyRepeatEnabled(false);
@@ -247,6 +268,9 @@ void Game::update()
 		delete camera;
 		camera = new pb::Camera(window->getSize().x, window->getSize().y, 0.5f, "screenshake.wav");
 
+		// Pause game time when in battle
+		gameClock->pause();
+
 		player->loadState(Player::Battle); // change player state
 
 		// Intialize a list of players to send to the battle engine
@@ -282,6 +306,7 @@ void Game::update()
 
 		player->loadState(Player::World); // change player state
 
+		gameClock->resume();
 		graphicManager->enableDayShift(true); // re-enable day shift
 
 		// Change states
@@ -311,7 +336,7 @@ void Game::render(double alpha)
 		player->renderPosition(alpha);
 
 		//Draw all graphics
-		map->updateDrawList(player, currentTime, true);
+		map->updateDrawList(player, currentTime, gameClock->getTime());
 
 		break;
 
@@ -320,19 +345,23 @@ void Game::render(double alpha)
 
 		break;
 
+
 	case Pause:
-		//Draw all graphics
-		if (returnState == Play)
-			map->updateDrawList(player, currentTime, false);
-		else
-			battle->updateDrawList(false, alpha);
+
+		if (graphicManager->drawListEmpty())
+		{
+			if (returnState == Play)
+				map->updateDrawList(player, currentTime, gameClock->getTime());
+			else if (returnState == Battle)
+				battle->updateDrawList(false, alpha);
+		}
 
 		break;
 
 	case Fading:
 		// Add the games previous state to the draw list
 		if (returnState == InitiateBattle || returnState == Transition || returnState == Play)
-			map->updateDrawList(player, currentTime, false);
+			map->updateDrawList(player, currentTime, gameClock->getTime());
 		else if (returnState == InitiateOverworld || returnState == Battle)
 			battle->updateDrawList(true, alpha);
 
@@ -345,10 +374,14 @@ void Game::render(double alpha)
 	camera->animateCamera(); // Apply any camera animations
 	window->setView(*camera); // Update the windows view
 
-	graphicManager->draw(window, gameClock->getTime()); // Use day/night version of graphic manager draw
+	if (state != Pause)
+		graphicManager->draw(window, gameClock->getTime()); // Use day/night version of graphic manager draw
+	else
+		graphicManager->draw(window, gameClock->getTime(), false); // Use day/night version of graphic manager draw
 
 	// Redisplay everything in the window
 	window->display();
+	glFinish(); // Potential fix to minor stutter issue?
 }
 
 /*
@@ -374,9 +407,6 @@ void Game::runGame()
 	// GAME LOOP
 	while (window->isOpen())
 	{
-		// Process events
-		processEvents();
-
 		// Get time
 		sf::Time t = clock.getElapsedTime();
 		this->currentTime = t;
@@ -391,6 +421,9 @@ void Game::runGame()
 		// Consume time to obtain a steady frame rate using a fixed timestep
 		while (accumulator >= dt)
 		{
+			// Process events
+			processEvents();
+
 			// Update game logic
 			update();
 

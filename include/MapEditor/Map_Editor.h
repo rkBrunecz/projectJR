@@ -45,7 +45,7 @@ private:
 	void moveCamera();
 
 	// Private variables
-	float zoomFactor = 1;
+	float zoomFactor = 1.f;
 
 	Editor_States state = Build;
 	sf::Vector2i rightButtonPos;

@@ -29,13 +29,16 @@ namespace pb
 		~Graphic_Manager();
 
 		const sf::Texture *addTexture(std::string fileName);
-		void addToDrawList(sf::Drawable *d, bool isShadow);
+		void addLight(pb::Light *l);
+		void addToDrawList(sf::Drawable *d, bool hasShadow = false);
+		
+		void updateDayShiftEffect(In_Game_Clock& clock);
 
 		// Basic draw method
 		void draw(sf::RenderWindow *window);
 
 		// Use this draw method if you want to utilize the built in day and night shift, and shadow alpha shader
-		void draw(sf::RenderWindow *window, Time& t);
+		void draw(sf::RenderWindow *window, Time& t, bool clearLists = true);
 
 		void clearTextureList();
 		void enableDayShift(bool enable);
@@ -46,6 +49,8 @@ namespace pb
 		void fadeOut(sf::Color fadeColor, float updateInterval, int increment);
 		void updateEffect(sf::RenderTarget& target);
 		bool effectFinished();
+
+		bool drawListEmpty();
 
 	private:	
 		struct Texture
@@ -90,8 +95,10 @@ namespace pb
 
 		std::vector<Texture *> textures;
 		std::vector<Graphic_Obj *> drawList;
-		sf::RenderTexture *buffer = 0; // Used to apply shaders
-		pb::Shader *alpha = 0;
+		std::vector<Light *> lights;
+
+		sf::RenderTexture *buffer = 0, *buffer2 = 0; // Used to apply shaders
+		pb::Shader *alpha = 0, *lighting = 0, *shadow = 0;
 		pb::Effect *effect = 0; // Used for simple effects, like screen diming and fading
 		pb::Day_Shift_Animation *dayShift = 0;
 		bool updateTime = true;

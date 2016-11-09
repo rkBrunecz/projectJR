@@ -17,7 +17,7 @@ Layer::~Layer()
 		delete layer[i];
 }
 
-void Layer::update(unsigned int tileSize, unsigned int row, unsigned int column, const sf::Time& currentTime)
+void Layer::update(unsigned int tileSize, unsigned int row, unsigned int column, const sf::Time& currentTime, pb::Graphic_Manager& graphicManager)
 {
 	unsigned int layerRow = (numRows != 1 ? row : 0);
 
@@ -25,6 +25,9 @@ void Layer::update(unsigned int tileSize, unsigned int row, unsigned int column,
 	{
 		layer[layerRow * numColumns + column]->update(currentTime);
 		updateVerticies(row, column, tileSize, *layer[layerRow * numColumns + column]);
+
+		if (layer[layerRow * numColumns + column]->getLight() != 0)
+			graphicManager.addLight(layer[layerRow * numColumns + column]->getLight());
 	}
 }
 
@@ -48,6 +51,15 @@ void Layer::changeTileCollision(unsigned int row, unsigned int column, bool coll
 
 	if (layer[row * numColumns + column] != 0)
 		layer[row * numColumns + column]->collidable = collidable;
+}
+
+void Layer::interactedWithTile(unsigned int row, unsigned int column)
+{
+	if (numRows == 1)
+		row = 0;
+
+	if (layer[row * numColumns + column] != 0)
+		layer[row * numColumns + column]->interact();
 }
 
 void Layer::addTile(const Tile& t, unsigned int row, unsigned int column)
@@ -99,10 +111,11 @@ void Layer::removeTile(unsigned int row, unsigned int column)
 	layer[row * numColumns + column] = 0;
 }
 
-void Layer::updateVerticies(unsigned int row, unsigned int column, unsigned int tileSize, const Tile& t)
+void Layer::updateVerticies(unsigned int row, unsigned int column, unsigned int tileSize, Tile& t)
 {
 	sf::Vertex quad[4];
-	
+	unsigned short textureColumn = t.getColumn();
+
 	// Define the quads four corners
 	quad[0].position = sf::Vector2f(float(column * tileSize), float(row * tileSize));
 	quad[1].position = sf::Vector2f(float((column + 1) * tileSize), float(row * tileSize));
@@ -110,16 +123,16 @@ void Layer::updateVerticies(unsigned int row, unsigned int column, unsigned int 
 	quad[3].position = sf::Vector2f(float(column * tileSize), float((row + 1) * tileSize));
 
 	// Defines its four texture coordinates
-	quad[0].texCoords = sf::Vector2f(float(t.column * tileSize), float(t.row * tileSize));
-	quad[1].texCoords = sf::Vector2f(float((t.column + 1) * tileSize), float(t.row * tileSize));
-	quad[2].texCoords = sf::Vector2f(float((t.column + 1) * tileSize), float((t.row + 1) * tileSize));
-	quad[3].texCoords = sf::Vector2f(float(t.column * tileSize), float((t.row + 1) * tileSize));
+	quad[0].texCoords = sf::Vector2f(float(textureColumn * tileSize), float(t.row * tileSize));
+	quad[1].texCoords = sf::Vector2f(float((textureColumn + 1) * tileSize), float(t.row * tileSize));
+	quad[2].texCoords = sf::Vector2f(float((textureColumn + 1) * tileSize), float((t.row + 1) * tileSize));
+	quad[3].texCoords = sf::Vector2f(float(textureColumn * tileSize), float((t.row + 1) * tileSize));
 	
 	// Determine transformations
 	if (t.rotation >= 1 && t.rotation <= 3)
 		rotateTile(quad, tileSize, t);
 	if (t.mirror)
-		mirrorTile(quad, tileSize, t);
+		mirrorTile(quad, tileSize);
 
 	verticies.append(quad[0]);
 	verticies.append(quad[1]);
@@ -127,32 +140,34 @@ void Layer::updateVerticies(unsigned int row, unsigned int column, unsigned int 
 	verticies.append(quad[3]);
 }
 
-void Layer::rotateTile(sf::Vertex *quad, unsigned int tileSize, const Tile& t)
+void Layer::rotateTile(sf::Vertex *quad, unsigned int tileSize, Tile& t)
 {
+	unsigned short textureColumn = t.getColumn();
+
 	if (t.rotation == 1) // 90 degree rotation
 	{
-		quad[0].texCoords = sf::Vector2f(float(t.column * tileSize), float((t.row + 1) * tileSize));
-		quad[1].texCoords = sf::Vector2f(float(t.column * tileSize), float(t.row * tileSize));
-		quad[2].texCoords = sf::Vector2f(float((t.column + 1) * tileSize), float(t.row * tileSize));
-		quad[3].texCoords = sf::Vector2f(float((t.column + 1) * tileSize), float((t.row + 1) * tileSize));
+		quad[0].texCoords = sf::Vector2f(float(textureColumn * tileSize), float((t.row + 1) * tileSize));
+		quad[1].texCoords = sf::Vector2f(float(textureColumn * tileSize), float(t.row * tileSize));
+		quad[2].texCoords = sf::Vector2f(float((textureColumn + 1) * tileSize), float(t.row * tileSize));
+		quad[3].texCoords = sf::Vector2f(float((textureColumn + 1) * tileSize), float((t.row + 1) * tileSize));
 	}
 	else if (t.rotation == 2) // 180 degree rotation
 	{
-		quad[0].texCoords = sf::Vector2f(float((t.column + 1) * tileSize), float((t.row + 1) * tileSize));
-		quad[1].texCoords = sf::Vector2f(float(t.column * tileSize), float((t.row + 1) * tileSize));
-		quad[2].texCoords = sf::Vector2f(float(t.column * tileSize), float(t.row * tileSize));
-		quad[3].texCoords = sf::Vector2f(float((t.column + 1) * tileSize), float(t.row * tileSize));
+		quad[0].texCoords = sf::Vector2f(float((textureColumn + 1) * tileSize), float((t.row + 1) * tileSize));
+		quad[1].texCoords = sf::Vector2f(float(textureColumn * tileSize), float((t.row + 1) * tileSize));
+		quad[2].texCoords = sf::Vector2f(float(textureColumn * tileSize), float(t.row * tileSize));
+		quad[3].texCoords = sf::Vector2f(float((textureColumn + 1) * tileSize), float(t.row * tileSize));
 	}
 	else if (t.rotation == 3) // 270 degree rotation
 	{
-		quad[0].texCoords = sf::Vector2f(float((t.column + 1) * tileSize), float(t.row * tileSize));
-		quad[1].texCoords = sf::Vector2f(float((t.column + 1) * tileSize), float((t.row + 1) * tileSize));
-		quad[2].texCoords = sf::Vector2f(float(t.column * tileSize), float((t.row + 1) * tileSize));
-		quad[3].texCoords = sf::Vector2f(float(t.column * tileSize), float(t.row * tileSize));
+		quad[0].texCoords = sf::Vector2f(float((textureColumn + 1) * tileSize), float(t.row * tileSize));
+		quad[1].texCoords = sf::Vector2f(float((textureColumn + 1) * tileSize), float((t.row + 1) * tileSize));
+		quad[2].texCoords = sf::Vector2f(float(textureColumn * tileSize), float((t.row + 1) * tileSize));
+		quad[3].texCoords = sf::Vector2f(float(textureColumn * tileSize), float(t.row * tileSize));
 	}
 }
 
-void Layer::mirrorTile(sf::Vertex *quad, unsigned int tileSize, const Tile& t)
+void Layer::mirrorTile(sf::Vertex *quad, unsigned int tileSize)
 {
 	sf::Vector2f texCoords0 = quad[0].texCoords, 
 		texCoords1 = quad[1].texCoords,
@@ -204,15 +219,9 @@ bool Layer::isColliding(const sf::IntRect& rect, unsigned int row, unsigned int 
 {
 	unsigned int layerRow = (numRows != 1 ? row : 0);
 
-	//Create a bounding box for the current tile.
-	sf::IntRect boundingBox(column * tileSize + layer[layerRow * numColumns + column]->bBX,
-		row * tileSize + layer[layerRow * numColumns + column]->bBY,
-		layer[layerRow * numColumns + column]->width,
-		layer[layerRow * numColumns + column]->height);
-
-	if (boundingBox.top == rect.height + rect.top)
-		return true;
+	if (layer[layerRow * numColumns + column] == 0)
+		return false;
 
 	//Check to see if the entity is inside of a objects colliding point
-	return rect.intersects(boundingBox);
+	return layer[layerRow * numColumns + column]->collidedWithTile(rect, row, column, tileSize);
 }

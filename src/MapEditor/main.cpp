@@ -5,7 +5,7 @@
 int main()
 {
 	// Local variables
-	std::string versionNum = "v.1.1a";
+	std::string versionNum = "v.2.0a";
 	Map_Editor editor(versionNum);
 
 	editor.runEditor();

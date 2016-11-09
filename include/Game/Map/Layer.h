@@ -16,7 +16,7 @@ public:
 	// Destructor
 	~Layer();
 
-	void update(unsigned int tileSize, unsigned int row, unsigned int column, const sf::Time& currentTime);
+	void update(unsigned int tileSize, unsigned int row, unsigned int column, const sf::Time& currentTime, pb::Graphic_Manager& graphicManager);
 
 	void clearVertexArray();
 
@@ -34,16 +34,18 @@ public:
 
 	void changeTileCollision(unsigned int row, unsigned int column, bool collidable);
 
+	void interactedWithTile(unsigned int row, unsigned int column);
+
 	bool isColliding(const sf::IntRect& rect, unsigned int row, unsigned int column, unsigned int tileSize);
 
 private:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
-	void updateVerticies(unsigned int row, unsigned int column, unsigned int tileSize, const Tile& t);
+	void updateVerticies(unsigned int row, unsigned int column, unsigned int tileSize, Tile& t);
 
-	void rotateTile(sf::Vertex *quad, unsigned int tileSize, const Tile& t);
+	void rotateTile(sf::Vertex *quad, unsigned int tileSize, Tile& t);
 
-	void mirrorTile(sf::Vertex *quad, unsigned int tileSize, const Tile& t);
+	void mirrorTile(sf::Vertex *quad, unsigned int tileSize);
 
 	const sf::Texture *tileset;
 	std::vector<Tile *>layer;

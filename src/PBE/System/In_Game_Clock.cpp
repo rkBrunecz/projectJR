@@ -70,7 +70,14 @@ namespace pb
 
 	void In_Game_Clock::resume()
 	{
-		clock = new sf::Clock();
+		if (clock == 0)
+			clock = new sf::Clock();
+	}
+
+	void In_Game_Clock::setTime(short currentHour, short currentMinute)
+	{
+		hours = currentHour;
+		minutes = currentMinute;
 	}
 
 	const short In_Game_Clock::getMorningHours()
