@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
 	// Local variables
 	Game *game = 0;
-	std::string version = "v.1.2a"; // Version number
+	std::string version = "v.2.0a"; // Version number
 
 	if (argc == 6)
 		game = new Game(version, argc, argv);
